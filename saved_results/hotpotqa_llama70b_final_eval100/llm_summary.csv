@@ -1,0 +1,14 @@
+mode,method_name,budget_mode,compression_mode,docs_used,prompt_tokens,completion_tokens,total_tokens,generation_time_ms,answer_f1,answer_coverage,semantic_similarity,ndcg_at_10,mrr_at_10,fallback_rate
+no_retrieval_full,No Retrieval,no_retrieval,full,0.0,146.99,5.08,152.07,1081.4,0.42467256,0.45057693,0.43121885,0.0,0.0,0.0
+fixed_3_full,Fixed Small Context,fixed_3,full,3.0,487.72,4.24,491.96,1030.73,0.62570588,0.61974361,0.62847529,0.61365328,0.78999998,0.0
+fixed_5_full,Fixed Medium Context,fixed_5,full,5.0,757.9,4.33,762.23,1000.05,0.69337255,0.6880769499999999,0.6976498,0.66668926,0.80599998,0.0
+fixed_7_full,Fixed Large Context,fixed_7,full,7.0,1042.81,4.34,1047.15,985.19,0.73039636,0.72557695,0.7342094,0.7070646899999999,0.8124285600000001,0.0
+fixed_10_full,Fixed Full Context,fixed_10,full,10.0,1532.42,4.26,1536.68,1149.15,0.7645392200000001,0.7522436100000001,0.7682823999999999,0.74224007,0.8124285600000001,0.0
+heuristic_rules_full,Heuristic Rules,heuristic_rules,full,6.2,940.75,4.23,944.98,960.16,0.70753922,0.69557695,0.7106738699999999,0.69100321,0.80909522,0.0
+answer_aware_fallback,Safe Adaptive Context,answer_aware_fallback,compact_then_full_fallback,10.0,1061.48,4.24,1065.72,1060.29,0.7365392199999999,0.73224361,0.74011743,0.74224007,0.8124285600000001,0.0
+no_retrieval_evidence_ngram_neighbors,No Retrieval,no_retrieval,evidence_ngram_neighbors,0.0,146.99,4.37,151.36,975.8,0.41428525,0.4247436,0.41774569,0.0,0.0,0.0
+fixed_3_evidence_ngram_neighbors,Fixed Small + Compact Evidence,fixed_3,evidence_ngram_neighbors,3.0,478.83,4.34,483.17,1003.39,0.6042773100000001,0.59974361,0.60713554,0.61365328,0.78999998,0.0
+fixed_5_evidence_ngram_neighbors,Fixed Medium + Compact Evidence,fixed_5,evidence_ngram_neighbors,5.0,733.06,4.31,737.37,1041.06,0.6737058899999999,0.66307695,0.67667557,0.66668926,0.80599998,0.0
+fixed_7_evidence_ngram_neighbors,Fixed Large + Compact Evidence,fixed_7,evidence_ngram_neighbors,7.0,993.52,4.28,997.8,1068.76,0.72003922,0.7080769499999999,0.72317387,0.7070646899999999,0.8124285600000001,0.0
+fixed_10_evidence_ngram_neighbors,Compressed Fixed Full Context,fixed_10,evidence_ngram_neighbors,10.0,1426.13,4.21,1430.34,969.2,0.75203922,0.7414102800000001,0.7550089,0.74224007,0.8124285600000001,0.0
+heuristic_rules_evidence_ngram_neighbors,Heuristic Rules + Compact Evidence,heuristic_rules,evidence_ngram_neighbors,6.2,897.75,4.43,902.18,983.34,0.6957058899999999,0.6930769499999999,0.70024494,0.69100321,0.80909522,0.0

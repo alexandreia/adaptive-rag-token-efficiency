@@ -1,0 +1,8 @@
+dataset,method,code_mode,ndcg_at_10,mrr_at_10,answer_f1,answer_coverage,semantic_similarity,f1_retained_vs_top10,semantic_similarity_retained_vs_top10,total_tokens,token_reduction_vs_top10,fallback_rate
+hotpotqa_crossenc_finalsafe_concise,No Retrieval,no_retrieval_full,0.0,0.0,0.422539,0.437244,0.550423,55.3%,65.7%,151.28,89.9%,0.0%
+hotpotqa_crossenc_finalsafe_concise,Fixed Top-3,fixed_3_full,0.760297,0.936667,0.737373,0.738077,0.809881,96.5%,96.7%,499.93,66.7%,0.0%
+hotpotqa_crossenc_finalsafe_concise,Fixed Top-5,fixed_5_full,0.800667,0.941167,0.750111,0.750577,0.817779,98.2%,97.6%,757.23,49.5%,0.0%
+hotpotqa_crossenc_finalsafe_concise,Fixed Top-7,fixed_7_full,0.819903,0.942833,0.760706,0.753077,0.825371,99.6%,98.5%,1046.73,30.2%,0.0%
+hotpotqa_crossenc_finalsafe_concise,Fixed Top-10,fixed_10_full,0.828926,0.942833,0.764039,0.75641,0.837879,100.0%,100.0%,1500.35,0.0%,0.0%
+hotpotqa_crossenc_finalsafe_concise,Heuristic Rules,heuristic_rules_full,0.803922,0.942833,0.766539,0.760577,0.834787,100.3%,99.6%,804.22,46.4%,0.0%
+hotpotqa_crossenc_finalsafe_concise,Safe Adaptive Context,answer_aware_fallback,0.829,0.942833,0.750896,0.74891,0.819072,98.3%,97.8%,1109.23,26.1%,0.0%

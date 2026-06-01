@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>RAG Annotation Form</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1>RAG Annotation Form</h1>
+        <p>Single-annotator review — use your own browser profile. Export one CSV per annotator, then compare in the kappa calculator.</p>
+      </div>
+      <div class="header-actions">
+        <a class="button-link" href="./kappa.html">Kappa calculator</a>
+        <button id="exportCsvBtn" type="button">Export CSV</button>
+        <button id="exportJsonBtn" type="button">Export JSON</button>
+        <label class="import-button">
+          Import CSV
+          <input id="importCsvInput" type="file" accept=".csv,text/csv" />
+        </label>
+        <label class="import-button">
+          Import JSON
+          <input id="importJsonInput" type="file" accept="application/json" />
+        </label>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="sidebar" aria-label="Samples">
+        <div id="modelTabs" class="dataset-tabs model-tabs" role="tablist" aria-label="Datasets"></div>
+        <div class="toolbar">
+          <label>
+            Filter
+            <select id="filterSelect">
+              <option value="all">All samples</option>
+              <option value="unstarted">Unstarted</option>
+              <option value="complete">Annotated</option>
+              <option value="worst">Worst group</option>
+              <option value="best">Best group</option>
+            </select>
+          </label>
+          <label>
+            Search
+            <input id="searchInput" type="search" placeholder="query id, text, note" />
+          </label>
+        </div>
+        <div id="sampleList" class="sample-list"></div>
+      </aside>
+
+      <section class="workspace" aria-label="Annotation workspace">
+        <nav class="item-nav" aria-label="Current sample navigation">
+          <button id="prevBtn" type="button">Previous</button>
+          <div id="positionText" class="position-text"></div>
+          <button id="nextBtn" type="button">Next</button>
+        </nav>
+
+        <section class="sample-panel">
+          <div class="sample-meta">
+            <span id="sampleId"></span>
+            <span id="sampleGroup"></span>
+            <span id="sampleMode"></span>
+          </div>
+          <h2 id="queryText"></h2>
+          <div class="evidence-grid">
+            <section>
+              <h3>Reference Answer</h3>
+              <p id="referenceAnswer"></p>
+            </section>
+            <section>
+              <h3>Model Answer</h3>
+              <p id="modelAnswer"></p>
+            </section>
+          </div>
+          <details open>
+            <summary>Retrieved Evidence</summary>
+            <pre id="evidenceText"></pre>
+          </details>
+          <div class="metric-strip" id="metricStrip"></div>
+        </section>
+
+        <section class="annotation-grid single-annotation-grid">
+          <form id="annotationForm" class="annotation-form">
+            <h3>Annotation</h3>
+            <label>
+              Rating
+              <select name="rating">
+                <option value=""></option>
+                <option>CORRECT</option>
+                <option>PARTIALLY_CORRECT</option>
+                <option>INCORRECT</option>
+                <option>NOT_ENOUGH_INFO</option>
+              </select>
+            </label>
+            <label class="wide">
+              Notes
+              <textarea name="notes" rows="5"></textarea>
+            </label>
+          </form>
+        </section>
+      </section>
+    </main>
+
+    <script src="./data.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>

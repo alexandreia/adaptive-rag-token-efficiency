@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>RAG Kappa Calculator</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <header class="app-header">
+      <div>
+        <h1>RAG Kappa Calculator</h1>
+        <p>Drop two annotator CSV exports to compute agreement and Cohen's kappa.</p>
+      </div>
+      <div class="header-actions">
+        <a class="button-link" href="./index.html">Annotation form</a>
+      </div>
+    </header>
+
+    <main class="calculator-layout">
+      <section class="calculator-panel">
+        <div class="upload-grid">
+          <label class="drop-zone" id="dropA">
+            <span>Annotator 1 CSV</span>
+            <strong id="fileAName">Drop or choose file</strong>
+            <input id="fileA" type="file" accept=".csv,text/csv">
+          </label>
+          <label class="drop-zone" id="dropB">
+            <span>Annotator 2 CSV</span>
+            <strong id="fileBName">Drop or choose file</strong>
+            <input id="fileB" type="file" accept=".csv,text/csv">
+          </label>
+        </div>
+
+        <div class="settings-grid">
+          <label>
+            ID column
+            <select id="idColumn">
+              <option value="auto">Auto: candidate_id or sample_id</option>
+              <option value="candidate_id">candidate_id</option>
+              <option value="sample_id">sample_id</option>
+              <option value="query_id">query_id</option>
+            </select>
+          </label>
+          <label>
+            Rating column
+            <select id="ratingColumn">
+              <option value="auto">Auto: rating or annotator/final rating</option>
+              <option value="rating">rating</option>
+              <option value="annotator_1_rating">annotator_1_rating</option>
+              <option value="annotator_2_rating">annotator_2_rating</option>
+              <option value="final_rating">final_rating</option>
+              <option value="annotator_1_label">annotator_1_label</option>
+              <option value="annotator_2_label">annotator_2_label</option>
+              <option value="final_label">final_label</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="actions-row">
+          <button id="calculateBtn" type="button">Calculate</button>
+          <button id="clearBtn" type="button">Clear</button>
+          <button id="downloadBtn" type="button" disabled>Download merged CSV</button>
+        </div>
+      </section>
+
+      <section class="calculator-panel">
+        <h2>Results</h2>
+        <div id="summaryPanel" class="summary-grid"></div>
+        <div id="messagePanel" class="message-panel"></div>
+      </section>
+
+      <section class="calculator-panel">
+        <h2>How Cohen's Kappa Is Calculated</h2>
+        <div class="formula-note">
+          <p><strong>Raw agreement</strong> is the share of matched items where both annotators chose the same rating.</p>
+          <p><strong>Expected agreement</strong> is the agreement we would expect by chance from each annotator's rating distribution.</p>
+          <p><strong>Cohen's kappa</strong> is calculated as: <code>kappa = (observed agreement - expected agreement) / (1 - expected agreement)</code>.</p>
+          <p>A kappa of <code>1</code> means perfect agreement. A kappa near <code>0</code> means agreement is close to chance. Negative values mean agreement is worse than chance.</p>
+        </div>
+      </section>
+
+      <section class="calculator-panel">
+        <h2>Disagreements</h2>
+        <div class="table-wrap">
+          <table id="disagreementTable">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Annotator 1</th>
+                <th>Annotator 2</th>
+                <th>Question / claim</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <script src="./kappa.js"></script>
+  </body>
+</html>

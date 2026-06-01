@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The RAG Kingdom — Adaptive Context Selection</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold:  #ffd700;
+  --sky:   #0d0d1f;
+  --panel: #0a0a1e;
+  --text:  #e8e8e8;
+  --dim:   #666;
+  --col:   #ffd700;
+}
+html, body {
+  width: 100%; height: 100%;
+  background: var(--sky);
+  font-family: 'Press Start 2P', monospace;
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* scanline overlay */
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
+  );
+}
+
+/* ── Root layout: sidebar + main ── */
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ── LEFT SIDEBAR ── */
+#sidebar {
+  width: 220px;
+  flex-shrink: 0;
+  background: #07071a;
+  border-right: 3px solid var(--col);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 10px 14px;
+  gap: 14px;
+  transition: border-color .3s;
+  position: relative;
+  overflow: hidden;
+}
+#sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, rgba(100,80,200,.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* portrait */
+#portrait-canvas {
+  width: 108px; height: 108px;
+  border: 3px solid var(--col);
+  background: #111133;
+  image-rendering: pixelated;
+  box-shadow: inset 0 0 18px rgba(0,0,0,.7), 0 0 18px var(--col);
+  transition: border-color .3s, box-shadow .3s;
+  flex-shrink: 0;
+}
+#portrait-label {
+  font-size: 5.5px;
+  color: var(--col);
+  text-align: center;
+  line-height: 1.8;
+  transition: color .3s;
+  max-width: 180px;
+}
+
+/* nav list */
+#nav-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+#nav-list::-webkit-scrollbar { display: none; }
+
+.nav-item {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #2a2a4a;
+  color: #888;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 4.5px;
+  padding: 7px 8px;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+  line-height: 1.7;
+  letter-spacing: .3px;
+}
+.nav-item:hover { background: rgba(255,255,255,.05); color: #ccc; border-color: #555; }
+.nav-item.active { background: rgba(255,215,0,.1); color: var(--col); border-color: var(--col); }
+
+#sidebar-footer {
+  font-size: 4px;
+  color: #333;
+  text-align: center;
+  line-height: 2;
+}
+
+/* ── MAIN CONTENT AREA ── */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  background: var(--sky);
+}
+
+/* background star field */
+#stars-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.star {
+  position: absolute; background: #fff; border-radius: 50%;
+  animation: twinkle var(--dur, 3s) ease-in-out infinite var(--del, 0s);
+}
+@keyframes twinkle {
+  0%,100%{opacity:.7;transform:scale(1)}
+  50%{opacity:.1;transform:scale(.5)}
+}
+
+/* top bar */
+#topbar {
+  position: relative; z-index: 2;
+  height: 42px;
+  background: rgba(7,7,26,.95);
+  border-bottom: 2px solid var(--col);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#topbar .title-main {
+  font-size: 7.5px;
+  color: var(--col);
+  text-shadow: 0 0 10px var(--col);
+  letter-spacing: 1px;
+}
+#topbar .title-sub {
+  font-size: 4.5px;
+  color: #888;
+  margin-left: auto;
+}
+
+/* content box */
+#content-box {
+  position: relative; z-index: 2;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 28px 40px 24px;
+  gap: 18px;
+  min-height: 0;
+}
+
+#section-title {
+  font-size: 11px;
+  color: var(--col);
+  text-shadow: 0 0 12px var(--col);
+  border-bottom: 2px solid var(--col);
+  padding-bottom: 10px;
+  transition: color .3s, border-color .3s, text-shadow .3s;
+  letter-spacing: .5px;
+  line-height: 1.6;
+}
+
+#slide-text {
+  font-size: 9.5px;
+  line-height: 2.4;
+  color: var(--text);
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+}
+.cursor {
+  display: inline-block;
+  width: 10px; height: 2px;
+  background: var(--col);
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: blink .7s step-start infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* bottom nav */
+#bottom-nav {
+  position: relative; z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 40px 20px;
+  flex-shrink: 0;
+}
+.btn {
+  background: transparent;
+  color: var(--col);
+  border: 2px solid var(--col);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  letter-spacing: .5px;
+}
+.btn:hover:not(:disabled) { background: var(--col); color: #000; }
+.btn:disabled { border-color: #2a2a4a; color: #2a2a4a; cursor: default; }
+
+#slide-counter {
+  font-size: 5.5px;
+  color: var(--dim);
+  flex: 1;
+  text-align: center;
+}
+
+/* decorative corner brackets on content-box */
+#content-box::before,
+#content-box::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border-color: var(--col);
+  border-style: solid;
+  opacity: .4;
+  transition: border-color .3s;
+}
+#content-box::before { top: 18px; left: 28px; border-width: 2px 0 0 2px; }
+#content-box::after  { bottom: 14px; right: 28px; border-width: 0 2px 2px 0; }
+
+/* welcome screen */
+#welcome {
+  position: absolute; inset: 0; z-index: 5;
+  background: var(--sky);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 22px;
+  text-align: center;
+  padding: 40px;
+}
+#welcome h1 { font-size: 14px; color: var(--gold); text-shadow: 0 0 20px var(--gold); }
+#welcome p  { font-size: 6px; color: #aaa; line-height: 2.4; max-width: 480px; }
+#welcome .hint { font-size: 5px; color: #555; animation: blink 1.5s step-start infinite; margin-top: 10px; }
+#welcome .authors { font-size: 4.5px; color: #666; line-height: 2.2; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <div id="sidebar">
+    <canvas id="portrait-canvas" width="108" height="108"></canvas>
+    <div id="portrait-label">SELECT A CHAPTER</div>
+    <div id="nav-list"></div>
+    <div id="sidebar-footer">← → ARROWS · ESC BACK</div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div id="main">
+    <div id="stars-bg"></div>
+
+    <!-- welcome screen shown on load -->
+    <div id="welcome">
+      <h1>⚔ THE RAG KINGDOM ⚔</h1>
+      <p>Adaptive Context Selection for Token-Efficient<br>Retrieval-Augmented Generation</p>
+      <div class="authors">
+        Andreia Alexa · Simon Backhaus Brudzewski · Karlis Martins Auce<br>
+        Joel Vazquez · Sheraz Ahmad
+      </div>
+      <div class="hint">▶ SELECT A CHAPTER FROM THE LEFT TO BEGIN ◀</div>
+    </div>
+
+    <div id="topbar">
+      <span class="title-main">⚔ THE RAG KINGDOM</span>
+      <span class="title-sub">Adaptive Context Selection for Token-Efficient RAG</span>
+    </div>
+
+    <div id="content-box">
+      <div id="section-title">—</div>
+      <div id="slide-text"></div>
+    </div>
+
+    <div id="bottom-nav">
+      <button class="btn" id="btn-prev" onclick="navigate(-1)" disabled>◄ PREV</button>
+      <span id="slide-counter">— / —</span>
+      <button class="btn" id="btn-next" onclick="navigate(1)" disabled>NEXT ►</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Pixel-art characters (24×24 grid, P=3 → 108×108 canvas) ──
+const P = 3;
+function r(ctx, x, y, w, h, c) {
+  ctx.fillStyle = c;
+  ctx.fillRect(x*P, y*P, w*P, h*P);
+}
+
+const CHARS = {
+  bard(ctx) {
+    r(ctx, 6,0, 12,1, '#aa1a1a');
+    r(ctx, 5,1, 14,3, '#cc2222');
+    r(ctx,18,0,  3,1, '#55cc33');
+    r(ctx,19,1,  2,2, '#44aa22');
+    r(ctx,20,2,  1,1, '#33881a');
+    r(ctx, 4,2,  3,2, '#7a3c0a');
+    r(ctx,17,2,  3,2, '#7a3c0a');
+    r(ctx, 4,4,  2,1, '#7a3c0a');
+    r(ctx,18,4,  2,1, '#7a3c0a');
+    r(ctx, 5,4, 14,6, '#f4c4a0');
+    r(ctx, 8,5,  2,2, '#4a2000');
+    r(ctx,14,5,  2,2, '#4a2000');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#d4a080');
+    r(ctx, 8,8,  2,1, '#cc5533');
+    r(ctx,14,8,  2,1, '#cc5533');
+    r(ctx,10,9,  4,1, '#cc5533');
+    r(ctx, 6,9,  2,1, '#e8b090');
+    r(ctx,16,9,  2,1, '#e8b090');
+    r(ctx, 2,10, 20,10, '#2d6a2d');
+    r(ctx,10,10,  4,2, '#f4c4a0');
+    r(ctx, 3,15, 18,2, '#c8a000');
+    r(ctx,10,15,  4,2, '#ffd700');
+    r(ctx,18,11,  5,6, '#a06030');
+    r(ctx,19,12,  3,4, '#c8904a');
+    r(ctx,20,10,  2,2, '#5a2000');
+    r(ctx, 5,20,  6,4, '#1a4a1a');
+    r(ctx,13,20,  6,4, '#1a4a1a');
+    r(ctx, 4,22,  7,2, '#3a1a00');
+    r(ctx,13,22,  7,2, '#3a1a00');
+  },
+  scholar(ctx) {
+    r(ctx, 7,0, 10,2, '#b0b0b0');
+    r(ctx, 5,1, 14,2, '#b0b0b0');
+    r(ctx, 4,2,  3,5, '#aaaaaa');
+    r(ctx,17,2,  3,5, '#aaaaaa');
+    r(ctx, 5,3, 14,7, '#e8b090');
+    r(ctx, 7,5,  4,2, '#888');
+    r(ctx,13,5,  4,2, '#888');
+    r(ctx, 8,5,  2,2, '#c8e8ff');
+    r(ctx,14,5,  2,2, '#c8e8ff');
+    r(ctx,11,5,  2,1, '#aaa');
+    r(ctx, 8,5,  2,1, '#2d2d2d');
+    r(ctx,14,5,  2,1, '#2d2d2d');
+    r(ctx,11,6,  2,2, '#d4a080');
+    r(ctx, 5,9, 14,2, '#c0c0c0');
+    r(ctx, 6,10, 12,2, '#d0d0d0');
+    r(ctx, 8,11,  8,1, '#d8d8d8');
+    r(ctx, 2,10, 20,13, '#1a2a6a');
+    r(ctx, 8,10,  8,2, '#c8a000');
+    r(ctx,11,10,  2,13, '#c8a000');
+    r(ctx,18,12,  5,5, '#8B5A1A');
+    r(ctx,18,12,  5,1, '#aa2222');
+    r(ctx,18,13,  5,3, '#f0e8d0');
+    r(ctx, 3,20, 18,3, '#131f52');
+    r(ctx, 5,22,  5,2, '#0a0a2a');
+    r(ctx,14,22,  5,2, '#0a0a2a');
+  },
+  alchemist(ctx) {
+    r(ctx, 4,0, 16,3, '#1e0e00');
+    r(ctx, 3,1,  3,3, '#2a1500');
+    r(ctx,18,1,  3,3, '#2a1500');
+    r(ctx, 5,2,  2,2, '#1e0e00');
+    r(ctx,17,2,  2,2, '#1e0e00');
+    r(ctx, 7,1,  4,2, '#3a7a3a');
+    r(ctx,13,1,  4,2, '#3a7a3a');
+    r(ctx, 9,1,  2,2, '#4a9a4a');
+    r(ctx,14,1,  2,2, '#4a9a4a');
+    r(ctx,11,2,  2,1, '#888');
+    r(ctx, 5,4, 14,6, '#f0c090');
+    r(ctx, 8,5,  2,2, '#2d7a00');
+    r(ctx,14,5,  2,2, '#2d7a00');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx, 9,9,  5,1, '#cc5533');
+    r(ctx,14,8,  2,1, '#cc5533');
+    r(ctx,16,6,  1,2, '#c09070');
+    r(ctx, 2,10, 20,12, '#8B5A1A');
+    r(ctx, 7,11, 10,8, '#e8e0c0');
+    r(ctx, 9,13,  2,2, '#4a9a3a');
+    r(ctx,14,15,  2,2, '#aa3300');
+    r(ctx,11,12,  1,1, '#3a3aaa');
+    r(ctx, 3,17, 18,2, '#3a1a00');
+    r(ctx,10,17,  4,2, '#c8a000');
+    r(ctx,19,12,  4,1, '#888');
+    r(ctx,20,13,  3,5, '#3a9a3a');
+    r(ctx,19,14,  5,3, '#4aaa4a');
+    r(ctx,20,17,  3,1, '#2a6a2a');
+    r(ctx, 5,20,  6,4, '#6a3a10');
+    r(ctx,13,20,  6,4, '#6a3a10');
+    r(ctx, 4,22,  7,2, '#2a1000');
+    r(ctx,13,22,  7,2, '#2a1000');
+  },
+  knight(ctx) {
+    r(ctx, 9,0,  6,1, '#4444cc');
+    r(ctx,10,1,  4,2, '#5555dd');
+    r(ctx,11,2,  2,1, '#6666ee');
+    r(ctx, 5,2, 14,2, '#c8c8c8');
+    r(ctx, 4,3, 16,5, '#d0d0d0');
+    r(ctx, 5,4, 14,4, '#c0c0c0');
+    r(ctx, 7,4, 10,2, '#1a1a2a');
+    r(ctx, 8,4,  3,1, '#4488ff');
+    r(ctx,13,4,  3,1, '#4488ff');
+    r(ctx, 7,7, 10,2, '#c8c8c8');
+    r(ctx, 9,8,  6,2, '#b8b8b8');
+    r(ctx, 2,10, 20,12, '#c0c0c0');
+    r(ctx, 2,10, 20,1, '#4444cc');
+    r(ctx,11,10,  2,12, '#4444cc');
+    r(ctx, 1,10,  4,4, '#d0d0d0');
+    r(ctx,19,10,  4,4, '#d0d0d0');
+    r(ctx, 0,10,  3,8, '#4444cc');
+    r(ctx, 0,12,  3,2, '#ffd700');
+    r(ctx, 1,10,  1,8, '#ffd700');
+    r(ctx,22,8,  2,14, '#c8c8c8');
+    r(ctx,21,10,  4,1, '#ffd700');
+    r(ctx, 5,22,  6,2, '#b0b0b0');
+    r(ctx,13,22,  6,2, '#b0b0b0');
+    r(ctx, 4,23,  8,1, '#c0c0c0');
+    r(ctx,12,23,  8,1, '#c0c0c0');
+  },
+  sorceress(ctx) {
+    r(ctx, 2,2,  4,20, '#d0d8f0');
+    r(ctx,18,2,  4,20, '#d0d8f0');
+    r(ctx, 3,2,  2,20, '#e0e8ff');
+    r(ctx,19,2,  2,18, '#e0e8ff');
+    r(ctx, 4,0, 16,3, '#d0d8f0');
+    r(ctx, 5,1, 14,3, '#e0e8ff');
+    r(ctx,10,0,  4,2, '#ffd700');
+    r(ctx,11,0,  2,1, '#ff88aa');
+    r(ctx, 5,3, 14,7, '#f4c4a0');
+    r(ctx, 8,5,  2,2, '#7733cc');
+    r(ctx,14,5,  2,2, '#7733cc');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#e0a888');
+    r(ctx, 9,8,  2,1, '#cc7766');
+    r(ctx,13,8,  2,1, '#cc7766');
+    r(ctx,11,9,  2,1, '#dd8877');
+    r(ctx, 4,10, 16,14, '#5b2d8e');
+    r(ctx, 3,12, 18,10, '#6535a0');
+    r(ctx, 8,10,  8,2, '#c8a000');
+    r(ctx, 9,10,  6,1, '#ffd700');
+    r(ctx, 6,14,  2,2, '#ffd700');
+    r(ctx,16,13,  2,2, '#ffd700');
+    r(ctx, 8,18,  2,2, '#ffd700');
+    r(ctx,14,17,  2,2, '#c8a000');
+    r(ctx, 1,6,  2,18, '#8b4513');
+    r(ctx, 0,5,  4,2, '#ffd700');
+    r(ctx, 1,4,  2,1, '#ff88ff');
+    r(ctx, 4,22, 16,2, '#7b3dbe');
+    r(ctx, 5,23, 14,1, '#c8a000');
+  }
+};
+
+function drawCharacter(type) {
+  const canvas = document.getElementById('portrait-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 108, 108);
+  ctx.fillStyle = '#111133';
+  ctx.fillRect(0, 0, 108, 108);
+  CHARS[type]?.(ctx);
+}
+
+function drawIdle() {
+  const canvas = document.getElementById('portrait-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 108, 108);
+  ctx.fillStyle = '#07071a';
+  ctx.fillRect(0, 0, 108, 108);
+  // question mark silhouette
+  ctx.fillStyle = '#2a2a4a';
+  ctx.font = 'bold 52px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('?', 54, 54);
+}
+
+// ── Section data ──────────────────────────────────────────────
+const SECTIONS = [
+  {
+    id: 'overview',
+    nav: '📜 THE QUEST',
+    name: 'ALDRIC THE HERALD', title: 'THE QUEST — OVERVIEW',
+    char: 'bard', color: '#ffd700',
+    slides: [
+      'Standard RAG pipelines retrieve the same 10 documents for every query and pass them all to the LLM. A query answered by one sentence pays the same token cost as a complex multi-hop task — wasteful and often harmful.',
+      'Safe Adaptive Context is a 3-stage pipeline: (1) predict a compact evidence budget per query using retrieval-score features, (2) compress each document to its most relevant sentences, (3) expand to full context only if the first answer is flagged as weak.',
+      'We evaluate 7 systems across 3 BEIR datasets — SciFact (claim verification), HotpotQA (multi-hop QA), BioASQ (biomedical factoid) — and 2 models: Mistral 7B (local, Ollama) and Llama-3.3-70B (hosted API).',
+      'Main result: 29–74% token reduction across all 6 dataset–model combinations. Answer quality is retained or improved in every case. Fallback triggers on only 0–5% of queries.'
+    ]
+  },
+  {
+    id: 'library',
+    nav: '📚 RELATED WORK',
+    name: 'ORYN THE SCHOLAR', title: 'RELATED WORK — THE ARCHIVES',
+    char: 'scholar', color: '#66aaff',
+    slides: [
+      'FLARE generates iteratively and retrieves only when the model expresses low confidence. Self-RAG uses learned reflection tokens to decide when to retrieve. Both require fine-tuning the generator — our method does not.',
+      'LLMLingua and Selective Context compress prompts using a second LM. RECOMP trains a summarisation model. Our n-gram neighbor selection is retrieval-side compression with no extra model calls.',
+      'Shi et al. (2023) show that irrelevant context actively degrades LLM output — especially in smaller models. We operationalise this: instead of compressing after retrieval, we limit what is transmitted to the generator in the first place.',
+      'Our method uses only retrieval-score features (score gaps, entropy, score mass) to predict query difficulty. No labeled training data. No fine-tuning. Adds microseconds of latency per query.'
+    ]
+  },
+  {
+    id: 'forge',
+    nav: '⚗️ THE SYSTEM',
+    name: 'THALRIC THE ALCHEMIST', title: 'SYSTEM — HOW IT WORKS',
+    char: 'alchemist', color: '#ff9944',
+    slides: [
+      'All methods share the same top-10 TF-IDF candidates. The retriever and the budget controller are fully decoupled — this isolates context selection as the single variable under study.',
+      'STAGE 1 — Budget prediction: a nearest-centroid classifier uses 6 retrieval-score features (top-1 score, score gaps, entropy, score concentration, query length) to select k ∈ {3, 5, 8} documents. Each document is trimmed to its highest-relevance sentence plus two neighbors.',
+      'STAGE 2 — Quality check (no gold labels): phrase triggers ("insufficient evidence", "unclear"), answer shorter than 4 tokens, or fewer than 15% of non-stopword answer tokens grounded in the evidence.',
+      'STAGE 3 — If flagged weak: re-query the LLM with full top-10 uncompressed context. If not flagged: return Stage 1 answer directly. Total cost = Stage 1 only, or Stage 1 + Stage 3 if fallback fires.'
+    ]
+  },
+  {
+    id: 'grounds',
+    nav: '⚔️ SETUP',
+    name: 'CAIUS THE KNIGHT', title: 'EXPERIMENTAL SETUP',
+    char: 'knight', color: '#44cc88',
+    slides: [
+      '3 BEIR benchmark datasets: SciFact (100 claim-verification queries), HotpotQA (100 multi-hop QA queries), BioASQ (100 biomedical factoid queries). 50-query dev split per dataset for calibration — never mixed with eval.',
+      'Mistral 7B runs locally via Ollama at temperature 0, max 80 completion tokens. Llama-3.3-70B-Instruct runs via hosted API with identical settings. Both accessed through an OpenAI-compatible interface.',
+      'Token counts are taken from provider API response fields only. Any run where the provider fails to return token usage is rejected. This ensures comparisons use actual billing units — not local estimates.',
+      '7 methods compared: No Retrieval, Fixed Top-3/5/7/10 (full documents), Heuristic Rules (score-gap thresholds), Safe Adaptive Context (main system). All share the same retrieved candidate set.'
+    ]
+  },
+  {
+    id: 'results',
+    nav: '📊 RESULTS',
+    name: 'CAIUS THE KNIGHT', title: 'MAIN RESULTS',
+    char: 'knight', color: '#ff7799',
+    slides: [
+      'SCIFACT: Safe Adaptive cuts tokens by 73.9% (Mistral) and 72.6% (Llama-70B). Answer F1 stays within 0.013 of Fixed Top-10. Fallback triggers on just 5% of queries. Fixed Top-10 is actually the worst method for Mistral (F1 = 0.204 vs 0.268 for Fixed Top-3).',
+      'HOTPOTQA: 29.6–30.6% token reduction. Safe Adaptive F1 with Mistral = 0.540, higher than Fixed Top-10\'s 0.516. Zero fallbacks triggered across both models — the system consistently produces adequate answers on the first pass.',
+      'BIOASQ: 48.3–52.3% token reduction. Safe Adaptive achieves the highest F1 of any method (Mistral: 0.339 vs Fixed Top-10: 0.257). As on SciFact, Fixed Top-10 is the worst method for Mistral due to context overload.',
+      'Key pattern: Fixed Top-10 hurts Mistral on 2 of 3 datasets but not Llama-70B. Larger models tolerate noisy prompts; 7B-scale models do not. Compact, targeted evidence helps smaller models most.'
+    ]
+  },
+  {
+    id: 'ablation',
+    nav: '🔬 ABLATION',
+    name: 'ORYN THE SCHOLAR', title: 'ABLATION STUDY',
+    char: 'scholar', color: '#bb66ff',
+    slides: [
+      'Adaptive budget predictor alone (no compression, no fallback) on SciFact / Llama-70B: 77.9% token reduction, 100.2% F1 retained vs Fixed Top-10. Already matches or exceeds quality at one-fifth of the token cost.',
+      'Adding n-gram neighbor compression: a further 10+ percentage points of reduction with F1 unchanged. Compact evidence keeps the LLM focused on relevant content rather than spreading attention across 10 full documents.',
+      'Safety fallback: only 4% of queries trigger it on SciFact. The fallback adds negligible average cost but prevents empty or incoherent answers on the hardest queries — the ones where a compact first pass genuinely fails.',
+      'Stacking effect (SciFact, Llama-70B): budget predictor alone = 67–78% reduction; adding compression = +10 pp; full Safe Adaptive = 73%. Each component contributes independently and additively.'
+    ]
+  },
+  {
+    id: 'oracle',
+    nav: '🔮 DISCUSSION',
+    name: 'LYARA THE SORCERESS', title: 'DISCUSSION',
+    char: 'sorceress', color: '#44dddd',
+    slides: [
+      'Token savings track evidence concentration by task. SciFact (1–2 key sentences per claim) saves 73–74%. HotpotQA (requires both supporting documents for multi-hop reasoning) saves only ~30%. BioASQ (short abstracts, high relevance) falls in between at 48–52%.',
+      'Smaller models degrade with noisy long prompts. On SciFact, Mistral Fixed Top-10 F1 is 24% lower than Fixed Top-3. On BioASQ, 26% lower than Fixed Top-5. Compact evidence partially fixes this — Safe Adaptive F1 exceeds Fixed Top-10 in 3 of 4 Mistral conditions.',
+      'Cross-encoder re-ranking improves nDCG@10 for Safe Adaptive on SciFact (0.560 → 0.624) without changing F1 or token efficiency. On BioASQ, sharper score distributions enable even larger savings (76.7% vs 52.3%). A better retriever amplifies the budget controller.',
+      'Key limitation: the budget predictor relies on TF-IDF score distributions as a proxy for query difficulty. When the gold document ranks low in retrieval, the predictor may commit to too small a budget. Fallback thresholds were set by inspection and may not transfer to new domains.'
+    ]
+  },
+  {
+    id: 'hall',
+    nav: '🏆 CONCLUSION',
+    name: 'ALDRIC THE HERALD', title: 'CONCLUSION & FUTURE WORK',
+    char: 'bard', color: '#ffd700',
+    slides: [
+      '29–74% token reduction across all 6 dataset–model combinations. Fallback rate 0–5%. No systematic drop in answer quality — F1 is retained or improved in every combination tested.',
+      'Ablation confirms each component is necessary: the budget predictor alone saves 67–78% of tokens; compression adds ~10 pp more; the fallback prevents failures on hard edge cases.',
+      'The method requires no fine-tuning, no additional model calls, and no external labeled data beyond the dev split used for centroid calibration. It deploys on top of any retriever and generator without modifying either.',
+      'Future quests: (1) evaluate with dense retrieval to improve gold-document coverage at small budgets, (2) calibrate fallback thresholds from human annotation labels, (3) test budget predictor generalisation to out-of-domain settings.'
+    ]
+  }
+];
+
+// ── State ─────────────────────────────────────────────────────
+let currentIdx = -1, slide = 0, tyTimer = null;
+
+// ── Build stars ───────────────────────────────────────────────
+function buildStars() {
+  const bg = document.getElementById('stars-bg');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div'); s.className = 'star';
+    const sz = Math.random() * 2 + 0.5;
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;
+      width:${sz}px;height:${sz}px;
+      --dur:${(Math.random()*4+2).toFixed(1)}s;
+      --del:-${(Math.random()*4).toFixed(1)}s;`;
+    bg.appendChild(s);
+  }
+}
+
+// ── Build nav list ────────────────────────────────────────────
+function buildNav() {
+  const list = document.getElementById('nav-list');
+  SECTIONS.forEach((sec, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-item';
+    btn.dataset.idx = i;
+    btn.textContent = sec.nav;
+    btn.style.setProperty('--col', sec.color);
+    btn.addEventListener('click', () => openSection(i));
+    list.appendChild(btn);
+  });
+}
+
+// ── Open section ──────────────────────────────────────────────
+function openSection(idx) {
+  currentIdx = idx; slide = 0;
+  document.getElementById('welcome').style.display = 'none';
+  document.querySelectorAll('.nav-item').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+    b.style.setProperty('--col', SECTIONS[i].color);
+  });
+  applyColor(SECTIONS[idx].color);
+  render();
+}
+
+function applyColor(col) {
+  document.documentElement.style.setProperty('--col', col);
+  document.getElementById('sidebar').style.borderColor = col;
+  document.getElementById('portrait-canvas').style.borderColor = col;
+  document.getElementById('portrait-canvas').style.boxShadow =
+    `inset 0 0 18px rgba(0,0,0,.7), 0 0 20px ${col}`;
+  document.getElementById('portrait-label').style.color = col;
+  document.getElementById('section-title').style.color = col;
+  document.getElementById('section-title').style.borderColor = col;
+  document.getElementById('section-title').style.textShadow = `0 0 12px ${col}`;
+  document.querySelectorAll('.btn').forEach(b => {
+    b.style.color = col; b.style.borderColor = col;
+  });
+  document.getElementById('topbar').style.borderColor = col;
+}
+
+function navigate(dir) {
+  if (currentIdx < 0) return;
+  const max = SECTIONS[currentIdx].slides.length - 1;
+  slide = Math.max(0, Math.min(max, slide + dir));
+  render();
+}
+
+function render() {
+  const sec = SECTIONS[currentIdx];
+  drawCharacter(sec.char);
+  document.getElementById('portrait-label').textContent = sec.name;
+  document.getElementById('section-title').textContent = sec.title;
+  document.getElementById('btn-prev').disabled = slide === 0;
+  document.getElementById('btn-next').disabled = slide === sec.slides.length - 1;
+  document.getElementById('slide-counter').textContent = `${slide + 1} / ${sec.slides.length}`;
+  typewrite(sec.slides[slide]);
+}
+
+function typewrite(text) {
+  clearTimeout(tyTimer);
+  const el = document.getElementById('slide-text');
+  el.textContent = '';
+  const cursor = document.createElement('span'); cursor.className = 'cursor';
+  el.appendChild(cursor);
+  let i = 0;
+  function tick() {
+    if (i < text.length) { cursor.before(text[i++]); tyTimer = setTimeout(tick, 14); }
+  }
+  tick();
+}
+
+// ── Init ──────────────────────────────────────────────────────
+buildStars();
+buildNav();
+drawIdle();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navigate(-1);
+  if (e.key === 'Escape' && currentIdx >= 0) {
+    currentIdx = -1;
+    document.getElementById('welcome').style.display = 'flex';
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('portrait-label').textContent = 'SELECT A CHAPTER';
+    document.getElementById('section-title').textContent = '—';
+    document.getElementById('slide-text').textContent = '';
+    document.getElementById('slide-counter').textContent = '— / —';
+    document.getElementById('btn-prev').disabled = true;
+    document.getElementById('btn-next').disabled = true;
+    drawIdle();
+    applyColor('#ffd700');
+  }
+});
+</script>
+</body>
+</html>

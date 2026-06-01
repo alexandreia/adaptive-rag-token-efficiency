@@ -286,7 +286,7 @@ brew install ollama
 Download/test Mistral:
 
 ```bash
-ollama run mistral "What is the capital of France?"
+ollama run mistral "What is the capital of Spain?"
 ```
 
 Install Python requirements:
@@ -384,11 +384,37 @@ The file for the report is:
 outputs/<run_name>/final_table.csv
 ```
 
+## Saved Results And Ablations
+
+Final saved result tables are kept in:
+
+```text
+saved_results/
+```
+
+The ablation section is:
+
+```text
+saved_results/ablation/
+```
+
+It contains:
+
+- `table_b_scifact_llama70b_component_ablation_25/`: Table B component ablation for Safe Adaptive Context.
+- `context_compression/`: compression-focused ablation across completed runs.
+
+Table B isolates the main parts of Safe Adaptive Context:
+
+- adaptive budget
+- compact evidence compression
+- fallback expansion
+
 ## What Each Important File Does
 
 | File | What It Does |
 |---|---|
 | `scripts/run_experiment.py` | Main script. Loads data, runs methods, writes tables |
+| `scripts/run_table_b_ablation.py` | Focused Table B component ablation script |
 | `src/adaptive_retrieval/data.py` | Reads `documents.jsonl` and `queries.jsonl` |
 | `src/adaptive_retrieval/text.py` | Tokenization, TF-IDF vectors, token estimates |
 | `src/adaptive_retrieval/retriever.py` | Retrieves top documents with TF-IDF cosine similarity |

@@ -1,0 +1,8 @@
+dataset,method,code_mode,ndcg_at_10,mrr_at_10,answer_f1,answer_coverage,semantic_similarity,f1_retained_vs_top10,semantic_similarity_retained_vs_top10,total_tokens,token_reduction_vs_top10,fallback_rate
+asqa_tfidf_finalsafe,No Retrieval,no_retrieval_full,0.0,0.0,0.203428,0.159347,0.387392,49.5%,49.3%,112.74,90.8%,0.0%
+asqa_tfidf_finalsafe,Fixed Top-3,fixed_3_full,0.701599,0.951667,0.397971,0.394838,0.771982,96.8%,98.2%,421.86,65.7%,0.0%
+asqa_tfidf_finalsafe,Fixed Top-5,fixed_5_full,0.795422,0.951667,0.404953,0.41721,0.783399,98.5%,99.6%,625.05,49.2%,0.0%
+asqa_tfidf_finalsafe,Fixed Top-7,fixed_7_full,0.835014,0.951667,0.407338,0.423125,0.790447,99.1%,100.5%,853.67,30.6%,0.0%
+asqa_tfidf_finalsafe,Fixed Top-10,fixed_10_full,0.852399,0.951667,0.410959,0.418503,0.786414,100.0%,100.0%,1229.47,0.0%,0.0%
+asqa_tfidf_finalsafe,Heuristic Rules,heuristic_rules_full,0.784885,0.951667,0.392896,0.414429,0.781811,95.6%,99.4%,629.01,48.8%,0.0%
+asqa_tfidf_finalsafe,Safe Adaptive Context,answer_aware_fallback,0.704741,0.951667,0.416842,0.41105,0.782406,101.4%,99.5%,503.41,59.1%,6.0%

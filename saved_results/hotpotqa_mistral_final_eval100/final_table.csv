@@ -1,0 +1,8 @@
+dataset,method,code_mode,ndcg_at_10,mrr_at_10,answer_f1,answer_coverage,semantic_similarity,f1_retained_vs_top10,semantic_similarity_retained_vs_top10,total_tokens,token_reduction_vs_top10,fallback_rate
+hotpotqa,No Retrieval,no_retrieval_full,0.0,0.0,0.291952,0.346667,0.307187,56.6%,58.0%,149.17,91.5%,0.0%
+hotpotqa,Fixed Top-3,fixed_3_full,0.613653,0.79,0.40996,0.476667,0.423649,79.4%,80.1%,545.28,69.1%,0.0%
+hotpotqa,Fixed Top-5,fixed_5_full,0.666689,0.806,0.466554,0.508333,0.475454,90.4%,89.8%,860.0,51.2%,0.0%
+hotpotqa,Fixed Top-7,fixed_7_full,0.707065,0.812429,0.507348,0.57,0.519214,98.3%,98.1%,1191.89,32.3%,0.0%
+hotpotqa,Fixed Top-10,fixed_10_full,0.74224,0.812429,0.516011,0.57641,0.529202,100.0%,100.0%,1761.82,0.0%,0.0%
+hotpotqa,Heuristic Rules,heuristic_rules_full,0.691003,0.809095,0.482015,0.563333,0.497302,93.4%,94.0%,1073.33,39.1%,0.0%
+hotpotqa,Safe Adaptive Context,answer_aware_fallback,0.74224,0.812429,0.539747,0.603333,0.553837,104.6%,104.7%,1239.94,29.6%,0.0%

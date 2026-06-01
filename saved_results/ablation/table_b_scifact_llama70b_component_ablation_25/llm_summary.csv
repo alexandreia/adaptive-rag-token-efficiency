@@ -1,0 +1,6 @@
+method_name,mode,docs_used,prompt_tokens,completion_tokens,total_tokens,token_reduction_vs_fixed_10,token_source,generation_time_ms,fallback_rate,first_pass_tokens,fallback_tokens,answer_f1,answer_coverage,semantic_similarity,ndcg_at_10,mrr_at_10
+Fixed Top-10,fixed_top10_full,10.0,3247.44,77.16,3324.6,0.0,provider,3428.8,0.0,0.0,0.0,0.247355,0.832051,0.488839,0.558136,0.510048
+Adaptive Compact Only,adaptive_compact_only,3.0,660.48,75.28,735.76,0.0,provider,3171.76,0.0,0.0,0.0,0.247956,0.808774,0.480824,0.484008,0.473333
+Adaptive Full Only,adaptive_full_only,3.0,1020.56,76.2,1096.76,0.0,provider,2916.76,0.0,0.0,0.0,0.239624,0.810804,0.485116,0.484008,0.473333
+Fixed Top-5 Compact + Fallback,fixed_top5_compact_fallback,5.0,1131.28,77.4,1208.68,0.0,provider,2884.92,0.04,1131.24,77.44,0.258336,0.831013,0.489237,0.532184,0.499333
+Full Safe Adaptive Context,full_safe_adaptive,3.0,701.6,78.8,780.4,0.0,provider,3326.84,0.04,736.08,44.32,0.247376,0.808461,0.477319,0.484008,0.473333

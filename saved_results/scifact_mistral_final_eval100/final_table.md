@@ -1,0 +1,9 @@
+| dataset | method | code_mode | ndcg_at_10 | mrr_at_10 | answer_f1 | answer_coverage | semantic_similarity | f1_retained_vs_top10 | semantic_similarity_retained_vs_top10 | total_tokens | token_reduction_vs_top10 | fallback_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| scifact | No Retrieval | no_retrieval_full | 0.0 | 0.0 | 0.304012 | 0.638218 | 0.450881 | 149.4% | 123.9% | 141.78 | 96.3% | 0.0% |
+| scifact | Fixed Top-3 | fixed_3_full | 0.560244 | 0.541667 | 0.267859 | 0.659386 | 0.439481 | 131.6% | 120.8% | 1323.35 | 65.0% | 0.0% |
+| scifact | Fixed Top-5 | fixed_5_full | 0.587142 | 0.557167 | 0.265123 | 0.675999 | 0.442579 | 130.3% | 121.6% | 2105.76 | 44.3% | 0.0% |
+| scifact | Fixed Top-7 | fixed_7_full | 0.596729 | 0.560262 | 0.26181 | 0.673588 | 0.439126 | 128.6% | 120.7% | 2897.9 | 23.4% | 0.0% |
+| scifact | Fixed Top-10 | fixed_10_full | 0.602129 | 0.562762 | 0.20353 | 0.544584 | 0.363887 | 100.0% | 100.0% | 3781.14 | 0.0% | 0.0% |
+| scifact | Heuristic Rules | heuristic_rules_full | 0.586836 | 0.556833 | 0.26454 | 0.668578 | 0.437337 | 130.0% | 120.2% | 2651.75 | 29.9% | 0.0% |
+| scifact | Safe Adaptive Context | answer_aware_fallback | 0.560244 | 0.541667 | 0.252913 | 0.646978 | 0.426009 | 124.3% | 117.1% | 985.01 | 73.9% | 5.0% |

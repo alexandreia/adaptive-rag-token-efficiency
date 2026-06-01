@@ -1,0 +1,1234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The RAG Kingdom — Adaptive Context Selection</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold:  #c9a84c;
+  --sky:   #0d0d1f;
+  --panel: #0a0a1e;
+  --text:  #d8d8d8;
+  --dim:   #666;
+  --col:   #c9a84c;
+}
+html, body {
+  width: 100%; height: 100%;
+  background: var(--sky);
+  font-family: 'Press Start 2P', monospace;
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* scanline overlay */
+body::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  background: repeating-linear-gradient(
+    0deg, transparent, transparent 3px,
+    rgba(0,0,0,0.06) 3px, rgba(0,0,0,0.06) 4px
+  );
+}
+
+/* ── Root layout: sidebar + main ── */
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ── LEFT SIDEBAR ── */
+#sidebar {
+  width: 305px;
+  flex-shrink: 0;
+  background: #07071a;
+  border-right: 3px solid var(--col);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 14px 16px;
+  gap: 16px;
+  transition: border-color .3s;
+  position: relative;
+  overflow: hidden;
+}
+#sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, rgba(100,80,200,.12) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* portrait */
+#portrait-canvas {
+  width: 158px; height: 158px;
+  border: 3px solid var(--col);
+  background: #111133;
+  image-rendering: pixelated;
+  box-shadow: inset 0 0 18px rgba(0,0,0,.7), 0 0 18px var(--col);
+  transition: border-color .3s, box-shadow .3s;
+  flex-shrink: 0;
+}
+#portrait-label {
+  font-size: 6.8px;
+  color: var(--col);
+  text-align: center;
+  line-height: 1.8;
+  transition: color .3s;
+  max-width: 230px;
+}
+
+/* nav list */
+#nav-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+#nav-list::-webkit-scrollbar { display: none; }
+
+.nav-item {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #2a2a4a;
+  color: #888;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8.4px;
+  padding: 14px 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+  line-height: 1.75;
+  letter-spacing: .3px;
+}
+.nav-item:hover { background: rgba(255,255,255,.05); color: #ccc; border-color: #555; }
+.nav-item.active { background: rgba(255,215,0,.1); color: var(--col); border-color: var(--col); }
+
+#sidebar-footer {
+  font-size: 4.8px;
+  color: #333;
+  text-align: center;
+  line-height: 2;
+}
+
+/* ── MAIN CONTENT AREA ── */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  background: var(--sky);
+}
+
+/* background star field */
+#stars-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.star {
+  position: absolute; background: #fff; border-radius: 50%;
+  animation: twinkle var(--dur, 3s) ease-in-out infinite var(--del, 0s);
+}
+@keyframes twinkle {
+  0%,100%{opacity:.7;transform:scale(1)}
+  50%{opacity:.1;transform:scale(.5)}
+}
+
+/* top bar */
+#topbar {
+  position: relative; z-index: 2;
+  height: 54px;
+  background: rgba(7,7,26,.95);
+  border-bottom: 2px solid var(--col);
+  display: flex;
+  align-items: center;
+  padding: 0 34px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#topbar .title-main {
+  font-size: 8.5px;
+  color: var(--col);
+  text-shadow: none;
+  letter-spacing: 1px;
+}
+#topbar .title-sub {
+  font-size: 5px;
+  color: #888;
+  margin-left: auto;
+}
+
+/* content box */
+#content-box {
+  position: relative; z-index: 2;
+  flex: 1;
+  width: min(1380px, calc(100% - 96px));
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 38px 0 34px;
+  gap: 24px;
+  min-height: 0;
+}
+
+#section-title {
+  font-size: 15px;
+  color: var(--col);
+  text-shadow: none;
+  border-bottom: 1px solid rgba(201,168,76,.4);
+  padding-bottom: 14px;
+  transition: color .3s, border-color .3s;
+  letter-spacing: .5px;
+  line-height: 1.6;
+}
+
+#slide-text {
+  font-size: 12.5px;
+  line-height: 2.35;
+  color: var(--text);
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  display: block;
+  padding-top: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--col) #111133;
+}
+#slide-text .slide-inner {
+  width: 100%;
+}
+.slide-para {
+  margin-bottom: 22px;
+  line-height: 2.35;
+}
+.slide-block {
+  margin-bottom: 28px;
+}
+.slide-para:last-child, .slide-block:last-child { margin-bottom: 0; }
+#slide-text::-webkit-scrollbar { width: 8px; height: 8px; }
+#slide-text::-webkit-scrollbar-thumb { background: var(--col); }
+#slide-text::-webkit-scrollbar-track { background: #111133; }
+#slide-text .kicker {
+  display: block;
+  color: var(--col);
+  font-size: 7.8px;
+  line-height: 2;
+  margin-bottom: 12px;
+}
+#slide-text .big-line {
+  display: block;
+  color: var(--col);
+  font-size: 24px;
+  line-height: 1.8;
+  text-shadow: none;
+  margin-bottom: 20px;
+}
+#slide-text .small {
+  color: #aaa;
+  font-size: 9px;
+  line-height: 2.2;
+}
+#slide-text ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#slide-text li {
+  margin-bottom: 10px;
+}
+#slide-text li::before {
+  content: ">";
+  color: var(--col);
+  margin-right: 8px;
+}
+.pipeline-map {
+  height: 500px;
+  margin-top: 14px;
+  position: relative;
+}
+.pipeline-step {
+  border: 2px solid rgba(102,170,255,.45);
+  background:
+    linear-gradient(180deg, rgba(102,170,255,.13), rgba(255,255,255,.025)),
+    rgba(10,10,30,.72);
+  padding: 16px 18px;
+  min-height: 104px;
+  position: absolute;
+  width: 30%;
+  box-shadow: inset 0 0 18px rgba(0,0,0,.55), 0 0 16px rgba(102,170,255,.12);
+  overflow: hidden;
+}
+.pipeline-step::before {
+  content: "";
+  position: absolute;
+  inset: 8px auto auto 8px;
+  width: 13px;
+  height: 13px;
+  border-style: solid;
+  border-color: var(--col);
+  border-width: 2px 0 0 2px;
+  opacity: .6;
+}
+.pipeline-step::after {
+  content: "";
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  width: 10px;
+  height: 10px;
+  border-style: solid;
+  border-color: var(--col);
+  border-width: 0 2px 2px 0;
+  opacity: .45;
+}
+.pipeline-step.p1 { left: 0; top: 0; }
+.pipeline-step.p2 { left: 35%; top: 0; }
+.pipeline-step.p3 { right: 0; top: 0; }
+.pipeline-step.p4 { right: 0; top: 192px; }
+.pipeline-step.p5 { left: 35%; top: 192px; }
+.pipeline-step.p6 { left: 0; top: 192px; }
+.pipeline-step.p7 { left: 0; top: 384px; }
+.pipeline-step.p8 { left: 35%; top: 384px; }
+.pipeline-step.p9 { right: 0; top: 384px; }
+.pipeline-step.result {
+  border-color: rgba(125,255,178,.5);
+  background:
+    linear-gradient(180deg, rgba(125,255,178,.10), rgba(255,255,255,.025)),
+    rgba(10,10,30,.72);
+}
+.pipeline-step .num {
+  display: block;
+  color: var(--col);
+  font-size: 7.6px;
+  line-height: 1.8;
+  margin-bottom: 6px;
+  padding-left: 24px;
+}
+.pipeline-step .label {
+  display: block;
+  color: #f2f2f2;
+  font-size: 12.2px;
+  line-height: 1.75;
+  margin-bottom: 8px;
+}
+.pipeline-step .desc {
+  display: block;
+  color: #aaa;
+  font-size: 6.8px;
+  line-height: 1.9;
+}
+.map-route {
+  position: absolute;
+  z-index: -1;
+  border-color: rgba(102,170,255,.75);
+  filter: drop-shadow(0 0 8px rgba(102,170,255,.35));
+}
+.map-route.h {
+  height: 0;
+  border-top: 3px dashed rgba(102,170,255,.75);
+}
+.map-route.v {
+  width: 0;
+  border-left: 3px dashed rgba(102,170,255,.75);
+}
+.map-route.green { border-color: rgba(125,255,178,.72); }
+.r12 { left: 30%; top: 52px; width: 5%; }
+.r23 { left: 65%; top: 52px; width: 5%; }
+.r34 { right: 15%; top: 104px; height: 88px; }
+.r45 { left: 65%; top: 244px; width: 5%; }
+.r56 { left: 30%; top: 244px; width: 5%; }
+.r67 { left: 15%; top: 296px; height: 88px; }
+.r78 { left: 30%; top: 436px; width: 5%; }
+.r89 { left: 65%; top: 436px; width: 5%; }
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.4px;
+  line-height: 2.12;
+  margin-top: 18px;
+}
+.result-table th,
+.result-table td {
+  border: 1px solid #343454;
+  padding: 16px 17px;
+  text-align: left;
+  vertical-align: top;
+}
+.result-table th {
+  color: var(--col);
+  background: rgba(255,255,255,.04);
+  font-weight: normal;
+}
+.result-table td.num { text-align: right; white-space: nowrap; }
+.result-table .good { color: #5db88a; }
+.result-table .warn { color: #c98844; }
+.slide-note {
+  margin-top: 12px;
+  color: #aaa;
+  font-size: 9.5px;
+  line-height: 2.1;
+}
+.prompt-example {
+  display: block;
+  margin-top: 16px;
+  color: #d8d8d8;
+  font-size: 13.2px;
+  line-height: 2.25;
+  white-space: pre-wrap;
+}
+.cursor {
+  display: inline-block;
+  width: 10px; height: 2px;
+  background: var(--col);
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: blink .7s step-start infinite;
+  flex: 0 0 auto;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+/* bottom nav */
+#bottom-nav {
+  position: relative; z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 40px 20px;
+  flex-shrink: 0;
+}
+.btn {
+  background: transparent;
+  color: var(--col);
+  border: 2px solid var(--col);
+  font-family: 'Press Start 2P', monospace;
+  font-size: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  letter-spacing: .5px;
+}
+.btn:hover:not(:disabled) { background: var(--col); color: #000; }
+.btn:disabled { border-color: #2a2a4a; color: #2a2a4a; cursor: default; }
+
+#slide-counter {
+  font-size: 5.5px;
+  color: var(--dim);
+  flex: 1;
+  text-align: center;
+}
+
+/* decorative corner brackets on content-box */
+#content-box::before,
+#content-box::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border-color: var(--col);
+  border-style: solid;
+  opacity: .4;
+  transition: border-color .3s;
+}
+#content-box::before { top: 18px; left: 28px; border-width: 2px 0 0 2px; }
+#content-box::after  { bottom: 14px; right: 28px; border-width: 0 2px 2px 0; }
+
+/* welcome screen */
+#welcome {
+  position: absolute; inset: 0; z-index: 5;
+  background: var(--sky);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  text-align: center;
+  padding: 40px;
+}
+#welcome h1 { font-size: 30px; color: var(--gold); text-shadow: none; line-height: 1.65; }
+#welcome p  { font-size: 13px; color: #aaa; line-height: 2.35; max-width: 900px; }
+#welcome .hint { font-size: 9.5px; color: #777; animation: blink 1.5s step-start infinite; margin-top: 18px; }
+#welcome .authors { font-size: 8.7px; color: #777; line-height: 2.25; }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <div id="sidebar">
+    <canvas id="portrait-canvas" width="108" height="108"></canvas>
+    <div id="portrait-label">SELECT A CHAPTER</div>
+    <div id="nav-list"></div>
+    <div id="sidebar-footer">← → ARROWS · ESC BACK · F FULLSCREEN</div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div id="main">
+    <div id="stars-bg"></div>
+
+    <!-- welcome screen shown on load -->
+    <div id="welcome">
+      <h1>⚔ THE RAG KINGDOM ⚔</h1>
+      <p>Adaptive Context Selection for Token-Efficient<br>Retrieval-Augmented Generation</p>
+      <div class="authors">
+        Andreia Alexa · Simon Backhaus Brudzewski · Karlis Martins Auce<br>
+        Joel Vazquez · Sheraz Ahmad
+      </div>
+      <div class="hint">▶ SELECT A CHAPTER FROM THE LEFT TO BEGIN ◀</div>
+      <button class="btn" id="btn-fullscreen" onclick="toggleFullscreen()" style="margin-top:8px;font-size:7px;padding:10px 22px;">⛶ ENTER FULLSCREEN [F]</button>
+    </div>
+
+    <div id="topbar">
+      <span class="title-main">⚔ THE RAG KINGDOM</span>
+      <span class="title-sub">Adaptive Context Selection for Token-Efficient RAG</span>
+    </div>
+
+    <div id="content-box">
+      <div id="section-title">—</div>
+      <div id="slide-text"></div>
+    </div>
+
+    <div id="bottom-nav">
+      <button class="btn" id="btn-prev" onclick="navigate(-1)" disabled>◄ PREV</button>
+      <span id="slide-counter">— / —</span>
+      <button class="btn" id="btn-next" onclick="navigate(1)" disabled>NEXT ►</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Pixel-art characters (24×24 grid, P=3 → 108×108 canvas) ──
+const P = 3;
+function r(ctx, x, y, w, h, c) {
+  ctx.fillStyle = c;
+  ctx.fillRect(x*P, y*P, w*P, h*P);
+}
+
+const CHARS = {
+  bard(ctx) {
+    r(ctx, 6,0, 12,1, '#aa1a1a');
+    r(ctx, 5,1, 14,3, '#cc2222');
+    r(ctx,18,0,  3,1, '#55cc33');
+    r(ctx,19,1,  2,2, '#44aa22');
+    r(ctx,20,2,  1,1, '#33881a');
+    r(ctx, 4,2,  3,2, '#7a3c0a');
+    r(ctx,17,2,  3,2, '#7a3c0a');
+    r(ctx, 4,4,  2,1, '#7a3c0a');
+    r(ctx,18,4,  2,1, '#7a3c0a');
+    r(ctx, 5,4, 14,6, '#f4c4a0');
+    r(ctx, 8,5,  2,2, '#4a2000');
+    r(ctx,14,5,  2,2, '#4a2000');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#d4a080');
+    r(ctx, 8,8,  2,1, '#cc5533');
+    r(ctx,14,8,  2,1, '#cc5533');
+    r(ctx,10,9,  4,1, '#cc5533');
+    r(ctx, 6,9,  2,1, '#e8b090');
+    r(ctx,16,9,  2,1, '#e8b090');
+    r(ctx, 2,10, 20,10, '#2d6a2d');
+    r(ctx,10,10,  4,2, '#f4c4a0');
+    r(ctx, 3,15, 18,2, '#c8a000');
+    r(ctx,10,15,  4,2, '#ffd700');
+    r(ctx,18,11,  5,6, '#a06030');
+    r(ctx,19,12,  3,4, '#c8904a');
+    r(ctx,20,10,  2,2, '#5a2000');
+    r(ctx, 5,20,  6,4, '#1a4a1a');
+    r(ctx,13,20,  6,4, '#1a4a1a');
+    r(ctx, 4,22,  7,2, '#3a1a00');
+    r(ctx,13,22,  7,2, '#3a1a00');
+  },
+  scholar(ctx) {
+    r(ctx, 7,0, 10,2, '#b0b0b0');
+    r(ctx, 5,1, 14,2, '#b0b0b0');
+    r(ctx, 4,2,  3,5, '#aaaaaa');
+    r(ctx,17,2,  3,5, '#aaaaaa');
+    r(ctx, 5,3, 14,7, '#e8b090');
+    r(ctx, 7,5,  4,2, '#888');
+    r(ctx,13,5,  4,2, '#888');
+    r(ctx, 8,5,  2,2, '#c8e8ff');
+    r(ctx,14,5,  2,2, '#c8e8ff');
+    r(ctx,11,5,  2,1, '#aaa');
+    r(ctx, 8,5,  2,1, '#2d2d2d');
+    r(ctx,14,5,  2,1, '#2d2d2d');
+    r(ctx,11,6,  2,2, '#d4a080');
+    r(ctx, 5,9, 14,2, '#c0c0c0');
+    r(ctx, 6,10, 12,2, '#d0d0d0');
+    r(ctx, 8,11,  8,1, '#d8d8d8');
+    r(ctx, 2,10, 20,13, '#1a2a6a');
+    r(ctx, 8,10,  8,2, '#c8a000');
+    r(ctx,11,10,  2,13, '#c8a000');
+    r(ctx,18,12,  5,5, '#8B5A1A');
+    r(ctx,18,12,  5,1, '#aa2222');
+    r(ctx,18,13,  5,3, '#f0e8d0');
+    r(ctx, 3,20, 18,3, '#131f52');
+    r(ctx, 5,22,  5,2, '#0a0a2a');
+    r(ctx,14,22,  5,2, '#0a0a2a');
+  },
+  alchemist(ctx) {
+    r(ctx, 4,0, 16,3, '#1e0e00');
+    r(ctx, 3,1,  3,3, '#2a1500');
+    r(ctx,18,1,  3,3, '#2a1500');
+    r(ctx, 5,2,  2,2, '#1e0e00');
+    r(ctx,17,2,  2,2, '#1e0e00');
+    r(ctx, 7,1,  4,2, '#3a7a3a');
+    r(ctx,13,1,  4,2, '#3a7a3a');
+    r(ctx, 9,1,  2,2, '#4a9a4a');
+    r(ctx,14,1,  2,2, '#4a9a4a');
+    r(ctx,11,2,  2,1, '#888');
+    r(ctx, 5,4, 14,6, '#f0c090');
+    r(ctx, 8,5,  2,2, '#2d7a00');
+    r(ctx,14,5,  2,2, '#2d7a00');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx, 9,9,  5,1, '#cc5533');
+    r(ctx,14,8,  2,1, '#cc5533');
+    r(ctx,16,6,  1,2, '#c09070');
+    r(ctx, 2,10, 20,12, '#8B5A1A');
+    r(ctx, 7,11, 10,8, '#e8e0c0');
+    r(ctx, 9,13,  2,2, '#4a9a3a');
+    r(ctx,14,15,  2,2, '#aa3300');
+    r(ctx,11,12,  1,1, '#3a3aaa');
+    r(ctx, 3,17, 18,2, '#3a1a00');
+    r(ctx,10,17,  4,2, '#c8a000');
+    r(ctx,19,12,  4,1, '#888');
+    r(ctx,20,13,  3,5, '#3a9a3a');
+    r(ctx,19,14,  5,3, '#4aaa4a');
+    r(ctx,20,17,  3,1, '#2a6a2a');
+    r(ctx, 5,20,  6,4, '#6a3a10');
+    r(ctx,13,20,  6,4, '#6a3a10');
+    r(ctx, 4,22,  7,2, '#2a1000');
+    r(ctx,13,22,  7,2, '#2a1000');
+  },
+  knight(ctx) {
+    r(ctx, 9,0,  6,1, '#4444cc');
+    r(ctx,10,1,  4,2, '#5555dd');
+    r(ctx,11,2,  2,1, '#6666ee');
+    r(ctx, 5,2, 14,2, '#c8c8c8');
+    r(ctx, 4,3, 16,5, '#d0d0d0');
+    r(ctx, 5,4, 14,4, '#c0c0c0');
+    r(ctx, 7,4, 10,2, '#1a1a2a');
+    r(ctx, 8,4,  3,1, '#4488ff');
+    r(ctx,13,4,  3,1, '#4488ff');
+    r(ctx, 7,7, 10,2, '#c8c8c8');
+    r(ctx, 9,8,  6,2, '#b8b8b8');
+    r(ctx, 2,10, 20,12, '#c0c0c0');
+    r(ctx, 2,10, 20,1, '#4444cc');
+    r(ctx,11,10,  2,12, '#4444cc');
+    r(ctx, 1,10,  4,4, '#d0d0d0');
+    r(ctx,19,10,  4,4, '#d0d0d0');
+    r(ctx, 0,10,  3,8, '#4444cc');
+    r(ctx, 0,12,  3,2, '#ffd700');
+    r(ctx, 1,10,  1,8, '#ffd700');
+    r(ctx,22,8,  2,14, '#c8c8c8');
+    r(ctx,21,10,  4,1, '#ffd700');
+    r(ctx, 5,22,  6,2, '#b0b0b0');
+    r(ctx,13,22,  6,2, '#b0b0b0');
+    r(ctx, 4,23,  8,1, '#c0c0c0');
+    r(ctx,12,23,  8,1, '#c0c0c0');
+  },
+  sorceress(ctx) {
+    r(ctx, 2,2,  4,20, '#d0d8f0');
+    r(ctx,18,2,  4,20, '#d0d8f0');
+    r(ctx, 3,2,  2,20, '#e0e8ff');
+    r(ctx,19,2,  2,18, '#e0e8ff');
+    r(ctx, 4,0, 16,3, '#d0d8f0');
+    r(ctx, 5,1, 14,3, '#e0e8ff');
+    r(ctx,10,0,  4,2, '#ffd700');
+    r(ctx,11,0,  2,1, '#ff88aa');
+    r(ctx, 5,3, 14,7, '#f4c4a0');
+    r(ctx, 8,5,  2,2, '#7733cc');
+    r(ctx,14,5,  2,2, '#7733cc');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#e0a888');
+    r(ctx, 9,8,  2,1, '#cc7766');
+    r(ctx,13,8,  2,1, '#cc7766');
+    r(ctx,11,9,  2,1, '#dd8877');
+    r(ctx, 4,10, 16,14, '#5b2d8e');
+    r(ctx, 3,12, 18,10, '#6535a0');
+    r(ctx, 8,10,  8,2, '#c8a000');
+    r(ctx, 9,10,  6,1, '#ffd700');
+    r(ctx, 6,14,  2,2, '#ffd700');
+    r(ctx,16,13,  2,2, '#ffd700');
+    r(ctx, 8,18,  2,2, '#ffd700');
+    r(ctx,14,17,  2,2, '#c8a000');
+    r(ctx, 1,6,  2,18, '#8b4513');
+    r(ctx, 0,5,  4,2, '#ffd700');
+    r(ctx, 1,4,  2,1, '#ff88ff');
+    r(ctx, 4,22, 16,2, '#7b3dbe');
+    r(ctx, 5,23, 14,1, '#c8a000');
+  },
+  ranger(ctx) {
+    r(ctx, 6,0, 12,3, '#2f7d32');
+    r(ctx, 4,2, 16,3, '#3f9d42');
+    r(ctx, 8,0,  8,1, '#66cc66');
+    r(ctx, 5,4, 14,6, '#d8a070');
+    r(ctx, 7,5,  3,2, '#2b1a00');
+    r(ctx,14,5,  3,2, '#2b1a00');
+    r(ctx, 8,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#b87850');
+    r(ctx, 9,9,  6,1, '#7a2a1a');
+    r(ctx, 3,10, 18,12, '#2e6b2e');
+    r(ctx, 5,12, 14,2, '#4a8f35');
+    r(ctx, 9,10,  6,3, '#d8a070');
+    r(ctx, 2,12,  3,8, '#8b5a2b');
+    r(ctx,19,11,  2,12, '#c48a3a');
+    r(ctx,20,10,  1,2, '#f4d060');
+    r(ctx,21,9,   1,1, '#f4d060');
+    r(ctx, 6,20,  5,4, '#1c4b1c');
+    r(ctx,13,20,  5,4, '#1c4b1c');
+    r(ctx, 5,23,  7,1, '#4b2a12');
+    r(ctx,13,23,  7,1, '#4b2a12');
+  },
+  cartographer(ctx) {
+    r(ctx, 5,1, 14,3, '#8b5a2b');
+    r(ctx, 4,3, 16,2, '#a66a2a');
+    r(ctx, 6,4, 12,6, '#e0b080');
+    r(ctx, 8,5,  2,2, '#1e1e1e');
+    r(ctx,14,5,  2,2, '#1e1e1e');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#c48a70');
+    r(ctx, 9,9,  6,1, '#7a3322');
+    r(ctx, 2,10, 20,13, '#244b7a');
+    r(ctx, 5,11, 14,9, '#e4d6a7');
+    r(ctx, 6,12, 12,1, '#a88f55');
+    r(ctx, 6,15, 12,1, '#a88f55');
+    r(ctx, 6,18, 12,1, '#a88f55');
+    r(ctx, 8,13,  2,2, '#44aa66');
+    r(ctx,14,16,  3,2, '#4488cc');
+    r(ctx,11,14,  1,5, '#cc8844');
+    r(ctx, 2,13,  4,3, '#244b7a');
+    r(ctx,18,12,  5,4, '#b8874d');
+    r(ctx, 6,22,  5,2, '#1b3152');
+    r(ctx,13,22,  5,2, '#1b3152');
+  },
+  oracle(ctx) {
+    r(ctx, 4,0, 16,4, '#202060');
+    r(ctx, 6,1, 12,3, '#303090');
+    r(ctx,10,0,  4,2, '#ffd700');
+    r(ctx, 5,4, 14,6, '#f0c098');
+    r(ctx, 7,5,  4,2, '#222255');
+    r(ctx,13,5,  4,2, '#222255');
+    r(ctx, 8,5,  2,2, '#b8ffff');
+    r(ctx,14,5,  2,2, '#b8ffff');
+    r(ctx,11,7,  2,1, '#d8a078');
+    r(ctx, 9,9,  6,1, '#aa5566');
+    r(ctx, 3,10, 18,14, '#2430a0');
+    r(ctx, 5,12, 14,9, '#3038c0');
+    r(ctx,11,10,  2,13, '#ffd700');
+    r(ctx, 7,13,  2,2, '#ffd700');
+    r(ctx,16,15,  2,2, '#ffd700');
+    r(ctx, 9,18,  6,2, '#151550');
+    r(ctx, 1,6,   2,17, '#6b3fb0');
+    r(ctx, 0,5,   4,2, '#b8ffff');
+    r(ctx, 1,4,   2,1, '#ffffff');
+  },
+  engineer(ctx) {
+    r(ctx, 5,0, 14,4, '#6a6a6a');
+    r(ctx, 4,2, 16,2, '#888888');
+    r(ctx, 7,1,  3,2, '#ffcc33');
+    r(ctx,14,1,  3,2, '#ffcc33');
+    r(ctx, 5,4, 14,6, '#d89a72');
+    r(ctx, 7,5,  4,2, '#333333');
+    r(ctx,13,5,  4,2, '#333333');
+    r(ctx, 8,5,  2,2, '#99ddff');
+    r(ctx,14,5,  2,2, '#99ddff');
+    r(ctx,11,7,  2,1, '#b87850');
+    r(ctx, 9,9,  6,1, '#7a2a1a');
+    r(ctx, 2,10, 20,12, '#5b5b5b');
+    r(ctx, 4,12, 16,7, '#777777');
+    r(ctx, 7,13,  3,3, '#ffcc33');
+    r(ctx,14,13,  3,3, '#ffcc33');
+    r(ctx,11,10,  2,12, '#ffcc33');
+    r(ctx,20,11,  3,8, '#9a5a2a');
+    r(ctx,21,10,  2,2, '#c0c0c0');
+    r(ctx, 6,21,  5,3, '#3a3a3a');
+    r(ctx,13,21,  5,3, '#3a3a3a');
+  },
+  cleric(ctx) {
+    r(ctx, 7,0, 10,2, '#f2e8c8');
+    r(ctx, 6,2, 12,3, '#e8d8a8');
+    r(ctx, 5,4, 14,6, '#f0c090');
+    r(ctx, 8,5,  2,2, '#3a2a1a');
+    r(ctx,14,5,  2,2, '#3a2a1a');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#c09070');
+    r(ctx, 9,9,  6,1, '#9a4a40');
+    r(ctx, 3,10, 18,14, '#f0e8c8');
+    r(ctx, 5,11, 14,11, '#fff2d0');
+    r(ctx,11,10,  2,13, '#c8a000');
+    r(ctx, 8,14,  8,2, '#c8a000');
+    r(ctx, 2,12,  3,6, '#f0e8c8');
+    r(ctx,19,12,  3,6, '#f0e8c8');
+    r(ctx, 0,10,  2,13, '#8b6b2b');
+    r(ctx, 0,9,   3,2, '#ffd700');
+    r(ctx, 6,22,  5,2, '#d0c090');
+    r(ctx,13,22,  5,2, '#d0c090');
+  },
+  merchant(ctx) {
+    r(ctx, 5,0, 14,3, '#7a1a5a');
+    r(ctx, 4,2, 16,3, '#9a2a7a');
+    r(ctx, 8,1,  8,1, '#ffd700');
+    r(ctx, 5,4, 14,6, '#e0a878');
+    r(ctx, 8,5,  2,2, '#2a1600');
+    r(ctx,14,5,  2,2, '#2a1600');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#c08868');
+    r(ctx, 8,9,  8,1, '#7a2a1a');
+    r(ctx, 2,10, 20,12, '#7a1a5a');
+    r(ctx, 5,12, 14,4, '#9a2a7a');
+    r(ctx, 6,16, 12,3, '#ffd700');
+    r(ctx, 9,16,  2,3, '#fff0a0');
+    r(ctx,14,16,  2,3, '#fff0a0');
+    r(ctx,19,12,  4,6, '#8b5a2b');
+    r(ctx,20,13,  2,4, '#c09050');
+    r(ctx, 6,21,  5,3, '#4a1038');
+    r(ctx,13,21,  5,3, '#4a1038');
+  },
+  scribe(ctx) {
+    r(ctx, 6,0, 12,2, '#4a2a10');
+    r(ctx, 5,2, 14,3, '#6a3a18');
+    r(ctx, 4,4, 16,3, '#7a4a20');
+    r(ctx, 5,4, 14,6, '#e8b080');
+    r(ctx, 7,5,  4,2, '#303030');
+    r(ctx,13,5,  4,2, '#303030');
+    r(ctx, 8,5,  2,2, '#d8f0ff');
+    r(ctx,14,5,  2,2, '#d8f0ff');
+    r(ctx,11,7,  2,1, '#c08868');
+    r(ctx, 9,9,  6,1, '#8a3a2a');
+    r(ctx, 2,10, 20,13, '#5a3a20');
+    r(ctx, 5,11, 14,9, '#f0e0b0');
+    r(ctx, 6,12, 12,1, '#9a7a40');
+    r(ctx, 6,14, 10,1, '#9a7a40');
+    r(ctx, 6,16, 12,1, '#9a7a40');
+    r(ctx, 6,18,  8,1, '#9a7a40');
+    r(ctx,19,11,  4,2, '#d0d0d0');
+    r(ctx,20,13,  2,7, '#f8f8f8');
+    r(ctx, 6,22,  5,2, '#3a2412');
+    r(ctx,13,22,  5,2, '#3a2412');
+  },
+  captain(ctx) {
+    r(ctx, 5,0, 14,3, '#1f3f8f');
+    r(ctx, 4,2, 16,2, '#2f5fbf');
+    r(ctx,10,0,  4,2, '#ffd700');
+    r(ctx, 5,4, 14,6, '#e0a878');
+    r(ctx, 8,5,  2,2, '#1a1a1a');
+    r(ctx,14,5,  2,2, '#1a1a1a');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#c08868');
+    r(ctx, 8,9,  8,1, '#7a2a1a');
+    r(ctx, 2,10, 20,12, '#1f3f8f');
+    r(ctx, 4,12, 16,3, '#2f5fbf');
+    r(ctx,11,10,  2,12, '#ffd700');
+    r(ctx, 8,14,  8,2, '#ffd700');
+    r(ctx,20,10,  3,10, '#c8c8c8');
+    r(ctx,21,9,   2,2, '#ff6666');
+    r(ctx, 6,21,  5,3, '#102452');
+    r(ctx,13,21,  5,3, '#102452');
+  }
+};
+
+function drawCharacter(type) {
+  const canvas = document.getElementById('portrait-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 108, 108);
+  ctx.fillStyle = '#111133';
+  ctx.fillRect(0, 0, 108, 108);
+  ctx.save();
+  ctx.translate(18, 18);
+  CHARS[type]?.(ctx);
+  ctx.restore();
+}
+
+function drawIdle() {
+  const canvas = document.getElementById('portrait-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 108, 108);
+  ctx.fillStyle = '#07071a';
+  ctx.fillRect(0, 0, 108, 108);
+  // question mark silhouette
+  ctx.fillStyle = '#2a2a4a';
+  ctx.font = 'bold 52px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('?', 54, 54);
+}
+
+// ── Section data ──────────────────────────────────────────────
+const SECTIONS = [
+  {
+    id: 'goal',
+    nav: 'GOAL',
+    name: 'ALDRIC THE HERALD',
+    title: 'GOAL - WHY THIS PROJECT EXISTS',
+    char: 'bard',
+    color: '#ffd700',
+    slides: [
+      {
+        html: `<span class="kicker">START WITH AN ANALOGY</span><span class="big-line">How much do we need to read?</span>Imagine Johan asks us a question for class, like why Euclidean distance might be used instead of cosine similarity. We find 10 possible articles, but we probably should not read every page first. We would start with the articles, paragraphs, or sentences that look most useful.`
+      },
+      'RAG systems often work like that. They retrieve documents, then many systems send a fixed amount of text to the model, for example the top-10 documents, even if the question only needs a small piece of evidence.',
+      {
+        html: `<span class="kicker">WHY FIXED TOP-K IS WASTEFUL</span><ul><li>A simple factual question may need one sentence.</li><li>A multi-hop question may need evidence from several documents.</li><li>A longer explanation may need broader coverage.</li><li>If we treat all questions the same, we waste tokens and may distract the model.</li></ul>`
+      },
+      {
+        html: `<span class="kicker">OUR QUESTION</span><span class="big-line">How much evidence is enough?</span>We keep the retrieved top-10 list the same. Our system asks: which parts of that retrieved evidence should actually go into the prompt?`
+      },
+      {
+        html: `<span class="kicker">WHAT WE TEST</span><ul><li>Can we reduce tokens compared with Fixed Top-10?</li><li>Can we do better than simple Heuristic Rules?</li><li>Can we keep answer quality close to the full-context baseline?</li><li>Does this still work with different models and datasets?</li></ul>`
+      }
+    ]
+  },
+  {
+    id: 'pipeline',
+    nav: 'PIPELINE',
+    name: 'NOMA THE CARTOGRAPHER',
+    title: 'THE FULL PIPELINE',
+    char: 'cartographer',
+    color: '#66aaff',
+    slides: [
+      {
+        html: `<span class="kicker">PRESENTATION MAP</span><span class="big-line">From question to answer, then to results</span><div class="pipeline-map"><div class="map-route h r12"></div><div class="map-route h r23"></div><div class="map-route v r34"></div><div class="map-route h r45"></div><div class="map-route h r56"></div><div class="map-route v r67 green"></div><div class="map-route h r78 green"></div><div class="map-route h r89 green"></div><div class="pipeline-step p1"><span class="num">01 INPUT</span><span class="label">Dataset</span><span class="desc">documents, questions, gold evidence</span></div><div class="pipeline-step p2"><span class="num">02 SEARCH</span><span class="label">Retriever</span><span class="desc">same top-10 candidates</span></div><div class="pipeline-step p3"><span class="num">03 CHOICE</span><span class="label">Context Methods</span><span class="desc">fixed, heuristic, adaptive</span></div><div class="pipeline-step p4"><span class="num">04 SYSTEM</span><span class="label">Safe Adaptive</span><span class="desc">budget, compression, fallback</span></div><div class="pipeline-step p5"><span class="num">05 GENERATE</span><span class="label">Prompt + LLM</span><span class="desc">selected evidence becomes answer</span></div><div class="pipeline-step p6"><span class="num">06 SCORE</span><span class="label">Evaluation</span><span class="desc">quality, tokens, fallback</span></div><div class="pipeline-step p7 result"><span class="num">07 RESULT</span><span class="label">Main Results</span><span class="desc">does it save tokens?</span></div><div class="pipeline-step p8 result"><span class="num">08 CHECK</span><span class="label">Cross-Encoder</span><span class="desc">stronger reranking test</span></div><div class="pipeline-step p9 result"><span class="num">09 EXTEND</span><span class="label">ASQA + Annotation</span><span class="desc">long-form and human check</span></div></div>`
+      },
+      {
+        html: `<table class="result-table"><tr><th>Section</th><th>What we explain there</th></tr><tr><td>Dataset</td><td>What documents, questions, gold evidence IDs, and reference answers enter the system.</td></tr><tr><td>Retriever</td><td>How we rank documents and keep the same top-10 candidate list for every method.</td></tr><tr><td>Context Methods</td><td>The baselines: No Retrieval, Fixed Top-k, Heuristic Rules, and Safe Adaptive.</td></tr><tr><td>Safe Adaptive</td><td>How the controller chooses budget, compresses evidence, and expands when an answer looks risky.</td></tr><tr><td>Prompt + LLM</td><td>How selected evidence becomes a prompt, and which LLMs generate the answers.</td></tr><tr><td>Evaluation</td><td>How we measure answer quality, retrieval quality, token use, and fallback rate.</td></tr><tr><td>Results</td><td>Main results, cross-encoder reranking, ASQA long-form test, and human annotation.</td></tr></table>`
+      }
+    ]
+  },
+  {
+    id: 'dataset',
+    nav: 'DATASET',
+    name: 'PENNA THE SCRIBE',
+    title: 'DATASET - WHAT ENTERS THE SYSTEM',
+    char: 'scribe',
+    color: '#ffd700',
+    slides: [
+      {
+        html: `<span class="kicker">SCIFACT EXAMPLE</span><table class="result-table"><tr><th>Original part</th><th>How we use it</th></tr><tr><td>corpus.jsonl</td><td>The documents we search through.</td></tr><tr><td>queries.jsonl</td><td>The questions or claims we ask.</td></tr><tr><td>test.tsv / qrels</td><td>The gold document IDs, used to check retrieval.</td></tr><tr><td>reference_answer</td><td>The answer we compare the model against.</td></tr></table><div class="slide-note">Each dataset gives us the basic pieces for RAG: documents, questions, gold evidence, and reference answers.</div>`
+      },
+      'For each main dataset, we use 150 queries in total: 50 development queries to calibrate the budget controller, and 100 held-out queries for the final evaluation. We also include ASQA as an exploratory long-form test.',
+      {
+        html: `<span class="kicker">WHAT EACH DATASET TESTS</span><table class="result-table"><tr><th>Dataset</th><th>Task type</th><th>What the model must do</th></tr><tr><td>SciFact</td><td>Claim verification</td><td>Decide if a scientific claim is supported or contradicted by evidence.</td></tr><tr><td>HotpotQA</td><td>Multi-hop QA</td><td>Connect information across documents to answer one question.</td></tr><tr><td>BioASQ</td><td>Biomedical factoid QA</td><td>Return a short biomedical answer, such as a disease, gene, drug, or concept.</td></tr><tr><td>ASQA</td><td>Long-form explanatory QA</td><td>Write a broader answer where wording can vary more.</td></tr></table>`
+      }
+    ]
+  },
+  {
+    id: 'retriever',
+    nav: 'RETRIEVER',
+    name: 'MIRA THE RANGER',
+    title: 'RETRIEVER - FINDING CANDIDATE EVIDENCE',
+    char: 'ranger',
+    color: '#44cc88',
+    slides: [
+      {
+        html: `<span class="kicker">TF-IDF RETRIEVAL</span><ul><li>Start with all documents.</li><li>Break them into words.</li><li>Give important words more weight.</li><li>Compare each document with the question.</li><li>Rank documents from best match to worst match.</li><li>Keep the top-10 documents.</li></ul>`
+      },
+      'Every method starts with the same top-10 list. This makes the comparison fair.'
+    ]
+  },
+  {
+    id: 'context_methods',
+    nav: 'CONTEXT METHODS',
+    name: 'SELKA THE MERCHANT',
+    title: 'CONTEXT METHODS - WHAT DO WE SEND?',
+    char: 'merchant',
+    color: '#bb66ff',
+    slides: [
+      {
+        html: `<span class="kicker">BASELINES</span><table class="result-table"><tr><th>Method</th><th>What the LLM receives</th><th>Why we test it</th></tr><tr><td>No Retrieval</td><td>Only the query, no extra documents.</td><td>Checks what the model knows without evidence.</td></tr><tr><td>Fixed Top-3</td><td>Query + top 3 full documents.</td><td>Small fixed evidence budget.</td></tr><tr><td>Fixed Top-5</td><td>Query + top 5 full documents.</td><td>Medium fixed evidence budget.</td></tr><tr><td>Fixed Top-7</td><td>Query + top 7 full documents.</td><td>Larger fixed evidence budget.</td></tr><tr><td>Fixed Top-10</td><td>Query + top 10 full documents.</td><td>Expensive full-context comparison baseline.</td></tr></table>`
+      },
+      {
+        html: `<span class="kicker">HEURISTIC RULES</span><ul><li>Look at the retrieval scores before calling the LLM.</li><li>If there is a sharp drop after the top documents, the system assumes the first few are enough.</li><li>If the scores are close together, the system assumes the query is less certain and sends more context.</li><li>Question length also matters: short queries can be vague, so the rules are more careful.</li></ul>`
+      },
+      'Safe Adaptive goes further. It chooses how much evidence to send, what form it should take, and whether to expand if the first answer looks risky.'
+    ]
+  },
+  {
+    id: 'safe_adaptive',
+    nav: 'SAFE ADAPTIVE',
+    name: 'THALRIC THE ALCHEMIST',
+    title: 'SAFE ADAPTIVE CONTEXT - HOW IT WORKS',
+    char: 'alchemist',
+    color: '#ff9944',
+    slides: [
+      {
+        html: `<span class="kicker">FIRST DECISION</span><ul><li>If the answer needs evidence or explanation, choose a document budget and compress the selected documents.</li><li>If the answer is short and exact, keep wider sentence coverage so names or short phrases are not lost.</li><li>The goal is to send useful context first, not simply the smallest context possible.</li></ul>`
+      },
+      {
+        html: `<span class="kicker">BUDGET + COMPRESSION</span><ul><li>The first budget is chosen from 3, 5, 8, or 10 documents.</li><li>The budget predictor uses only retrieval signals, before any LLM call.</li><li>Selected documents are split into sentences.</li><li>The system keeps the best sentence plus nearby sentences, so the evidence stays short but understandable.</li></ul>`
+      },
+      {
+        html: `<span class="kicker">ANSWER-AWARE FALLBACK</span><ul><li>Generate the first answer with compact context.</li><li>Check warning signs: empty answer, weak wording, poor grounding, or low answer-context overlap.</li><li>If risky, expand to fuller evidence, then a larger budget, and finally full top-10 if needed.</li></ul>`
+      },
+      'So the system is not just trying to send less text. It tries to send the right amount first, then safely asks for more context when the first answer looks unreliable.'
+    ]
+  },
+  {
+    id: 'prompt_llm',
+    nav: 'PROMPT + LLM',
+    name: 'GARRON THE ENGINEER',
+    title: 'PROMPT BUILDER AND LLM',
+    char: 'engineer',
+    color: '#44dddd',
+    slides: [
+      'The prompt builder turns the question and selected evidence into the final message for the LLM. This matters because the LLM only sees the prompt we give it.',
+      {
+        html: `<span class="kicker">PROMPT SHAPE</span><pre class="prompt-example">Answer the question using only the provided documents.
+If the documents do not contain enough evidence, say evidence is insufficient.
+
+Question:
+[query text]
+
+Documents:
+[selected full documents or compact evidence spans]
+
+Answer:</pre>`
+      },
+      'We test two models: Mistral 7B as a smaller local model, and Llama-3.3-70B as a stronger hosted model.',
+      'For token counts, we use the numbers reported by the provider. So the token savings are based on real prompt and answer tokens.'
+    ]
+  },
+  {
+    id: 'evaluation',
+    nav: 'EVALUATION',
+    name: 'ELION THE CLERIC',
+    title: 'EVALUATION - THE IMPORTANT NUMBERS',
+    char: 'cleric',
+    color: '#44cc88',
+    slides: [
+      {
+        html: `<table class="result-table"><tr><th>What we check</th><th>Metrics</th><th>Meaning</th></tr><tr><td>Retrieval quality</td><td>nDCG@10, MRR@10</td><td>Did the useful documents appear near the top?</td></tr><tr><td>Answer quality</td><td>Token F1, coverage, semantic similarity</td><td>Did the answer match the reference in words, content, and meaning?</td></tr><tr><td>Efficiency</td><td>Total tokens, token reduction, fallback rate</td><td>How many tokens did we use, and how often did we expand?</td></tr></table>`
+      },
+      'Token F1 is useful, but it is not perfect. It rewards matching words, so a correct paraphrase can score too low.',
+      'Semantic similarity helps because it compares meaning. But it can also be too generous if an answer sounds related but is still wrong.',
+      'That is why human annotation matters. People can judge whether an answer is correct, partly correct, wrong, or not supported.'
+    ]
+  },
+  {
+    id: 'main_results',
+    nav: 'MAIN RESULTS',
+    name: 'VALE THE CAPTAIN',
+    title: 'MAIN RESULTS',
+    char: 'captain',
+    color: '#ff7799',
+    slides: [
+      {
+        html: `<span class="kicker">SAFE ADAPTIVE VS FIXED TOP-10</span><table class="result-table"><tr><th>Dataset</th><th>Model</th><th>Fixed F1</th><th>Safe F1</th><th>Fixed Sem.</th><th>Safe Sem.</th><th>Fixed Tokens</th><th>Safe Tokens</th><th>Reduction</th></tr><tr><td>SciFact</td><td>Mistral</td><td class="num">0.204</td><td class="num good">0.253</td><td class="num">0.364</td><td class="num good">0.426</td><td class="num">3,781</td><td class="num">985</td><td class="num good">73.9%</td></tr><tr><td>SciFact</td><td>Llama-70B</td><td class="num">0.262</td><td class="num good">0.265</td><td class="num">0.569</td><td class="num">0.569</td><td class="num">3,412</td><td class="num">933</td><td class="num good">72.6%</td></tr><tr><td>HotpotQA</td><td>Mistral</td><td class="num">0.516</td><td class="num good">0.540</td><td class="num">0.529</td><td class="num good">0.554</td><td class="num">1,762</td><td class="num">1,240</td><td class="num good">29.6%</td></tr><tr><td>HotpotQA</td><td>Llama-70B</td><td class="num">0.765</td><td class="num warn">0.737</td><td class="num">0.768</td><td class="num warn">0.740</td><td class="num">1,537</td><td class="num">1,066</td><td class="num good">30.6%</td></tr><tr><td>BioASQ</td><td>Mistral</td><td class="num">0.257</td><td class="num good">0.339</td><td class="num">0.606</td><td class="num good">0.758</td><td class="num">3,889</td><td class="num">2,011</td><td class="num good">48.3%</td></tr><tr><td>BioASQ</td><td>Llama-70B</td><td class="num">0.344</td><td class="num">0.342</td><td class="num">0.774</td><td class="num good">0.779</td><td class="num">3,496</td><td class="num">1,668</td><td class="num good">52.3%</td></tr></table>`
+      },
+      {
+        html: `<span class="kicker">SAFE ADAPTIVE VS HEURISTIC RULES</span><table class="result-table"><tr><th>Dataset</th><th>Model</th><th>Heur. F1</th><th>Safe F1</th><th>Heur. Sem.</th><th>Safe Sem.</th><th>Heur. Tokens</th><th>Safe Tokens</th><th>Token vs Heur.</th></tr><tr><td>SciFact</td><td>Mistral</td><td class="num good">0.265</td><td class="num">0.253</td><td class="num good">0.437</td><td class="num">0.426</td><td class="num">2,652</td><td class="num">985</td><td class="num good">-62.9%</td></tr><tr><td>SciFact</td><td>Llama-70B</td><td class="num good">0.266</td><td class="num">0.265</td><td class="num good">0.575</td><td class="num">0.569</td><td class="num">2,234</td><td class="num">933</td><td class="num good">-58.2%</td></tr><tr><td>HotpotQA</td><td>Mistral</td><td class="num">0.482</td><td class="num good">0.540</td><td class="num">0.497</td><td class="num good">0.554</td><td class="num">1,073</td><td class="num">1,240</td><td class="num warn">+15.5%</td></tr><tr><td>HotpotQA</td><td>Llama-70B</td><td class="num">0.708</td><td class="num good">0.737</td><td class="num">0.711</td><td class="num good">0.740</td><td class="num">945</td><td class="num">1,066</td><td class="num warn">+12.8%</td></tr><tr><td>BioASQ</td><td>Mistral</td><td class="num">0.333</td><td class="num good">0.339</td><td class="num">0.745</td><td class="num good">0.758</td><td class="num">2,560</td><td class="num">2,011</td><td class="num good">-21.4%</td></tr><tr><td>BioASQ</td><td>Llama-70B</td><td class="num good">0.349</td><td class="num">0.342</td><td class="num good">0.780</td><td class="num">0.779</td><td class="num">2,126</td><td class="num">1,668</td><td class="num good">-21.5%</td></tr></table>`
+      },
+      'Compared with Heuristic Rules, Safe Adaptive is much cheaper on SciFact and BioASQ. On HotpotQA, it spends a little more than the heuristic, but gives better F1 and semantic similarity. That makes sense because HotpotQA often needs broader multi-hop evidence.',
+      {
+        html: `<span class="kicker">DATASET-LEVEL SUMMARY</span><table class="result-table"><tr><th>Dataset</th><th>Avg. Token Reduction</th><th>Avg. F1 Retention</th><th>Avg. Fallback</th><th>Interpretation</th></tr><tr><td>SciFact</td><td class="num good">73.3%</td><td class="num good">112.7%</td><td class="num">5.0%</td><td>Compact evidence is often enough.</td></tr><tr><td>HotpotQA</td><td class="num good">30.1%</td><td class="num">100.4%</td><td class="num">0.0%</td><td>Multi-hop questions need broader context.</td></tr><tr><td>BioASQ</td><td class="num good">50.3%</td><td class="num good">115.7%</td><td class="num">1.0%</td><td>Biomedical factoids benefit from focused evidence.</td></tr></table>`
+      },
+      'Against Fixed Top-10, Safe Adaptive always saves many tokens and keeps answer quality close. Against Heuristic Rules, it is not always the top F1 method, but it is often much cheaper. HotpotQA is the main case where it spends more tokens to get stronger answers.'
+    ]
+  },
+  {
+    id: 'cross_encoder',
+    nav: 'CROSS-ENCODER',
+    name: 'LYARA THE ORACLE',
+    title: 'CROSS-ENCODER RERANKING EXPERIMENT',
+    char: 'oracle',
+    color: '#44dddd',
+    slides: [
+      {
+        html: `<span class="kicker">HOW THE CROSS-ENCODER WORKS</span><ul><li>Start with the same top-10 TF-IDF documents.</li><li>Pair the question with each candidate document.</li><li>The cross-encoder reads each pair together.</li><li>It gives each document a relevance score.</li><li>Then we reorder the top-10 list and run the same context methods again.</li></ul>`
+      },
+      {
+        html: `<table class="result-table"><tr><th>Dataset</th><th>Retriever</th><th>Fixed F1</th><th>Safe F1</th><th>Safe Tokens</th><th>Reduction</th><th>Safe nDCG</th></tr><tr><td>SciFact</td><td>TF-IDF</td><td class="num">0.262</td><td class="num">0.265</td><td class="num">933</td><td class="num good">72.6%</td><td class="num">0.560</td></tr><tr><td>SciFact</td><td>Cross-enc.</td><td class="num">0.261</td><td class="num">0.265</td><td class="num">939</td><td class="num good">72.5%</td><td class="num good">0.624</td></tr><tr><td>HotpotQA</td><td>TF-IDF</td><td class="num">0.765</td><td class="num">0.737</td><td class="num">1,066</td><td class="num good">30.6%</td><td class="num">0.742</td></tr><tr><td>HotpotQA</td><td>Cross-enc.</td><td class="num">0.764</td><td class="num good">0.751</td><td class="num">1,109</td><td class="num good">26.1%</td><td class="num good">0.829</td></tr><tr><td>BioASQ</td><td>TF-IDF</td><td class="num">0.344</td><td class="num">0.342</td><td class="num">1,668</td><td class="num good">52.3%</td><td class="num">0.825</td></tr><tr><td>BioASQ</td><td>Cross-enc.</td><td class="num">0.338</td><td class="num">0.342</td><td class="num">814</td><td class="num good">76.7%</td><td class="num">0.672</td></tr></table>`
+      },
+      {
+        html: `<span class="kicker">WHAT CHANGES IN RANKING?</span><table class="result-table"><tr><th>Dataset</th><th>Method</th><th>TF-IDF nDCG</th><th>Cross nDCG</th><th>Change</th></tr><tr><td>SciFact</td><td>Fixed Top-10</td><td class="num">0.602</td><td class="num">0.649</td><td class="num good">+0.047</td></tr><tr><td>SciFact</td><td>Heuristic</td><td class="num">0.587</td><td class="num">0.639</td><td class="num good">+0.052</td></tr><tr><td>SciFact</td><td>Safe Adaptive</td><td class="num">0.560</td><td class="num">0.624</td><td class="num good">+0.064</td></tr><tr><td>HotpotQA</td><td>Fixed Top-10</td><td class="num">0.742</td><td class="num">0.829</td><td class="num good">+0.087</td></tr><tr><td>HotpotQA</td><td>Heuristic</td><td class="num">0.691</td><td class="num">0.804</td><td class="num good">+0.113</td></tr><tr><td>HotpotQA</td><td>Safe Adaptive</td><td class="num">0.742</td><td class="num">0.829</td><td class="num good">+0.087</td></tr><tr><td>BioASQ</td><td>Fixed Top-10</td><td class="num">0.868</td><td class="num">0.891</td><td class="num good">+0.023</td></tr><tr><td>BioASQ</td><td>Heuristic</td><td class="num">0.761</td><td class="num">0.766</td><td class="num">+0.005</td></tr><tr><td>BioASQ</td><td>Safe Adaptive</td><td class="num">0.825</td><td class="num">0.672</td><td class="num warn">-0.153</td></tr></table>`
+      },
+      'The key metric here is nDCG: it tells us whether useful documents move higher in the list. Cross-encoder reranking improves document order on SciFact and HotpotQA. It helps simpler order-based methods clearly, while Safe Adaptive changes the selected context too, so better ordering does not always become better answer scores.'
+    ]
+  },
+  {
+    id: 'expansion',
+    nav: 'ASQA TEST',
+    name: 'GARRON THE ENGINEER',
+    title: 'ASQA LONG-FORM EXPERIMENT',
+    char: 'engineer',
+    color: '#bb66ff',
+    slides: [
+      'ASQA is a long-answer test. The main datasets mostly need short factual or multi-step answers. ASQA checks whether the same idea works when the answer needs more explanation.',
+      {
+        html: `<span class="kicker">WHY ASQA MATTERS</span><ul><li>Long answers often need several pieces of evidence.</li><li>Exact word matching is less reliable for long answers.</li><li>So we also look at coverage and meaning.</li><li>This is a stress test, not the main benchmark.</li></ul>`
+      },
+      {
+        html: `<span class="kicker">ASQA RESULTS WITH LLAMA-70B</span><table class="result-table"><tr><th>Method</th><th>F1</th><th>Coverage</th><th>Semantic</th><th>Tokens</th><th>Reduction</th><th>Fallback</th></tr><tr><td>No Retrieval</td><td class="num">0.203</td><td class="num">0.159</td><td class="num">0.387</td><td class="num">113</td><td class="num">90.8%</td><td class="num">0.0%</td></tr><tr><td>Fixed Top-3</td><td class="num">0.398</td><td class="num">0.395</td><td class="num">0.772</td><td class="num">422</td><td class="num">65.7%</td><td class="num">0.0%</td></tr><tr><td>Fixed Top-5</td><td class="num">0.405</td><td class="num">0.417</td><td class="num">0.783</td><td class="num">625</td><td class="num">49.2%</td><td class="num">0.0%</td></tr><tr><td>Fixed Top-7</td><td class="num">0.407</td><td class="num good">0.423</td><td class="num good">0.790</td><td class="num">854</td><td class="num">30.6%</td><td class="num">0.0%</td></tr><tr><td>Fixed Top-10</td><td class="num">0.411</td><td class="num">0.419</td><td class="num">0.786</td><td class="num">1,229</td><td class="num">0.0%</td><td class="num">0.0%</td></tr><tr><td>Heuristic Rules</td><td class="num">0.393</td><td class="num">0.414</td><td class="num">0.782</td><td class="num">629</td><td class="num">48.8%</td><td class="num">0.0%</td></tr><tr><td>Safe Adaptive</td><td class="num good">0.417</td><td class="num">0.411</td><td class="num">0.782</td><td class="num">503</td><td class="num good">59.1%</td><td class="num">6.0%</td></tr></table>`
+      },
+      'Takeaway: ASQA shows the same idea can work for longer answers. Safe Adaptive gets the highest F1 and uses fewer tokens than Fixed Top-5, Top-7, and Top-10. Coverage is slightly lower than some fixed baselines, so the trade-off is shorter prompts and strong F1, but we still need human checks for completeness.'
+    ]
+  },
+  {
+    id: 'annotation_discussion',
+    nav: 'ANNOTATION',
+    name: 'PENNA THE SCRIBE',
+    title: 'HUMAN ANNOTATION AND DISCUSSION',
+    char: 'scribe',
+    color: '#ffd700',
+    slides: [
+      {
+        html: `<span class="kicker">ANNOTATION DESIGN</span><table class="result-table"><tr><th>Item</th><th>Design</th></tr><tr><td>Sample size</td><td>120 Safe Adaptive outputs</td></tr><tr><td>Datasets</td><td>40 SciFact, 40 HotpotQA, 40 BioASQ</td></tr><tr><td>Annotators</td><td>Two independent annotators</td></tr><tr><td>Shown fields</td><td>Query, reference answer, model answer, retrieved evidence</td></tr><tr><td>Agreement</td><td>Cohen kappa and disagreement list for adjudication</td></tr></table>`
+      },
+      'Expected pattern: SciFact may have more cases with not enough evidence. HotpotQA should have more correct answers. BioASQ may have more partly correct answers because the reference answers are very short.',
+      'Main discussion point: context size should be a choice. SciFact can use very little context, HotpotQA needs more, and BioASQ is in the middle.',
+      'Limitations: the method depends on retrieval quality, fallback rules are hand-set, automatic metrics are imperfect, and biomedical answers are not medical advice.'
+    ]
+  },
+  {
+    id: 'conclusion',
+    nav: 'CONCLUSION',
+    name: 'CAIUS THE KNIGHT',
+    title: 'CONCLUSION',
+    char: 'knight',
+    color: '#ffd700',
+    slides: [
+      {
+        html: `<span class="kicker">FINAL TAKEAWAY</span><span class="big-line">Context size should be a decision.</span>Safe Adaptive sends focused evidence first. If the answer looks risky, it adds more context.`
+      },
+      'Against Fixed Top-10, Safe Adaptive saves 29.6-73.9% of tokens while keeping at least 96.3% of the Fixed Top-10 F1 score. Against Heuristic Rules, it uses 22.6% fewer tokens on average and keeps 101.8% of the heuristic F1 on average. The exception is HotpotQA: Safe Adaptive spends 12.8-15.5% more tokens, but improves F1 by +0.029 to +0.058.',
+      'So efficient RAG should not only ask: did we retrieve useful evidence? It should also ask: how much evidence is enough?',
+      {
+        html: `<span class="big-line">How much evidence is enough?</span><span class="small">Thank you. Questions?</span>`
+      }
+    ]
+  }
+];
+
+// ── State ─────────────────────────────────────────────────────
+let currentIdx = -1, slide = 0;
+
+// ── Build stars ───────────────────────────────────────────────
+function buildStars() {
+  const bg = document.getElementById('stars-bg');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div'); s.className = 'star';
+    const sz = Math.random() * 2 + 0.5;
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;
+      width:${sz}px;height:${sz}px;
+      --dur:${(Math.random()*4+2).toFixed(1)}s;
+      --del:-${(Math.random()*4).toFixed(1)}s;`;
+    bg.appendChild(s);
+  }
+}
+
+// ── Build nav list ────────────────────────────────────────────
+function buildNav() {
+  const list = document.getElementById('nav-list');
+  SECTIONS.forEach((sec, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-item';
+    btn.dataset.idx = i;
+    btn.textContent = sec.nav;
+    btn.style.setProperty('--col', sec.color);
+    btn.addEventListener('click', () => openSection(i));
+    list.appendChild(btn);
+  });
+}
+
+// ── Open section ──────────────────────────────────────────────
+function openSection(idx) {
+  currentIdx = idx; slide = 0;
+  document.getElementById('welcome').style.display = 'none';
+  document.querySelectorAll('.nav-item').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+    b.style.setProperty('--col', SECTIONS[i].color);
+  });
+  applyColor(SECTIONS[idx].color);
+  render();
+}
+
+function applyColor(_col) { /* single consistent color from CSS */ }
+
+function navigate(dir) {
+  const next = Math.max(0, Math.min(SECTIONS.length - 1, currentIdx + dir));
+  if (next !== currentIdx) openSection(next);
+}
+
+function render() {
+  const sec = SECTIONS[currentIdx];
+  drawCharacter(sec.char);
+  document.getElementById('portrait-label').textContent = sec.name;
+  document.getElementById('section-title').textContent = sec.title;
+  document.getElementById('btn-prev').disabled = currentIdx <= 0;
+  document.getElementById('btn-next').disabled = currentIdx >= SECTIONS.length - 1;
+  document.getElementById('slide-counter').textContent = `${currentIdx + 1} / ${SECTIONS.length}`;
+
+  const html = sec.slides.map(item => {
+    if (typeof item === 'string') return `<p class="slide-para">${item}</p>`;
+    if (item.html) return `<div class="slide-block">${item.html}</div>`;
+    return '';
+  }).join('');
+  showHtml(html);
+  document.getElementById('slide-text').scrollTop = 0;
+}
+
+function showHtml(html) {
+  const el = document.getElementById('slide-text');
+  el.innerHTML = `<div class="slide-inner">${html}</div>`;
+}
+
+function typewrite(text) {
+  const el = document.getElementById('slide-text');
+  el.innerHTML = `<div class="slide-inner">${text}</div>`;
+}
+
+// ── Fullscreen ────────────────────────────────────────────────
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.();
+  } else {
+    document.exitFullscreen?.();
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) btn.textContent = document.fullscreenElement ? '⛶ EXIT FULLSCREEN [F]' : '⛶ ENTER FULLSCREEN [F]';
+});
+
+// ── Init ──────────────────────────────────────────────────────
+buildStars();
+buildNav();
+drawIdle();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); return; }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navigate(-1);
+  if (e.key === 'Escape' && currentIdx >= 0) {
+    currentIdx = -1;
+    document.getElementById('welcome').style.display = 'flex';
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('portrait-label').textContent = 'SELECT A CHAPTER';
+    document.getElementById('section-title').textContent = '—';
+    document.getElementById('slide-text').textContent = '';
+    document.getElementById('slide-counter').textContent = '— / —';
+    document.getElementById('btn-prev').disabled = true;
+    document.getElementById('btn-next').disabled = true;
+    drawIdle();
+    applyColor('#ffd700');
+  }
+});
+</script>
+</body>
+</html>

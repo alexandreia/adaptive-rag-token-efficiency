@@ -1,0 +1,1856 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The RAG Kingdom — Adaptive Context Selection</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --gold:  #a07828;
+  --sky:   #f4f0e8;
+  --panel: #ebe7d8;
+  --text:  #1a1a2e;
+  --dim:   #777;
+  --col:   #a07828;
+}
+html, body {
+  width: 100%; height: 100%;
+  background: var(--sky);
+  font-family: 'VT323', monospace;
+  color: var(--text);
+  overflow: hidden;
+}
+
+/* scanline overlay removed */
+
+/* ── Root layout: sidebar + main ── */
+#app {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+}
+
+/* ── LEFT SIDEBAR ── */
+#sidebar {
+  width: 305px;
+  flex-shrink: 0;
+  background: #e8e4d4;
+  border-right: 3px solid var(--col);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 22px 14px 16px;
+  gap: 16px;
+  transition: border-color .3s;
+  position: relative;
+  overflow: hidden;
+}
+#sidebar::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 30%, rgba(160,120,40,.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* portrait */
+#portrait-canvas {
+  width: 158px; height: 158px;
+  border: 3px solid var(--col);
+  background: #ddd8c4;
+  image-rendering: pixelated;
+  box-shadow: inset 0 0 10px rgba(0,0,0,.15), 0 0 0 1px var(--col);
+  transition: border-color .3s, box-shadow .3s;
+  flex-shrink: 0;
+}
+#portrait-label {
+  font-size: 15px;
+  color: var(--col);
+  text-align: center;
+  line-height: 1.8;
+  transition: color .3s;
+  max-width: 230px;
+}
+
+/* nav list */
+#nav-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+#nav-list::-webkit-scrollbar { display: none; }
+
+.nav-item {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #ccc8b4;
+  color: #888;
+  font-family: 'VT323', monospace;
+  font-size: 18px;
+  padding: 14px 15px;
+  text-align: left;
+  cursor: pointer;
+  transition: background .12s, color .12s, border-color .12s;
+  line-height: 1.75;
+  letter-spacing: .3px;
+}
+.nav-item:hover { background: rgba(0,0,0,.05); color: #444; border-color: #aaa; }
+.nav-item.active { background: rgba(160,120,40,.12); color: var(--col); border-color: var(--col); }
+
+#sidebar-footer {
+  font-size: 13px;
+  color: #999;
+  text-align: center;
+  line-height: 2;
+}
+
+/* ── MAIN CONTENT AREA ── */
+#main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  position: relative;
+  background: var(--sky);
+}
+
+/* background star field */
+#stars-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.star {
+  position: absolute; background: #c8c0a8; border-radius: 50%;
+  animation: twinkle var(--dur, 3s) ease-in-out infinite var(--del, 0s);
+}
+@keyframes twinkle {
+  0%,100%{opacity:.7;transform:scale(1)}
+  50%{opacity:.1;transform:scale(.5)}
+}
+
+/* top bar */
+#topbar {
+  position: relative; z-index: 2;
+  height: 54px;
+  background: rgba(232,228,212,.97);
+  border-bottom: 2px solid var(--col);
+  display: flex;
+  align-items: center;
+  padding: 0 34px;
+  gap: 10px;
+  flex-shrink: 0;
+}
+#topbar .title-main {
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8.5px;
+  color: var(--col);
+  text-shadow: none;
+  letter-spacing: 1px;
+}
+#topbar .title-sub {
+  font-size: 17px;
+  color: #888;
+  margin-left: auto;
+}
+
+/* content box */
+#content-box {
+  position: relative; z-index: 2;
+  flex: 1;
+  width: min(1380px, calc(100% - 96px));
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 28px 0 20px;
+  gap: 16px;
+  min-height: 0;
+}
+
+#section-title {
+  font-size: 32px;
+  color: var(--col);
+  text-shadow: none;
+  border-bottom: 1px solid rgba(160,120,40,.3);
+  padding-bottom: 14px;
+  transition: color .3s, border-color .3s;
+  letter-spacing: .5px;
+  line-height: 1.6;
+}
+
+#slide-text {
+  font-size: 24px;
+  line-height: 1.85;
+  color: var(--text);
+  flex: 1;
+  overflow: auto;
+  position: relative;
+  display: block;
+  padding-top: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--col) #e8e4d4;
+}
+#slide-text .slide-inner {
+  width: 100%;
+  animation: fadeIn .22s ease-out;
+}
+.slide-para {
+  margin-bottom: 14px;
+  line-height: 1.85;
+}
+.slide-block {
+  margin-bottom: 28px;
+}
+.slide-para:last-child, .slide-block:last-child { margin-bottom: 0; }
+#slide-text::-webkit-scrollbar { width: 8px; height: 8px; }
+#slide-text::-webkit-scrollbar-thumb { background: var(--col); }
+#slide-text::-webkit-scrollbar-track { background: #e8e4d4; }
+#slide-text .kicker {
+  display: block;
+  color: var(--col);
+  font-size: 26px;
+  line-height: 2;
+  margin-top: 14px;
+  margin-bottom: 10px;
+}
+#slide-text .big-line {
+  display: block;
+  color: var(--col);
+  font-size: 40px;
+  line-height: 1.6;
+  text-shadow: none;
+  margin-bottom: 20px;
+}
+#slide-text .small {
+  color: #888;
+  font-size: 18px;
+  line-height: 2.0;
+}
+#slide-text ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+#slide-text li {
+  margin-bottom: 10px;
+}
+#slide-text li::before {
+  content: ">";
+  color: var(--col);
+  margin-right: 8px;
+}
+.pipeline-map {
+  height: 500px;
+  margin-top: 14px;
+  position: relative;
+}
+.pipeline-step {
+  border: 2px solid rgba(102,170,255,.45);
+  background:
+    linear-gradient(180deg, rgba(102,170,255,.13), rgba(255,255,255,.025)),
+    rgba(10,10,30,.72);
+  padding: 16px 18px;
+  min-height: 104px;
+  position: absolute;
+  width: 30%;
+  box-shadow: inset 0 0 18px rgba(0,0,0,.55), 0 0 16px rgba(102,170,255,.12);
+  overflow: hidden;
+}
+.pipeline-step::before {
+  content: "";
+  position: absolute;
+  inset: 8px auto auto 8px;
+  width: 13px;
+  height: 13px;
+  border-style: solid;
+  border-color: var(--col);
+  border-width: 2px 0 0 2px;
+  opacity: .6;
+}
+.pipeline-step::after {
+  content: "";
+  position: absolute;
+  right: 9px;
+  bottom: 9px;
+  width: 10px;
+  height: 10px;
+  border-style: solid;
+  border-color: var(--col);
+  border-width: 0 2px 2px 0;
+  opacity: .45;
+}
+.pipeline-step.p1 { left: 0; top: 0; }
+.pipeline-step.p2 { left: 35%; top: 0; }
+.pipeline-step.p3 { right: 0; top: 0; }
+.pipeline-step.p4 { right: 0; top: 192px; }
+.pipeline-step.p5 { left: 35%; top: 192px; }
+.pipeline-step.p6 { left: 0; top: 192px; }
+.pipeline-step.p7 { left: 0; top: 384px; }
+.pipeline-step.p8 { left: 35%; top: 384px; }
+.pipeline-step.p9 { right: 0; top: 384px; }
+.pipeline-step.result {
+  border-color: rgba(125,255,178,.5);
+  background:
+    linear-gradient(180deg, rgba(125,255,178,.10), rgba(255,255,255,.025)),
+    rgba(10,10,30,.72);
+}
+.pipeline-step .num {
+  display: block;
+  color: var(--col);
+  font-size: 7.6px;
+  line-height: 1.8;
+  margin-bottom: 6px;
+  padding-left: 24px;
+}
+.pipeline-step .label {
+  display: block;
+  color: #f2f2f2;
+  font-size: 12.2px;
+  line-height: 1.75;
+  margin-bottom: 8px;
+}
+.pipeline-step .desc {
+  display: block;
+  color: #aaa;
+  font-size: 6.8px;
+  line-height: 1.9;
+}
+.map-route {
+  position: absolute;
+  z-index: -1;
+  border-color: rgba(102,170,255,.75);
+  filter: drop-shadow(0 0 8px rgba(102,170,255,.35));
+}
+.map-route.h {
+  height: 0;
+  border-top: 3px dashed rgba(102,170,255,.75);
+}
+.map-route.v {
+  width: 0;
+  border-left: 3px dashed rgba(102,170,255,.75);
+}
+.map-route.green { border-color: rgba(125,255,178,.72); }
+.r12 { left: 30%; top: 52px; width: 5%; }
+.r23 { left: 65%; top: 52px; width: 5%; }
+.r34 { right: 15%; top: 104px; height: 88px; }
+.r45 { left: 65%; top: 244px; width: 5%; }
+.r56 { left: 30%; top: 244px; width: 5%; }
+.r67 { left: 15%; top: 296px; height: 88px; }
+.r78 { left: 30%; top: 436px; width: 5%; }
+.r89 { left: 65%; top: 436px; width: 5%; }
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 20px;
+  line-height: 1.8;
+  margin-top: 14px;
+}
+.result-table th,
+.result-table td {
+  border: 1px solid #ccc8b4;
+  padding: 9px 18px;
+  text-align: left;
+  vertical-align: top;
+}
+.result-table th {
+  color: var(--col);
+  background: rgba(0,0,0,.04);
+  font-weight: normal;
+}
+.result-table td.num { text-align: right; white-space: nowrap; }
+.result-table .good { color: #5db88a; }
+.result-table .warn { color: #c98844; }
+.slide-note {
+  margin-top: 12px;
+  color: #777;
+  font-size: 18px;
+  line-height: 1.8;
+}
+.prompt-example {
+  display: block;
+  margin-top: 16px;
+  color: #d8d8d8;
+  font-size: 13.2px;
+  line-height: 2.25;
+  white-space: pre-wrap;
+}
+.cursor {
+  display: inline-block;
+  width: 10px; height: 2px;
+  background: var(--col);
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: blink .7s step-start infinite;
+  flex: 0 0 auto;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* bottom nav */
+#bottom-nav {
+  position: relative; z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 40px 20px;
+  flex-shrink: 0;
+}
+.btn {
+  background: transparent;
+  color: var(--col);
+  border: 2px solid var(--col);
+  font-family: 'VT323', monospace;
+  font-size: 16px;
+  padding: 8px 16px;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  letter-spacing: .5px;
+}
+.btn:hover:not(:disabled) { background: var(--col); color: #000; }
+.btn:disabled { border-color: #ccc8b4; color: #bbb8a8; cursor: default; }
+
+#slide-counter {
+  font-size: 14px;
+  color: var(--dim);
+  flex: 1;
+  text-align: center;
+}
+
+/* decorative corner brackets on content-box */
+#content-box::before,
+#content-box::after {
+  content: '';
+  position: absolute;
+  width: 18px; height: 18px;
+  border-color: var(--col);
+  border-style: solid;
+  opacity: .4;
+  transition: border-color .3s;
+}
+#content-box::before { top: 18px; left: 28px; border-width: 2px 0 0 2px; }
+#content-box::after  { bottom: 14px; right: 28px; border-width: 0 2px 2px 0; }
+
+/* welcome screen */
+#welcome {
+  position: absolute; inset: 0; z-index: 5;
+  background: var(--sky);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 34px;
+  text-align: center;
+  padding: 40px;
+}
+#welcome h1 { font-family: 'Press Start 2P', monospace; font-size: 30px; color: var(--gold); text-shadow: none; line-height: 1.65; }
+#welcome p  { font-size: 22px; color: #555; line-height: 2.0; max-width: 900px; }
+#welcome .hint { font-size: 18px; color: #999; animation: blink 1.5s step-start infinite; margin-top: 18px; }
+#welcome .authors { font-size: 18px; color: #888; line-height: 2.25; }
+
+@keyframes descAppear {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+#deco-corner {
+  position: absolute;
+  bottom: 8px;
+  right: 0;
+  z-index: 3;
+  pointer-events: none;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  opacity: 0.72;
+}
+#deco-bubble {
+  display: none;
+  background: var(--sky);
+  border: 2px solid var(--col);
+  padding: 5px 11px;
+  font-family: 'VT323', monospace;
+  font-size: 20px;
+  color: var(--text);
+  white-space: nowrap;
+  position: relative;
+}
+#deco-bubble::after {
+  content: '';
+  position: absolute;
+  bottom: -9px;
+  left: 50%;
+  transform: translateX(-50%);
+  border-left: 7px solid transparent;
+  border-right: 7px solid transparent;
+  border-top: 9px solid var(--col);
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ── LEFT SIDEBAR ── -->
+  <div id="sidebar">
+    <canvas id="portrait-canvas" width="108" height="108"></canvas>
+    <div id="portrait-label">SELECT A CHAPTER</div>
+    <div id="nav-list"></div>
+    <div id="sidebar-footer">← → ARROWS · ESC BACK · F FULLSCREEN</div>
+  </div>
+
+  <!-- ── MAIN ── -->
+  <div id="main">
+    <div id="stars-bg"></div>
+
+    <!-- welcome screen shown on load -->
+    <div id="welcome">
+      <h1>⚔ THE RAG KINGDOM ⚔</h1>
+      <p>Adaptive Context Selection for Token-Efficient<br>Retrieval-Augmented Generation</p>
+      <div class="authors">
+        Andreia Alexa · Simon Backhaus Brudzewski · Karlis Martins Auce<br>
+        Joel Vazquez · Sheraz Ahmad
+      </div>
+      <div class="hint">▶ SELECT A CHAPTER FROM THE LEFT TO BEGIN ◀</div>
+      <button class="btn" id="btn-fullscreen" onclick="toggleFullscreen()" style="margin-top:8px;font-size:16px;padding:10px 22px;">⛶ ENTER FULLSCREEN [F]</button>
+    </div>
+
+    <div id="topbar">
+      <span class="title-main">⚔ THE RAG KINGDOM</span>
+      <span class="title-sub">Adaptive Context Selection for Token-Efficient RAG</span>
+    </div>
+
+    <div id="content-box">
+      <div id="section-title">—</div>
+      <div id="slide-text"></div>
+      <div id="deco-corner"><div id="deco-bubble"></div><canvas id="deco-canvas" width="90" height="90"></canvas></div>
+    </div>
+
+    <div id="bottom-nav">
+      <button class="btn" id="btn-prev" onclick="navigate(-1)" disabled>◄ PREV</button>
+      <span id="slide-counter">— / —</span>
+      <button class="btn" id="btn-next" onclick="navigate(1)" disabled>NEXT ►</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Pixel-art characters (24×24 grid, P=3 → 108×108 canvas) ──
+const P = 2;
+function r(ctx, x, y, w, h, c) {
+  ctx.fillStyle = c;
+  ctx.fillRect(x*P, y*P, w*P, h*P);
+}
+
+const CHARS = {
+  bard(ctx) {
+    r(ctx, 6,0, 12,1, '#aa1a1a');
+    r(ctx, 5,1, 14,3, '#cc2222');
+    r(ctx,18,0,  3,1, '#55cc33');
+    r(ctx,19,1,  2,2, '#44aa22');
+    r(ctx,20,2,  1,1, '#33881a');
+    r(ctx, 4,2,  3,2, '#7a3c0a');
+    r(ctx,17,2,  3,2, '#7a3c0a');
+    r(ctx, 4,4,  2,1, '#7a3c0a');
+    r(ctx,18,4,  2,1, '#7a3c0a');
+    r(ctx, 5,4, 14,6, '#f4c4a0');
+    r(ctx, 8,5,  2,2, '#4a2000');
+    r(ctx,14,5,  2,2, '#4a2000');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#d4a080');
+    r(ctx, 8,8,  2,1, '#cc5533');
+    r(ctx,14,8,  2,1, '#cc5533');
+    r(ctx,10,9,  4,1, '#cc5533');
+    r(ctx, 6,9,  2,1, '#e8b090');
+    r(ctx,16,9,  2,1, '#e8b090');
+    r(ctx, 2,10, 20,10, '#2d6a2d');
+    r(ctx,10,10,  4,2, '#f4c4a0');
+    r(ctx, 3,15, 18,2, '#c8a000');
+    r(ctx,10,15,  4,2, '#ffd700');
+    r(ctx,18,11,  5,6, '#a06030');
+    r(ctx,19,12,  3,4, '#c8904a');
+    r(ctx,20,10,  2,2, '#5a2000');
+    r(ctx, 5,20,  6,4, '#1a4a1a');
+    r(ctx,13,20,  6,4, '#1a4a1a');
+    r(ctx, 4,22,  7,2, '#3a1a00');
+    r(ctx,13,22,  7,2, '#3a1a00');
+  },
+  scholar(ctx) {
+    r(ctx, 7,0, 10,2, '#b0b0b0');
+    r(ctx, 5,1, 14,2, '#b0b0b0');
+    r(ctx, 4,2,  3,5, '#aaaaaa');
+    r(ctx,17,2,  3,5, '#aaaaaa');
+    r(ctx, 5,3, 14,7, '#e8b090');
+    r(ctx, 7,5,  4,2, '#888');
+    r(ctx,13,5,  4,2, '#888');
+    r(ctx, 8,5,  2,2, '#c8e8ff');
+    r(ctx,14,5,  2,2, '#c8e8ff');
+    r(ctx,11,5,  2,1, '#aaa');
+    r(ctx, 8,5,  2,1, '#2d2d2d');
+    r(ctx,14,5,  2,1, '#2d2d2d');
+    r(ctx,11,6,  2,2, '#d4a080');
+    r(ctx, 5,9, 14,2, '#c0c0c0');
+    r(ctx, 6,10, 12,2, '#d0d0d0');
+    r(ctx, 8,11,  8,1, '#d8d8d8');
+    r(ctx, 2,10, 20,13, '#1a2a6a');
+    r(ctx, 8,10,  8,2, '#c8a000');
+    r(ctx,11,10,  2,13, '#c8a000');
+    r(ctx,18,12,  5,5, '#8B5A1A');
+    r(ctx,18,12,  5,1, '#aa2222');
+    r(ctx,18,13,  5,3, '#f0e8d0');
+    r(ctx, 3,20, 18,3, '#131f52');
+    r(ctx, 5,22,  5,2, '#0a0a2a');
+    r(ctx,14,22,  5,2, '#0a0a2a');
+  },
+  alchemist(ctx) {
+    r(ctx, 4,0, 16,3, '#1e0e00');
+    r(ctx, 3,1,  3,3, '#2a1500');
+    r(ctx,18,1,  3,3, '#2a1500');
+    r(ctx, 5,2,  2,2, '#1e0e00');
+    r(ctx,17,2,  2,2, '#1e0e00');
+    r(ctx, 7,1,  4,2, '#3a7a3a');
+    r(ctx,13,1,  4,2, '#3a7a3a');
+    r(ctx, 9,1,  2,2, '#4a9a4a');
+    r(ctx,14,1,  2,2, '#4a9a4a');
+    r(ctx,11,2,  2,1, '#888');
+    r(ctx, 5,4, 14,6, '#f0c090');
+    r(ctx, 8,5,  2,2, '#2d7a00');
+    r(ctx,14,5,  2,2, '#2d7a00');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx, 9,9,  5,1, '#cc5533');
+    r(ctx,14,8,  2,1, '#cc5533');
+    r(ctx,16,6,  1,2, '#c09070');
+    r(ctx, 2,10, 20,12, '#8B5A1A');
+    r(ctx, 7,11, 10,8, '#e8e0c0');
+    r(ctx, 9,13,  2,2, '#4a9a3a');
+    r(ctx,14,15,  2,2, '#aa3300');
+    r(ctx,11,12,  1,1, '#3a3aaa');
+    r(ctx, 3,17, 18,2, '#3a1a00');
+    r(ctx,10,17,  4,2, '#c8a000');
+    r(ctx,19,12,  4,1, '#888');
+    r(ctx,20,13,  3,5, '#3a9a3a');
+    r(ctx,19,14,  5,3, '#4aaa4a');
+    r(ctx,20,17,  3,1, '#2a6a2a');
+    r(ctx, 5,20,  6,4, '#6a3a10');
+    r(ctx,13,20,  6,4, '#6a3a10');
+    r(ctx, 4,22,  7,2, '#2a1000');
+    r(ctx,13,22,  7,2, '#2a1000');
+  },
+  knight(ctx) {
+    r(ctx, 9,0,  6,1, '#4444cc');
+    r(ctx,10,1,  4,2, '#5555dd');
+    r(ctx,11,2,  2,1, '#6666ee');
+    r(ctx, 5,2, 14,2, '#c8c8c8');
+    r(ctx, 4,3, 16,5, '#d0d0d0');
+    r(ctx, 5,4, 14,4, '#c0c0c0');
+    r(ctx, 7,4, 10,2, '#1a1a2a');
+    r(ctx, 8,4,  3,1, '#4488ff');
+    r(ctx,13,4,  3,1, '#4488ff');
+    r(ctx, 7,7, 10,2, '#c8c8c8');
+    r(ctx, 9,8,  6,2, '#b8b8b8');
+    r(ctx, 2,10, 20,12, '#c0c0c0');
+    r(ctx, 2,10, 20,1, '#4444cc');
+    r(ctx,11,10,  2,12, '#4444cc');
+    r(ctx, 1,10,  4,4, '#d0d0d0');
+    r(ctx,19,10,  4,4, '#d0d0d0');
+    r(ctx, 0,10,  3,8, '#4444cc');
+    r(ctx, 0,12,  3,2, '#ffd700');
+    r(ctx, 1,10,  1,8, '#ffd700');
+    r(ctx,22,8,  2,14, '#c8c8c8');
+    r(ctx,21,10,  4,1, '#ffd700');
+    r(ctx, 5,22,  6,2, '#b0b0b0');
+    r(ctx,13,22,  6,2, '#b0b0b0');
+    r(ctx, 4,23,  8,1, '#c0c0c0');
+    r(ctx,12,23,  8,1, '#c0c0c0');
+  },
+  sorceress(ctx) {
+    r(ctx, 2,2,  4,20, '#d0d8f0');
+    r(ctx,18,2,  4,20, '#d0d8f0');
+    r(ctx, 3,2,  2,20, '#e0e8ff');
+    r(ctx,19,2,  2,18, '#e0e8ff');
+    r(ctx, 4,0, 16,3, '#d0d8f0');
+    r(ctx, 5,1, 14,3, '#e0e8ff');
+    r(ctx,10,0,  4,2, '#ffd700');
+    r(ctx,11,0,  2,1, '#ff88aa');
+    r(ctx, 5,3, 14,7, '#f4c4a0');
+    r(ctx, 8,5,  2,2, '#7733cc');
+    r(ctx,14,5,  2,2, '#7733cc');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#e0a888');
+    r(ctx, 9,8,  2,1, '#cc7766');
+    r(ctx,13,8,  2,1, '#cc7766');
+    r(ctx,11,9,  2,1, '#dd8877');
+    r(ctx, 4,10, 16,14, '#5b2d8e');
+    r(ctx, 3,12, 18,10, '#6535a0');
+    r(ctx, 8,10,  8,2, '#c8a000');
+    r(ctx, 9,10,  6,1, '#ffd700');
+    r(ctx, 6,14,  2,2, '#ffd700');
+    r(ctx,16,13,  2,2, '#ffd700');
+    r(ctx, 8,18,  2,2, '#ffd700');
+    r(ctx,14,17,  2,2, '#c8a000');
+    r(ctx, 1,6,  2,18, '#8b4513');
+    r(ctx, 0,5,  4,2, '#ffd700');
+    r(ctx, 1,4,  2,1, '#ff88ff');
+    r(ctx, 4,22, 16,2, '#7b3dbe');
+    r(ctx, 5,23, 14,1, '#c8a000');
+  },
+  ranger(ctx) {
+    r(ctx, 6,0, 12,3, '#2f7d32');
+    r(ctx, 4,2, 16,3, '#3f9d42');
+    r(ctx, 8,0,  8,1, '#66cc66');
+    r(ctx, 5,4, 14,6, '#d8a070');
+    r(ctx, 7,5,  3,2, '#2b1a00');
+    r(ctx,14,5,  3,2, '#2b1a00');
+    r(ctx, 8,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#b87850');
+    r(ctx, 9,9,  6,1, '#7a2a1a');
+    r(ctx, 3,10, 18,12, '#2e6b2e');
+    r(ctx, 5,12, 14,2, '#4a8f35');
+    r(ctx, 9,10,  6,3, '#d8a070');
+    r(ctx, 2,12,  3,8, '#8b5a2b');
+    r(ctx,19,11,  2,12, '#c48a3a');
+    r(ctx,20,10,  1,2, '#f4d060');
+    r(ctx,21,9,   1,1, '#f4d060');
+    r(ctx, 6,20,  5,4, '#1c4b1c');
+    r(ctx,13,20,  5,4, '#1c4b1c');
+    r(ctx, 5,23,  7,1, '#4b2a12');
+    r(ctx,13,23,  7,1, '#4b2a12');
+  },
+  cartographer(ctx) {
+    r(ctx, 5,1, 14,3, '#8b5a2b');
+    r(ctx, 4,3, 16,2, '#a66a2a');
+    r(ctx, 6,4, 12,6, '#e0b080');
+    r(ctx, 8,5,  2,2, '#1e1e1e');
+    r(ctx,14,5,  2,2, '#1e1e1e');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#c48a70');
+    r(ctx, 9,9,  6,1, '#7a3322');
+    r(ctx, 2,10, 20,13, '#244b7a');
+    r(ctx, 5,11, 14,9, '#e4d6a7');
+    r(ctx, 6,12, 12,1, '#a88f55');
+    r(ctx, 6,15, 12,1, '#a88f55');
+    r(ctx, 6,18, 12,1, '#a88f55');
+    r(ctx, 8,13,  2,2, '#44aa66');
+    r(ctx,14,16,  3,2, '#4488cc');
+    r(ctx,11,14,  1,5, '#cc8844');
+    r(ctx, 2,13,  4,3, '#244b7a');
+    r(ctx,18,12,  5,4, '#b8874d');
+    r(ctx, 6,22,  5,2, '#1b3152');
+    r(ctx,13,22,  5,2, '#1b3152');
+  },
+  oracle(ctx) {
+    r(ctx, 4,0, 16,4, '#202060');
+    r(ctx, 6,1, 12,3, '#303090');
+    r(ctx,10,0,  4,2, '#ffd700');
+    r(ctx, 5,4, 14,6, '#f0c098');
+    r(ctx, 7,5,  4,2, '#222255');
+    r(ctx,13,5,  4,2, '#222255');
+    r(ctx, 8,5,  2,2, '#b8ffff');
+    r(ctx,14,5,  2,2, '#b8ffff');
+    r(ctx,11,7,  2,1, '#d8a078');
+    r(ctx, 9,9,  6,1, '#aa5566');
+    r(ctx, 3,10, 18,14, '#2430a0');
+    r(ctx, 5,12, 14,9, '#3038c0');
+    r(ctx,11,10,  2,13, '#ffd700');
+    r(ctx, 7,13,  2,2, '#ffd700');
+    r(ctx,16,15,  2,2, '#ffd700');
+    r(ctx, 9,18,  6,2, '#151550');
+    r(ctx, 1,6,   2,17, '#6b3fb0');
+    r(ctx, 0,5,   4,2, '#b8ffff');
+    r(ctx, 1,4,   2,1, '#ffffff');
+  },
+  engineer(ctx) {
+    r(ctx, 5,0, 14,4, '#6a6a6a');
+    r(ctx, 4,2, 16,2, '#888888');
+    r(ctx, 7,1,  3,2, '#ffcc33');
+    r(ctx,14,1,  3,2, '#ffcc33');
+    r(ctx, 5,4, 14,6, '#d89a72');
+    r(ctx, 7,5,  4,2, '#333333');
+    r(ctx,13,5,  4,2, '#333333');
+    r(ctx, 8,5,  2,2, '#99ddff');
+    r(ctx,14,5,  2,2, '#99ddff');
+    r(ctx,11,7,  2,1, '#b87850');
+    r(ctx, 9,9,  6,1, '#7a2a1a');
+    r(ctx, 2,10, 20,12, '#5b5b5b');
+    r(ctx, 4,12, 16,7, '#777777');
+    r(ctx, 7,13,  3,3, '#ffcc33');
+    r(ctx,14,13,  3,3, '#ffcc33');
+    r(ctx,11,10,  2,12, '#ffcc33');
+    r(ctx,20,11,  3,8, '#9a5a2a');
+    r(ctx,21,10,  2,2, '#c0c0c0');
+    r(ctx, 6,21,  5,3, '#3a3a3a');
+    r(ctx,13,21,  5,3, '#3a3a3a');
+  },
+  cleric(ctx) {
+    r(ctx, 7,0, 10,2, '#f2e8c8');
+    r(ctx, 6,2, 12,3, '#e8d8a8');
+    r(ctx, 5,4, 14,6, '#f0c090');
+    r(ctx, 8,5,  2,2, '#3a2a1a');
+    r(ctx,14,5,  2,2, '#3a2a1a');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#c09070');
+    r(ctx, 9,9,  6,1, '#9a4a40');
+    r(ctx, 3,10, 18,14, '#f0e8c8');
+    r(ctx, 5,11, 14,11, '#fff2d0');
+    r(ctx,11,10,  2,13, '#c8a000');
+    r(ctx, 8,14,  8,2, '#c8a000');
+    r(ctx, 2,12,  3,6, '#f0e8c8');
+    r(ctx,19,12,  3,6, '#f0e8c8');
+    r(ctx, 0,10,  2,13, '#8b6b2b');
+    r(ctx, 0,9,   3,2, '#ffd700');
+    r(ctx, 6,22,  5,2, '#d0c090');
+    r(ctx,13,22,  5,2, '#d0c090');
+  },
+  merchant(ctx) {
+    r(ctx, 5,0, 14,3, '#7a1a5a');
+    r(ctx, 4,2, 16,3, '#9a2a7a');
+    r(ctx, 8,1,  8,1, '#ffd700');
+    r(ctx, 5,4, 14,6, '#e0a878');
+    r(ctx, 8,5,  2,2, '#2a1600');
+    r(ctx,14,5,  2,2, '#2a1600');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#c08868');
+    r(ctx, 8,9,  8,1, '#7a2a1a');
+    r(ctx, 2,10, 20,12, '#7a1a5a');
+    r(ctx, 5,12, 14,4, '#9a2a7a');
+    r(ctx, 6,16, 12,3, '#ffd700');
+    r(ctx, 9,16,  2,3, '#fff0a0');
+    r(ctx,14,16,  2,3, '#fff0a0');
+    r(ctx,19,12,  4,6, '#8b5a2b');
+    r(ctx,20,13,  2,4, '#c09050');
+    r(ctx, 6,21,  5,3, '#4a1038');
+    r(ctx,13,21,  5,3, '#4a1038');
+  },
+  scribe(ctx) {
+    r(ctx, 6,0, 12,2, '#4a2a10');
+    r(ctx, 5,2, 14,3, '#6a3a18');
+    r(ctx, 4,4, 16,3, '#7a4a20');
+    r(ctx, 5,4, 14,6, '#e8b080');
+    r(ctx, 7,5,  4,2, '#303030');
+    r(ctx,13,5,  4,2, '#303030');
+    r(ctx, 8,5,  2,2, '#d8f0ff');
+    r(ctx,14,5,  2,2, '#d8f0ff');
+    r(ctx,11,7,  2,1, '#c08868');
+    r(ctx, 9,9,  6,1, '#8a3a2a');
+    r(ctx, 2,10, 20,13, '#5a3a20');
+    r(ctx, 5,11, 14,9, '#f0e0b0');
+    r(ctx, 6,12, 12,1, '#9a7a40');
+    r(ctx, 6,14, 10,1, '#9a7a40');
+    r(ctx, 6,16, 12,1, '#9a7a40');
+    r(ctx, 6,18,  8,1, '#9a7a40');
+    r(ctx,19,11,  4,2, '#d0d0d0');
+    r(ctx,20,13,  2,7, '#f8f8f8');
+    r(ctx, 6,22,  5,2, '#3a2412');
+    r(ctx,13,22,  5,2, '#3a2412');
+  },
+  captain(ctx) {
+    r(ctx, 5,0, 14,3, '#1f3f8f');
+    r(ctx, 4,2, 16,2, '#2f5fbf');
+    r(ctx,10,0,  4,2, '#ffd700');
+    r(ctx, 5,4, 14,6, '#e0a878');
+    r(ctx, 8,5,  2,2, '#1a1a1a');
+    r(ctx,14,5,  2,2, '#1a1a1a');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#c08868');
+    r(ctx, 8,9,  8,1, '#7a2a1a');
+    r(ctx, 2,10, 20,12, '#1f3f8f');
+    r(ctx, 4,12, 16,3, '#2f5fbf');
+    r(ctx,11,10,  2,12, '#ffd700');
+    r(ctx, 8,14,  8,2, '#ffd700');
+    r(ctx,20,10,  3,10, '#c8c8c8');
+    r(ctx,21,9,   2,2, '#ff6666');
+    r(ctx, 6,21,  5,3, '#102452');
+    r(ctx,13,21,  5,3, '#102452');
+  },
+  king(ctx) {
+    r(ctx, 6,0, 12,3, '#ffd700');
+    r(ctx, 5,2, 14,2, '#d8a000');
+    r(ctx, 7,0,  2,2, '#ff4444');
+    r(ctx,11,0,  2,2, '#44aaff');
+    r(ctx,15,0,  2,2, '#44cc66');
+    r(ctx, 4,3, 16,3, '#b8860b');
+    r(ctx, 5,4, 14,6, '#f0c090');
+    r(ctx, 8,5,  2,2, '#2a1600');
+    r(ctx,14,5,  2,2, '#2a1600');
+    r(ctx, 9,5,  1,1, '#fff');
+    r(ctx,15,5,  1,1, '#fff');
+    r(ctx,11,7,  2,1, '#d0a070');
+    r(ctx, 8,9,  8,1, '#7a2a1a');
+    r(ctx, 2,10, 20,13, '#7a1f8f');
+    r(ctx, 4,11, 16,10, '#8f2fbf');
+    r(ctx,11,10,  2,13, '#ffd700');
+    r(ctx, 7,13, 10,2, '#ffd700');
+    r(ctx, 3,10,  3,9, '#f0e0b0');
+    r(ctx,18,10,  3,9, '#f0e0b0');
+    r(ctx, 0,8,   2,16, '#8b5a2b');
+    r(ctx, 0,7,   4,2, '#ffd700');
+    r(ctx, 6,22,  5,2, '#4a1038');
+    r(ctx,13,22,  5,2, '#4a1038');
+  }
+};
+
+
+// ── Decorations ───────────────────────────────────────────────
+const PD = 3;
+function rd(ctx, x, y, w, h, c) { ctx.fillStyle = c; ctx.fillRect(x*PD, y*PD, w*PD, h*PD); }
+
+const DECOS = {
+  analogy(ctx) {
+    ctx.save(); ctx.translate(30, 30); CHARS.bard(ctx); ctx.restore();
+  },
+  introduction(ctx) {
+    ctx.save(); ctx.translate(30, 30); CHARS.bard(ctx); ctx.restore();
+  },
+  related(ctx) {
+    // Open book
+    rd(ctx, 0, 2,10,12,'#f0ead0'); rd(ctx,10, 2,10,12,'#ede7c7');
+    rd(ctx, 9, 1, 2,13,'#7a4a20');
+    rd(ctx, 0, 0,10, 1,'#8b5a2b'); rd(ctx,10, 0,10, 1,'#8b5a2b');
+    rd(ctx, 0,14,20, 2,'#8b5a2b');
+    rd(ctx, 1, 4, 7, 1,'#bbb8a0'); rd(ctx, 1, 6, 8, 1,'#bbb8a0');
+    rd(ctx, 1, 8, 6, 1,'#bbb8a0'); rd(ctx, 1,10, 7, 1,'#bbb8a0');
+    rd(ctx,12, 4, 7, 1,'#bbb8a0'); rd(ctx,11, 6, 8, 1,'#bbb8a0');
+    rd(ctx,12, 8, 6, 1,'#bbb8a0'); rd(ctx,11,10, 7, 1,'#bbb8a0');
+    rd(ctx,16, 0, 2, 6,'#c9a84c');
+  },
+  approach(ctx) {
+    // Two potion bottles
+    rd(ctx, 2, 0, 2, 1,'#5a3a10'); rd(ctx, 2, 1, 2, 3,'#3a8a3a');
+    rd(ctx, 0, 4, 6, 9,'#2d6a2d'); rd(ctx, 1, 8, 4, 4,'#cc2222');
+    rd(ctx, 1, 5, 1, 2,'#88cc88'); rd(ctx, 4, 9, 1, 1,'#ff8888');
+    rd(ctx,12, 0, 2, 1,'#5a3a10'); rd(ctx,12, 1, 2, 3,'#2255aa');
+    rd(ctx,10, 4, 6, 9,'#1a4488'); rd(ctx,11, 8, 4, 4,'#44aaff');
+    rd(ctx,11, 5, 1, 2,'#88aadd'); rd(ctx,14, 9, 1, 1,'#99ddff');
+  },
+  budget(ctx) {
+    // Rolled scroll
+    rd(ctx, 0, 4, 2, 8,'#8b5a2b'); rd(ctx,16, 4, 2, 8,'#8b5a2b');
+    rd(ctx, 2, 3,14, 1,'#a07828'); rd(ctx, 2,12,14, 1,'#a07828');
+    rd(ctx, 2, 4,14, 8,'#f0ead0');
+    rd(ctx, 4, 5, 8, 1,'#aaa898'); rd(ctx, 3, 7,10, 1,'#aaa898');
+    rd(ctx, 4, 9, 7, 1,'#aaa898'); rd(ctx, 3,11, 9, 1,'#aaa898');
+    rd(ctx,19, 0, 2,18,'#8b5a2b'); rd(ctx,20, 1, 1,16,'#f0ead0');
+  },
+  compression(ctx) {
+    // Arrow pointing right
+    rd(ctx, 0, 6,15, 3,'#5a3a10');
+    rd(ctx,12, 3, 5, 9,'#5a3a10'); rd(ctx,15, 5, 3, 5,'#8b5a2b');
+    rd(ctx, 0, 4, 4, 2,'#5a3a10'); rd(ctx, 0,10, 4, 2,'#5a3a10');
+    // Arrow pointing up
+    rd(ctx,22, 2, 3,18,'#7a4a20');
+    rd(ctx,19, 2, 9, 3,'#7a4a20'); rd(ctx,21, 5, 5, 3,'#8b5a2b');
+    rd(ctx,21,20, 1, 2,'#5a3a10'); rd(ctx,24,20, 1, 2,'#5a3a10');
+  },
+  fallback(ctx) {
+    // Three stars
+    rd(ctx, 9, 5, 2,10,'#c9a84c'); rd(ctx, 5, 9,10, 2,'#c9a84c');
+    rd(ctx, 7, 7, 2, 2,'#c9a84c'); rd(ctx,11, 7, 2, 2,'#c9a84c');
+    rd(ctx, 7,11, 2, 2,'#c9a84c'); rd(ctx,11,11, 2, 2,'#c9a84c');
+    rd(ctx, 9, 9, 2, 2,'#ffd700');
+    rd(ctx,20, 1, 1, 5,'#c9a84c'); rd(ctx,18, 3, 5, 1,'#c9a84c');
+    rd(ctx, 1,22, 1, 4,'#a07828'); rd(ctx, 0,24, 3, 1,'#a07828');
+  },
+  setup(ctx) {
+    // Compass rose
+    rd(ctx, 9, 0, 2, 7,'#c9a84c'); rd(ctx, 7, 0, 6, 3,'#c9a84c');
+    rd(ctx, 9,14, 2, 7,'#a07828'); rd(ctx, 7,18, 6, 2,'#a07828');
+    rd(ctx, 0, 9, 7, 2,'#a07828'); rd(ctx, 0, 7, 3, 6,'#a07828');
+    rd(ctx,14, 9, 7, 2,'#c9a84c'); rd(ctx,18, 7, 3, 6,'#c9a84c');
+    rd(ctx, 8, 8, 4, 4,'#5a3a10'); rd(ctx, 9, 9, 2, 2,'#c9a84c');
+    rd(ctx, 4, 3, 3, 3,'#d0b86a'); rd(ctx,14, 3, 3, 3,'#d0b86a');
+    rd(ctx, 4,15, 3, 3,'#d0b86a'); rd(ctx,14,15, 3, 3,'#d0b86a');
+  },
+  results(ctx) {
+    // Sword + shield
+    rd(ctx, 5, 0, 2,15,'#c8c8c8'); rd(ctx, 6, 1, 1,12,'#e8e8e8');
+    rd(ctx, 1,14,10, 2,'#c9a84c'); rd(ctx, 5,16, 2, 8,'#8b5a2b');
+    rd(ctx, 4,24, 4, 2,'#5a3a10');
+    rd(ctx,14, 1, 9,11,'#1a3a8a'); rd(ctx,13, 3,11, 7,'#1a3a8a');
+    rd(ctx,15,12, 7, 4,'#1a3a8a'); rd(ctx,17,16, 3, 3,'#1a3a8a'); rd(ctx,18,19, 1, 1,'#1a3a8a');
+    rd(ctx,14, 1, 9, 1,'#c9a84c'); rd(ctx,13, 3, 1,13,'#c9a84c'); rd(ctx,22, 3, 1,13,'#c9a84c');
+    rd(ctx,17, 3, 2,17,'#c9a84c'); rd(ctx,13, 8,10, 2,'#c9a84c');
+  },
+  analysis(ctx) {
+    // Crystal ball on stand
+    rd(ctx, 6,21, 8, 2,'#5a3a10'); rd(ctx, 8,18, 4, 3,'#7a4a20'); rd(ctx, 6,15, 8, 3,'#8b5a2b');
+    rd(ctx, 4, 1,12, 2,'#c8d8f0'); rd(ctx, 2, 3,16, 2,'#c8d8f0');
+    rd(ctx, 1, 5,18, 8,'#c8d8f0'); rd(ctx, 2,13,16, 2,'#c8d8f0'); rd(ctx, 4,15,12, 1,'#c8d8f0');
+    rd(ctx, 5, 3,10,10,'#d8eaff'); rd(ctx, 6, 5, 8, 7,'#e4f0ff');
+    rd(ctx, 9, 6, 2, 6,'#6688cc'); rd(ctx, 7, 8, 6, 2,'#6688cc');
+    rd(ctx, 3, 3, 2, 3,'#ffffff');
+  },
+  ablation(ctx) {
+    // Gear/cog
+    rd(ctx, 8, 0, 4, 5,'#888888'); rd(ctx, 8,15, 4, 5,'#888888');
+    rd(ctx, 0, 8, 5, 4,'#888888'); rd(ctx,15, 8, 5, 4,'#888888');
+    rd(ctx, 2, 2, 4, 4,'#888888'); rd(ctx,14, 2, 4, 4,'#888888');
+    rd(ctx, 2,14, 4, 4,'#888888'); rd(ctx,14,14, 4, 4,'#888888');
+    rd(ctx, 5, 5,10,10,'#777777'); rd(ctx, 6, 6, 8, 8,'#999999');
+    rd(ctx, 8, 8, 4, 4,'#bbbbbb'); rd(ctx, 9, 9, 2, 2,'#ddd8c4');
+  },
+  annotation(ctx) {
+    // Quill + ink pot
+    rd(ctx, 0,13, 3, 3,'#2a2a2a'); rd(ctx, 1,11, 2, 2,'#555');
+    rd(ctx, 2, 9, 2, 3,'#f5f0e0'); rd(ctx, 3, 7, 2, 3,'#eee8d0');
+    rd(ctx, 4, 5, 3, 3,'#e0d8b8'); rd(ctx, 5, 3, 4, 3,'#d8d0a8');
+    rd(ctx, 7, 1, 5, 3,'#ccc888'); rd(ctx, 9, 0, 4, 2,'#bbb870');
+    rd(ctx, 1,15, 2, 1,'#1a1a2e');
+    rd(ctx,13, 7, 2, 1,'#666'); rd(ctx,12, 8, 4, 1,'#555'); rd(ctx,11, 9, 6, 1,'#444');
+    rd(ctx,10,10, 8, 6,'#2a2a2a'); rd(ctx,11,11, 6, 4,'#1a1a2e');
+    rd(ctx,10,16, 8, 1,'#2a2a2a');
+  },
+  conclusion(ctx) {
+    // Heraldic shield
+    rd(ctx, 1, 0,18,13,'#1a3a8a'); rd(ctx, 0, 2,20, 9,'#1a3a8a');
+    rd(ctx, 3,13,14, 5,'#1a3a8a'); rd(ctx, 6,18, 8, 3,'#1a3a8a'); rd(ctx, 9,21, 2, 2,'#1a3a8a');
+    rd(ctx, 9, 1, 2,22,'#c9a84c'); rd(ctx, 1, 8,18, 2,'#c9a84c');
+    rd(ctx, 1, 0,18, 1,'#c9a84c'); rd(ctx, 0, 2, 1,11,'#c9a84c'); rd(ctx,19, 2, 1,11,'#c9a84c');
+    rd(ctx, 3,13, 1, 5,'#c9a84c'); rd(ctx,16,13, 1, 5,'#c9a84c');
+    rd(ctx, 6,18, 1, 3,'#c9a84c'); rd(ctx,13,18, 1, 3,'#c9a84c');
+  }
+};
+
+function drawDeco(sectionId) {
+  const corner = document.getElementById('deco-corner');
+  const bubble = document.getElementById('deco-bubble');
+  const canvas = document.getElementById('deco-canvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 90, 90);
+  bubble.style.display = 'none';
+  corner.style.display = 'flex';
+  if (DECOS[sectionId]) DECOS[sectionId](ctx);
+  if (sectionId === 'analogy') {
+    bubble.textContent = 'I KNOW NOT HOW TO READ!';
+    bubble.style.display = 'block';
+  } else if (sectionId === 'introduction') {
+    bubble.textContent = 'HEAR YE, HEAR YE!';
+    bubble.style.display = 'block';
+  }
+}
+
+function drawCharacter(type) {
+  const canvas = document.getElementById('portrait-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 108, 108);
+  ctx.fillStyle = '#111133';
+  ctx.fillRect(0, 0, 108, 108);
+  ctx.save();
+  ctx.translate(30, 30);
+  CHARS[type]?.(ctx);
+  ctx.restore();
+}
+
+function drawIdle() {
+  const canvas = document.getElementById('portrait-canvas');
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, 108, 108);
+  ctx.fillStyle = '#07071a';
+  ctx.fillRect(0, 0, 108, 108);
+  // question mark silhouette
+  ctx.fillStyle = '#2a2a4a';
+  ctx.font = 'bold 52px monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillText('?', 54, 54);
+}
+
+// ── Section data ──────────────────────────────────────────────
+const SECTIONS = [
+  {
+    id: 'analogy',
+    nav: '1 · ANALOGY',
+    name: 'ALDRIC THE HERALD',
+    title: '1 · ANALOGY',
+    char: 'bard',
+    color: '#a07828',
+    slides: [
+      { html: `<span class="kicker">START WITH THE SIMPLE IDEA</span>
+      <span class="big-line">How much do we need to read?</span>
+      <p>Imagine Johan asks us a question for class, like why Euclidean distance might be used instead of cosine similarity.</p>
+      <p>We find 10 possible articles, but we probably should not read every page first.</p>
+      <p>We would start with the articles, paragraphs, or sentences that look most useful.</p>` }
+    ]
+  },
+  {
+    id: 'introduction',
+    nav: '2 · INTRODUCTION',
+    name: 'ALDRIC THE HERALD',
+    title: '2 · INTRODUCTION',
+    char: 'bard',
+    color: '#a07828',
+    slides: [
+      { html: `<span class="kicker">THE PROBLEM WITH FIXED TOP-K RAG</span>
+      <span class="big-line">RAG often reads too much.</span>
+      <ul>
+        <li>RAG systems often work like that: they retrieve documents, then send evidence to the language model.</li>
+        <li>Many systems send the same fixed amount every time, for example the top-10 documents.</li>
+        <li>But a simple question may need one sentence, while a multi-hop question may need several documents.</li>
+        <li>Sending too much text costs more, is slower, and can distract the model.</li>
+      </ul>` },
+      { html: `<span class="kicker">RESEARCH QUESTION</span>
+      <span class="big-line">How much evidence is enough?</span>
+      <ul>
+        <li>Once the same top-10 documents have been retrieved, can the system decide how much evidence is enough?</li>
+        <li>We keep retrieval fixed. The only thing we change is what context enters the prompt.</li>
+      </ul>` }
+    ]
+  },
+  {
+    id: 'related',
+    nav: '3 · RELATED WORK',
+    name: 'ORYN THE SCHOLAR',
+    title: '3 · RELATED WORK',
+    char: 'scholar',
+    color: '#a07828',
+    slides: [{ html: `<span class="kicker">ADAPTIVE RETRIEVAL</span>
+      <ul>
+        <li>FLARE retrieves iteratively only when the model expresses low confidence. Self-RAG uses learned reflection tokens to decide when to retrieve. Both require fine-tuning the generator — our method does not.</li>
+        <li>Our method predicts context budget from retrieval-score features only, before any LLM call.</li>
+      </ul>
+      <span class="kicker">PROMPT COMPRESSION</span>
+      <ul>
+        <li>LLMLingua and Selective Context compress prompts using a second language model. RECOMP trains a summarisation model.</li>
+        <li>Our n-gram neighbour selection is retrieval-side compression with no extra model calls.</li>
+      </ul>
+      <span class="kicker">CONTEXT RELEVANCE</span>
+      <ul>
+        <li>Shi et al. (2023) show that irrelevant context actively degrades LLM output — especially in smaller models.</li>
+        <li>We operationalise this finding: instead of compressing after retrieval, we limit what enters the prompt in the first place.</li>
+      </ul>` }]
+  },
+  {
+    id: 'approach',
+    nav: '4 · APPROACH',
+    name: 'THALRIC THE ALCHEMIST',
+    title: '4 · APPROACH',
+    char: 'alchemist',
+    color: '#a07828',
+    slides: [{ html: `<span class="big-line">Send useful evidence first.<br>Ask for more only when needed.</span>
+      <span class="kicker">WHAT SAFE ADAPTIVE DOES</span>
+      <ul>
+        <li>Every method starts with the same top-10 retrieved documents.</li>
+        <li>Safe Adaptive decides how many of those documents should enter the prompt.</li>
+        <li>It can also compress documents into the most useful evidence spans.</li>
+        <li>If the first answer looks risky, it expands and gives the model more context.</li>
+      </ul>
+      <span class="kicker">MAIN IDEA</span>
+      <ul>
+        <li>Easy questions stay cheap.</li>
+        <li>Hard questions can still get more evidence.</li>
+        <li>The system tries to save tokens without becoming overconfident.</li>
+      </ul>` }]
+  },
+  {
+    id: 'budget',
+    nav: '5 · BUDGET PREDICTION',
+    name: 'ORYN THE SCHOLAR',
+    title: '5 · BUDGET PREDICTION',
+    char: 'scholar',
+    color: '#a07828',
+    slides: [{ html: `<span class="kicker">FIRST DECISION</span>
+      <ul>
+        <li>Safe Adaptive looks only at retrieval signals before calling the LLM.</li>
+        <li>It chooses a first document budget: 3, 5, 8, or 10 documents.</li>
+      </ul>
+      <span class="kicker">INTUITION</span>
+      <ul>
+        <li>If the top documents look clearly better, the answer may be concentrated in a small set.</li>
+        <li>If many documents look similarly relevant, the evidence may be spread out.</li>
+        <li>So the budget changes with the query instead of staying fixed for all questions.</li>
+      </ul>` }]
+  },
+  {
+    id: 'compression',
+    nav: '6 · EVIDENCE COMPRESSION',
+    name: 'MIRA THE RANGER',
+    title: '6 · EVIDENCE COMPRESSION',
+    char: 'ranger',
+    color: '#a07828',
+    slides: [{ html: `<span class="kicker">SECOND DECISION</span>
+      <ul>
+        <li>Each selected document is split into sentences.</li>
+        <li>The system scores which sentences look most connected to the question.</li>
+        <li>It keeps the best sentence plus nearby sentences.</li>
+        <li>This makes the evidence shorter, but still readable.</li>
+      </ul>
+      <span class="kicker">WHY THIS MATTERS</span>
+      <ul>
+        <li>The LLM sees focused evidence instead of a full wall of text.</li>
+        <li>No extra language model is needed for this compression.</li>
+        <li>For short-answer tasks, the system keeps wider sentence coverage so exact names or short phrases are not lost.</li>
+      </ul>` }]
+  },
+  {
+    id: 'fallback',
+    nav: '7 · SAFETY FALLBACK',
+    name: 'LYARA THE SORCERESS',
+    title: '7 · SAFETY FALLBACK',
+    char: 'sorceress',
+    color: '#a07828',
+    slides: [{ html: `<span class="kicker">FINAL SAFETY CHECK</span>
+      <ul>
+        <li>First, the LLM answers with compact context.</li>
+        <li>Then the system checks whether the answer looks unreliable.</li>
+        <li>If the answer looks good, we stop there and save tokens.</li>
+        <li>If the answer looks risky, we give the LLM more context and try again.</li>
+      </ul>
+      <span class="kicker">WHAT COUNTS AS RISKY?</span>
+      <ul>
+        <li>The answer is empty or extremely short.</li>
+        <li>The model says the evidence is unclear or insufficient.</li>
+        <li>The answer has weak grounding in the provided evidence.</li>
+        <li>In our experiments, fallback is rare: only 0–5% of queries reach it.</li>
+      </ul>` }]
+  },
+  {
+    id: 'setup',
+    nav: '8 · EXPERIMENTAL SETUP',
+    name: 'NOMA THE CARTOGRAPHER',
+    title: '8 · EXPERIMENTAL SETUP',
+    char: 'cartographer',
+    color: '#a07828',
+    slides: [
+      { html: `
+        <div style="font-size:26px;color:var(--col);letter-spacing:1px;margin-bottom:8px;">DATASETS</div>
+        <p style="font-size:17px;color:#777;margin-top:0;margin-bottom:14px;line-height:1.55;">Three retrieval tasks let us test different evidence needs, from compact fact claims to multi-hop questions.</p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:20px;">
+          <div style="border:2px solid var(--col);padding:13px 14px;border-top:5px solid #5db88a;">
+            <div style="font-size:21px;color:#5db88a;margin-bottom:4px;">SCIFACT</div>
+            <div style="font-size:16px;color:#555;line-height:1.45;">Biomedical claim verification</div>
+            <div style="font-size:14px;color:#888;margin-top:5px;line-height:1.45;">Dense evidence · 1–2 sentence answers</div>
+          </div>
+          <div style="border:2px solid var(--col);padding:13px 14px;border-top:5px solid #c98844;">
+            <div style="font-size:21px;color:#c98844;margin-bottom:4px;">HOTPOTQA</div>
+            <div style="font-size:16px;color:#555;line-height:1.45;">Multi-hop question answering</div>
+            <div style="font-size:14px;color:#888;margin-top:5px;line-height:1.45;">Requires two connected documents</div>
+          </div>
+          <div style="border:2px solid var(--col);padding:13px 14px;border-top:5px solid #6688cc;">
+            <div style="font-size:21px;color:#6688cc;margin-bottom:4px;">BIOASQ</div>
+            <div style="font-size:16px;color:#555;line-height:1.45;">Biomedical factoid QA</div>
+            <div style="font-size:14px;color:#888;margin-top:5px;line-height:1.45;">Short answer · scattered abstracts</div>
+          </div>
+        </div>
+        <div style="height:1px;background:rgba(160,120,40,.35);margin:0 0 16px;"></div>
+        <div style="font-size:26px;color:var(--col);letter-spacing:1px;margin-bottom:8px;">MODELS</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="background:rgba(160,120,40,.06);border:1px solid var(--col);padding:20px 20px;text-align:center;">
+            <div style="font-size:25px;color:var(--col);margin-bottom:6px;">Mistral 7B</div>
+            <div style="font-size:16px;color:#777;line-height:1.45;">local · Ollama · small model</div>
+            <div style="font-size:14px;color:#999;margin-top:5px;line-height:1.45;">Tests context pressure on a lightweight model</div>
+          </div>
+          <div style="background:rgba(160,120,40,.06);border:1px solid var(--col);padding:20px 20px;text-align:center;">
+            <div style="font-size:25px;color:var(--col);margin-bottom:6px;">Llama 70B</div>
+            <div style="font-size:16px;color:#777;line-height:1.45;">hosted API · large model</div>
+            <div style="font-size:14px;color:#999;margin-top:5px;line-height:1.45;">Checks whether gains hold with a stronger model</div>
+          </div>
+        </div>` },
+      { html: `
+        <span class="big-line" style="font-size:36px;">Evaluation Metrics</span>
+        <p style="font-size:20px;color:#777;margin-top:2px;margin-bottom:20px;line-height:1.55;"><b style="color:var(--col);">50</b> dev queries per dataset for calibration &nbsp;·&nbsp; <b style="color:var(--col);">100</b> held-out queries per dataset for final evaluation.</p>
+        <div style="font-size:20px;color:var(--col);letter-spacing:1px;margin-bottom:10px;">QUALITY</div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px;">
+          <div style="border:1px solid var(--col);border-radius:8px;padding:18px 16px;background:rgba(160,120,40,.04);min-height:128px;">
+            <div style="font-size:23px;color:var(--col);margin-bottom:9px;">F1</div>
+            <div style="font-size:16px;color:#777;line-height:1.5;">Word-overlap between answer and reference.</div>
+          </div>
+          <div style="border:1px solid var(--col);border-radius:8px;padding:18px 16px;background:rgba(160,120,40,.04);min-height:128px;">
+            <div style="font-size:23px;color:var(--col);margin-bottom:9px;">Semantic</div>
+            <div style="font-size:16px;color:#777;line-height:1.5;">Embedding similarity; catches correct paraphrases.</div>
+          </div>
+          <div style="border:1px solid var(--col);border-radius:8px;padding:18px 16px;background:rgba(160,120,40,.04);min-height:128px;">
+            <div style="font-size:23px;color:var(--col);margin-bottom:9px;">nDCG@10</div>
+            <div style="font-size:16px;color:#777;line-height:1.5;">Whether relevant documents rank high.</div>
+          </div>
+          <div style="border:1px solid var(--col);border-radius:8px;padding:18px 16px;background:rgba(160,120,40,.04);min-height:128px;">
+            <div style="font-size:23px;color:var(--col);margin-bottom:9px;">Answer Coverage</div>
+            <div style="font-size:16px;color:#777;line-height:1.5;">Reference vocabulary covered in long answers.</div>
+          </div>
+        </div>
+        <div style="height:1px;background:rgba(160,120,40,.35);margin:0 0 18px;"></div>
+        <div style="font-size:20px;color:var(--col);letter-spacing:1px;margin-bottom:10px;">EFFICIENCY &amp; RELIABILITY</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+          <div style="border:2px solid var(--col);border-radius:8px;padding:22px 24px;background:rgba(160,120,40,.04);min-height:132px;">
+            <div style="font-size:26px;color:var(--col);margin-bottom:10px;">Token Reduction %</div>
+            <div style="font-size:17px;color:#555;line-height:1.55;">Context tokens used by Safe Adaptive compared to Fixed Top-10. This is the core efficiency measure.</div>
+          </div>
+          <div style="border:2px solid var(--col);border-radius:8px;padding:22px 24px;background:rgba(160,120,40,.04);min-height:132px;">
+            <div style="font-size:26px;color:var(--col);margin-bottom:10px;">Fallback Rate</div>
+            <div style="font-size:17px;color:#555;line-height:1.55;">Share of queries expanded to full Top-10. Low fallback shows savings are real, not just delayed.</div>
+          </div>
+        </div>` },
+      { html: `
+        <span class="big-line" style="font-size:36px;">Strategy Flow</span>
+        <p style="font-size:20px;color:#777;margin-top:2px;margin-bottom:20px;line-height:1.55;">All main methods use the same <b style="color:var(--col);">TF-IDF top-10</b> candidate list. What changes is the amount of context sent to the LLM.</p>
+        <div style="display:grid;grid-template-columns:1fr 1fr;column-gap:70px;align-items:center;margin-bottom:20px;position:relative;">
+          <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:36px;color:var(--col);background:var(--sky);padding:0 10px;z-index:1;">→</div>
+          <div style="border:2px solid var(--col);border-radius:8px;background:rgba(160,120,40,.05);padding:18px 22px;text-align:center;min-height:72px;display:flex;align-items:center;justify-content:center;">
+            <div style="font-size:27px;color:var(--col);">Question</div>
+          </div>
+          <div style="border:2px solid var(--col);border-radius:8px;background:rgba(160,120,40,.05);padding:18px 22px;text-align:center;min-height:72px;display:flex;align-items:center;justify-content:center;">
+            <div style="font-size:27px;color:var(--col);">TF-IDF retrieves top-10 documents</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch;">
+          <div style="border:1px solid #bbb;border-radius:8px;padding:16px 18px;background:rgba(0,0,0,.02);min-height:118px;">
+            <div style="display:grid;grid-template-columns:156px 34px 1fr;gap:10px;align-items:center;height:100%;">
+              <div style="font-size:23px;color:#777;text-align:center;">No Retrieval</div>
+              <div style="font-size:26px;color:#aaa;text-align:center;">→</div>
+              <div style="font-size:17px;color:#777;line-height:1.48;">Ignore retrieved docs<br><span style="color:#999;">closed-book answer</span></div>
+            </div>
+          </div>
+          <div style="border:1px solid var(--col);border-radius:8px;padding:16px 18px;background:rgba(160,120,40,.03);min-height:118px;">
+            <div style="display:grid;grid-template-columns:156px 34px 1fr;gap:10px;align-items:center;height:100%;">
+              <div style="font-size:23px;color:var(--col);text-align:center;">Fixed Top-K</div>
+              <div style="font-size:26px;color:var(--col);text-align:center;">→</div>
+              <div style="font-size:17px;color:#555;line-height:1.48;">Always send first K full docs<br><span style="color:#777;">K = 3, 5, 7, or 10</span></div>
+            </div>
+          </div>
+          <div style="border:1px solid #6688cc;border-radius:8px;padding:16px 18px;background:rgba(102,136,204,.05);min-height:118px;">
+            <div style="display:grid;grid-template-columns:156px 34px 1fr;gap:10px;align-items:center;height:100%;">
+              <div style="font-size:23px;color:#6688cc;text-align:center;">Heuristic</div>
+              <div style="font-size:26px;color:#6688cc;text-align:center;">→</div>
+              <div style="font-size:15px;color:#555;line-height:1.38;">
+                1. If rank-3 gap is large and query is short, use 3 docs<br>
+                2. Else if rank-5 gap is large, use 5 docs<br>
+                <span style="color:#777;">Otherwise use full docs; no fallback</span>
+              </div>
+            </div>
+          </div>
+          <div style="border:2px solid #5db88a;border-radius:8px;padding:16px 18px;background:rgba(93,184,138,.07);min-height:118px;">
+            <div style="display:grid;grid-template-columns:156px 34px 1fr;gap:10px;align-items:center;height:100%;">
+              <div style="font-size:23px;color:#5db88a;font-weight:bold;text-align:center;">Safe Adaptive</div>
+              <div style="font-size:26px;color:#5db88a;text-align:center;">→</div>
+              <div style="font-size:17px;color:#555;line-height:1.48;">Predict budget + compress evidence<br><span style="color:#5db88a;">fallback to Top-10 only if risky</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:18px;font-size:17px;color:#777;line-height:1.55;border-left:3px solid var(--col);padding:12px 14px;background:rgba(160,120,40,.05);">Cross-encoder reranking is tested later as a retrieval-quality check: TF-IDF still finds candidates first, then the cross-encoder reorders them.</div>` }
+    ]
+  },
+  {
+    id: 'non_adaptive',
+    nav: '9 · NON-ADAPTIVE BASELINES',
+    name: 'VALE THE CAPTAIN',
+    title: '9 · NON-ADAPTIVE BASELINES',
+    char: 'captain',
+    color: '#a07828',
+    slides: [
+      { html: `
+        <span class="big-line" style="font-size:28px;">Fixed Top-K</span>
+        <div style="font-size:17px;color:#666;line-height:1.6;margin-top:6px;margin-bottom:10px;padding:8px 14px;border-left:3px solid var(--col);background:rgba(160,120,40,.05);">Always sends exactly K documents regardless of the query — hardcoded, not learned. We test K = 3, 5, 7, 10.</div>
+        <div style="font-size:19px;color:var(--text);margin-bottom:16px;">Fixed Top-10 is our main expensive baseline. These are Mistral 7B final-evaluation F1 scores.</div>
+        <div style="font-size:15px;color:var(--col);letter-spacing:1px;margin-bottom:10px;">SCIFACT — among fixed baselines, more docs hurt ↓</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span style="width:52px;font-size:19px;color:#777;text-align:right;flex-shrink:0;">Top-3</span>
+          <div style="height:28px;width:52%;background:#5db88a;opacity:.85;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#5db88a;">0.268</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span style="width:52px;font-size:19px;color:#777;text-align:right;flex-shrink:0;">Top-5</span>
+          <div style="height:28px;width:51%;background:#5db88a;opacity:.85;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#5db88a;">0.265</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span style="width:52px;font-size:19px;color:#777;text-align:right;flex-shrink:0;">Top-7</span>
+          <div style="height:28px;width:50%;background:#5db88a;opacity:.85;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#5db88a;">0.262</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <span style="width:52px;font-size:19px;color:#c98844;text-align:right;flex-shrink:0;">Top-10</span>
+          <div style="height:28px;width:39%;background:#c98844;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#c98844;">0.204 ↓</span>
+        </div>
+        <div style="height:1px;background:rgba(160,120,40,.25);margin-bottom:14px;"></div>
+        <div style="font-size:15px;color:var(--col);letter-spacing:1px;margin-bottom:10px;">BIOASQ — peaks at Top-5, drops after ↓</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span style="width:52px;font-size:19px;color:#777;text-align:right;flex-shrink:0;">Top-3</span>
+          <div style="height:28px;width:48%;background:#5db88a;opacity:.85;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#5db88a;">0.333</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span style="width:52px;font-size:19px;color:#777;text-align:right;flex-shrink:0;">Top-5</span>
+          <div style="height:28px;width:51%;background:#5db88a;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#5db88a;">0.349 ★</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span style="width:52px;font-size:19px;color:#777;text-align:right;flex-shrink:0;">Top-7</span>
+          <div style="height:28px;width:47%;background:#c98844;opacity:.85;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#c98844;">0.329</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px;">
+          <span style="width:52px;font-size:19px;color:#c98844;text-align:right;flex-shrink:0;">Top-10</span>
+          <div style="height:28px;width:37%;background:#c98844;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#c98844;">0.257 ↓</span>
+        </div>
+        <div style="height:1px;background:rgba(160,120,40,.25);margin-bottom:14px;"></div>
+        <div style="font-size:15px;color:var(--col);letter-spacing:1px;margin-bottom:10px;">HOTPOTQA — more docs help ↑</div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span style="width:52px;font-size:19px;color:#777;text-align:right;flex-shrink:0;">Top-3</span>
+          <div style="height:28px;width:43%;background:#c98844;opacity:.85;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#c98844;">0.410</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span style="width:52px;font-size:19px;color:#777;text-align:right;flex-shrink:0;">Top-5</span>
+          <div style="height:28px;width:49%;background:#c98844;opacity:.9;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#c98844;">0.467</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+          <span style="width:52px;font-size:19px;color:#777;text-align:right;flex-shrink:0;">Top-7</span>
+          <div style="height:28px;width:53%;background:#5db88a;opacity:.9;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#5db88a;">0.507</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <span style="width:52px;font-size:19px;color:#5db88a;text-align:right;flex-shrink:0;">Top-10</span>
+          <div style="height:28px;width:55%;background:#5db88a;flex-shrink:0;border-radius:3px;"></div>
+          <span style="font-size:19px;color:#5db88a;">0.516 ↑</span>
+        </div>` },
+      { html: `
+        <span class="big-line" style="font-size:28px;">Heuristic</span>
+        <p style="font-size:17px;color:#777;margin-top:6px;margin-bottom:18px;line-height:1.7;">Two score-gap rules pick K dynamically: stop after 3 for short, high-confidence queries; stop after 5 for medium-confidence queries; otherwise use 7. No training, compression, or fallback. Mistral 7B.</p>
+        <div style="display:flex;gap:10px;margin-bottom:14px;align-items:stretch;">
+          <div style="flex:1;border:2px solid #5db88a;padding:14px 16px;">
+            <div style="font-size:18px;color:#5db88a;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(93,184,138,.25);">SciFact — Heuristic beats Top-10</div>
+            <div style="display:flex;margin-bottom:6px;"><div style="flex:1;"></div><div style="width:86px;text-align:center;font-size:14px;color:#5db88a;">Heuristic</div><div style="width:86px;text-align:center;font-size:14px;color:#c98844;">Top-10</div></div>
+            <div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid rgba(160,120,40,.1);"><div style="flex:1;font-size:16px;color:#777;">F1</div><div style="width:86px;text-align:center;font-size:24px;color:#5db88a;">0.265</div><div style="width:86px;text-align:center;font-size:24px;color:#c98844;">0.204</div></div>
+            <div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid rgba(160,120,40,.1);"><div style="flex:1;font-size:16px;color:#777;">Semantic</div><div style="width:86px;text-align:center;font-size:24px;color:#5db88a;">0.437</div><div style="width:86px;text-align:center;font-size:24px;color:#c98844;">0.364</div></div>
+            <div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid rgba(160,120,40,.1);"><div style="flex:1;font-size:16px;color:#777;">Tokens</div><div style="width:86px;text-align:center;font-size:24px;color:#5db88a;">2,652</div><div style="width:86px;text-align:center;font-size:24px;color:#c98844;">3,781</div></div>
+          </div>
+          <div style="flex:1;border:2px solid #5db88a;padding:14px 16px;">
+            <div style="font-size:18px;color:#5db88a;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(93,184,138,.25);">BioASQ — Heuristic beats Top-10</div>
+            <div style="display:flex;margin-bottom:6px;"><div style="flex:1;"></div><div style="width:86px;text-align:center;font-size:14px;color:#5db88a;">Heuristic</div><div style="width:86px;text-align:center;font-size:14px;color:#c98844;">Top-10</div></div>
+            <div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid rgba(160,120,40,.1);"><div style="flex:1;font-size:16px;color:#777;">F1</div><div style="width:86px;text-align:center;font-size:24px;color:#5db88a;">0.333</div><div style="width:86px;text-align:center;font-size:24px;color:#c98844;">0.257</div></div>
+            <div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid rgba(160,120,40,.1);"><div style="flex:1;font-size:16px;color:#777;">Semantic</div><div style="width:86px;text-align:center;font-size:24px;color:#5db88a;">0.745</div><div style="width:86px;text-align:center;font-size:24px;color:#c98844;">0.606</div></div>
+            <div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid rgba(160,120,40,.1);"><div style="flex:1;font-size:16px;color:#777;">Tokens</div><div style="width:86px;text-align:center;font-size:24px;color:#5db88a;">2,560</div><div style="width:86px;text-align:center;font-size:24px;color:#c98844;">3,889</div></div>
+          </div>
+          <div style="flex:1;border:2px solid #c98844;padding:14px 16px;">
+            <div style="font-size:18px;color:#c98844;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid rgba(201,136,68,.25);">HotpotQA — Mixed</div>
+            <div style="display:flex;margin-bottom:6px;"><div style="flex:1;"></div><div style="width:86px;text-align:center;font-size:14px;color:#777;">Heuristic</div><div style="width:86px;text-align:center;font-size:14px;color:#777;">Top-10</div></div>
+            <div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid rgba(160,120,40,.1);"><div style="flex:1;font-size:16px;color:#777;">F1</div><div style="width:86px;text-align:center;font-size:24px;color:#c98844;">0.482</div><div style="width:86px;text-align:center;font-size:24px;color:#5db88a;">0.516</div></div>
+            <div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid rgba(160,120,40,.1);"><div style="flex:1;font-size:16px;color:#777;">Semantic</div><div style="width:86px;text-align:center;font-size:24px;color:#c98844;">0.497</div><div style="width:86px;text-align:center;font-size:24px;color:#5db88a;">0.529</div></div>
+            <div style="display:flex;align-items:center;padding:6px 0;border-top:1px solid rgba(160,120,40,.1);"><div style="flex:1;font-size:16px;color:#777;">Tokens</div><div style="width:86px;text-align:center;font-size:24px;color:#5db88a;">1,073</div><div style="width:86px;text-align:center;font-size:24px;color:#c98844;">1,762</div></div>
+          </div>
+        </div>
+        <div style="font-size:17px;color:#666;line-height:1.8;padding:12px 16px;border-left:4px solid #5db88a;background:rgba(93,184,138,.05);">On SciFact and BioASQ, the top-ranked document usually scores much higher than the rest — that gap is a reliable signal that the answer is concentrated in a small set. Sending fewer, more relevant docs removes noise. On HotpotQA, the answer requires chaining facts across documents, so no single doc stands out and the gap signal is weak — more context is genuinely necessary.</div>` }
+    ]
+  },
+  {
+    id: 'results_safe',
+    nav: '10 · SAFE ADAPTIVE vs. NON-ADAPTIVE',
+    name: 'VALE THE CAPTAIN',
+    title: '10 · SAFE ADAPTIVE vs. NON-ADAPTIVE',
+    char: 'captain',
+    color: '#a07828',
+    slides: [{ html: `
+      <div style="display:flex;gap:12px;margin-bottom:16px;">
+        <div style="flex:1;text-align:center;padding:14px 12px;border:2px solid var(--col);background:rgba(160,120,40,.05);">
+          <div style="font-size:40px;color:var(--col);line-height:1.1;">29–74%</div>
+          <div style="font-size:15px;color:#777;margin-top:6px;line-height:1.4;">Safe token reduction<br>vs Fixed Top-10</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:14px 12px;border:2px solid #5db88a;background:rgba(93,184,138,.05);">
+          <div style="font-size:30px;color:#5db88a;line-height:1.15;">Safe semantic<br>beats Fixed in 4</div>
+          <div style="font-size:15px;color:#777;margin-top:6px;line-height:1.4;">and is near-tied in 1<br>of 6 settings</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:14px 12px;border:2px solid #6688cc;background:rgba(102,136,204,.05);">
+          <div style="font-size:30px;color:#6688cc;line-height:1.15;">Safe cheaper<br>than Heuristic</div>
+          <div style="font-size:15px;color:#777;margin-top:6px;line-height:1.4;">in 4 of 6 settings;<br>HotpotQA buys higher quality</div>
+        </div>
+        <div style="flex:1;text-align:center;padding:14px 12px;border:2px solid var(--col);background:rgba(160,120,40,.05);">
+          <div style="font-size:40px;color:var(--col);line-height:1.1;">0–5%</div>
+          <div style="font-size:15px;color:#777;margin-top:6px;line-height:1.4;">fallback rate;<br>savings are genuine</div>
+        </div>
+      </div>
+      <div style="height:1px;background:rgba(160,120,40,.35);margin:42px 0 22px;"></div>
+      <table class="result-table" style="font-size:18px;line-height:1.6;width:100%;margin:0 auto;">
+        <tr><th>Setting</th><th>F1<br>Fixed Top-10 → Safe</th><th>Semantic<br>Fixed Top-10 → Safe</th><th>F1<br>Heuristic → Safe</th><th>Semantic<br>Heuristic → Safe</th><th>Tok. Reduction<br>vs Fixed Top-10</th></tr>
+        <tr style="border-bottom:1px solid rgba(160,120,40,.15);">
+          <td>SciFact · Mistral</td>
+          <td class="num">0.204 → <b class="good">0.253</b></td>
+          <td class="num">0.364 → <b class="good">0.426</b></td>
+          <td class="num">0.265 → <b class="warn">0.253</b></td>
+          <td class="num">0.437 → <b class="warn">0.426</b></td>
+          <td class="num good">73.9%</td>
+        </tr>
+        <tr style="border-bottom:2px solid rgba(160,120,40,.25);">
+          <td>SciFact · Llama-70B</td>
+          <td class="num">0.262 → <b class="good">0.265</b></td>
+          <td class="num">0.569 → <b style="color:#777;">0.569</b></td>
+          <td class="num">0.266 → <b style="color:#777;">0.265</b></td>
+          <td class="num">0.575 → <b class="warn">0.569</b></td>
+          <td class="num good">72.6%</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(160,120,40,.15);">
+          <td>HotpotQA · Mistral</td>
+          <td class="num">0.516 → <b class="good">0.540</b></td>
+          <td class="num">0.529 → <b class="good">0.554</b></td>
+          <td class="num">0.482 → <b class="good">0.540</b></td>
+          <td class="num">0.497 → <b class="good">0.554</b></td>
+          <td class="num good">29.6%</td>
+        </tr>
+        <tr style="border-bottom:2px solid rgba(160,120,40,.25);">
+          <td>HotpotQA · Llama-70B</td>
+          <td class="num">0.765 → <b class="warn">0.737</b></td>
+          <td class="num">0.768 → <b class="warn">0.740</b></td>
+          <td class="num">0.708 → <b class="good">0.737</b></td>
+          <td class="num">0.711 → <b class="good">0.740</b></td>
+          <td class="num good">30.6%</td>
+        </tr>
+        <tr style="border-bottom:1px solid rgba(160,120,40,.15);">
+          <td>BioASQ · Mistral</td>
+          <td class="num">0.257 → <b class="good">0.339</b></td>
+          <td class="num">0.606 → <b class="good">0.758</b></td>
+          <td class="num">0.333 → <b class="good">0.339</b></td>
+          <td class="num">0.745 → <b class="good">0.758</b></td>
+          <td class="num good">48.3%</td>
+        </tr>
+        <tr>
+          <td>BioASQ · Llama-70B</td>
+          <td class="num">0.344 → <b style="color:#777;">0.342</b></td>
+          <td class="num">0.774 → <b class="good">0.779</b></td>
+          <td class="num">0.349 → <b class="warn">0.342</b></td>
+          <td class="num">0.780 → <b style="color:#777;">0.779</b></td>
+          <td class="num good">52.3%</td>
+        </tr>
+      </table>
+      <ul style="margin-top:12px;font-size:17px;color:#777;line-height:1.6;">
+        <li><b style="color:var(--col);">Against Fixed Top-10:</b> Safe cuts 29.6–73.9% of tokens; semantic quality improves or ties in 5 of 6 settings.</li>
+        <li><b style="color:var(--col);">Against Heuristic:</b> Safe is cheaper on SciFact and BioASQ; on HotpotQA it spends more tokens but improves answer quality.</li>
+        <li><b style="color:var(--col);">Fallback stays rare:</b> 0–5%, so savings come from genuinely smaller context, not constant Top-10 fallback.</li>
+      </ul>` }]
+  },
+  {
+    id: 'cross_encoder_intro',
+    nav: '11 · CROSS-ENCODER',
+    name: 'LYARA THE ORACLE',
+    title: '11 · CROSS-ENCODER RERANKING',
+    char: 'oracle',
+    color: '#a07828',
+    slides: [{ html: `
+   <div class="slide">
+  <h2>Architecture, Pros & LLM Analogy</h2>
+
+  <h3>Architecture</h3>
+  <pre>
+Query->TF-IDF(vocab based 15 documents; could be larger with more compute)->
+->Cross-Encoder (reranks to top 10)->Final ranked documents
+  </pre>
+  <h3>How Cross-Encoder works</h3>
+  <ul>
+    <li>Each query is paired with each candidate document individually as a pair</li>
+    <li><[CLS] Query [SEP] Document [SEP]</li>
+    <li>Self-attention operates across both query and document tokens</li>
+    <li>The CLS token representation is fed into a classification head which outputs a relevance score</li>
+  </ul>
+
+  <h3>Pros</h3>
+  <ul>
+    <li>Strong semantic understanding (synonyms, paraphrases, meaning matching)</li>
+    <li>Full query-document interaction via attention</li>
+    <li>Higher ranking quality than lexical-only methods</li>
+  </ul>
+
+  <h3>Cons</h3>
+  <ul>
+    <li>Computationally expensive: O(k) inference per query (k = candidate docs)</li>
+    <li>TF-IDF is O(log N), so it is required as a first-stage filter</li>
+    <li>Does not scale to full corpus reranking, hence TF-IDF first</li>
+  </ul>
+
+  <h3>LLMs as pseudo cross-encoders</h3>
+  <ul>
+    <li>Both process query + document jointly in the same attention space</li>
+    <li>Cross-Encoders are smaller and task-specific (ranking optimized)</li>
+    <li>LLMs are larger, general-purpose models</li>
+    <li>Conceptually similar mechanism: joint token-level reasoning over query-document pairs</li>
+  </ul>
+</div>` }]
+},
+  {
+    id: 'cross_encoder',
+    nav: '12 · CROSS-ENCODER',
+    name: 'LYARA THE ORACLE',
+    title: '12 · CROSS-ENCODER RERANKING',
+    char: 'oracle',
+    color: '#a07828',
+    slides: [{ html: `<span class="kicker">TF-IDF VS TF-IDF + CROSS-ENCODER</span><table class="result-table"><tr><th>Dataset</th><th>Retriever</th><th>Fixed F1</th><th>Safe F1</th><th>Safe Tokens</th><th>Reduction</th><th>Safe nDCG</th></tr><tr><td>SciFact</td><td>TF-IDF</td><td class="num">0.262</td><td class="num">0.265</td><td class="num">933</td><td class="num good">72.6%</td><td class="num">0.560</td></tr><tr><td>SciFact</td><td>Cross-enc.</td><td class="num">0.261</td><td class="num">0.265</td><td class="num">939</td><td class="num good">72.5%</td><td class="num good">0.624</td></tr><tr><td>HotpotQA</td><td>TF-IDF</td><td class="num">0.765</td><td class="num">0.737</td><td class="num">1,066</td><td class="num good">30.6%</td><td class="num">0.742</td></tr><tr><td>HotpotQA</td><td>Cross-enc.</td><td class="num">0.764</td><td class="num">0.751</td><td class="num">1,109</td><td class="num good">26.1%</td><td class="num good">0.829</td></tr><tr><td>BioASQ</td><td>TF-IDF</td><td class="num">0.344</td><td class="num">0.342</td><td class="num">1,668</td><td class="num good">52.3%</td><td class="num">0.825</td></tr><tr><td>BioASQ</td><td>Cross-enc.</td><td class="num">0.338</td><td class="num">0.342</td><td class="num">814</td><td class="num good">76.7%</td><td class="num">0.672</td></tr></table><div class="slide-note">Cross-encoder reranking improves Safe selected-context nDCG on SciFact and HotpotQA. BioASQ shows the trade-off: Safe uses far fewer tokens and slightly higher F1, even though selected-context nDCG is lower.</div>` }]
+  },
+  {
+    id: 'asqa',
+    nav: '13 · ASQA TEST',
+    name: 'GARRON THE ENGINEER',
+    title: '13 · ASQA LONG-FORM TEST',
+    char: 'engineer',
+    color: '#a07828',
+    slides: [{ html: `<span class="kicker">ASQA RESULTS WITH LLAMA-70B</span><table class="result-table"><tr><th>Method</th><th>F1</th><th>Coverage</th><th>Semantic</th><th>Tokens</th><th>Reduction</th><th>Fallback</th></tr><tr><td>No Retrieval</td><td class="num">0.203</td><td class="num">0.159</td><td class="num">0.387</td><td class="num">113</td><td class="num">90.8%</td><td class="num">0.0%</td></tr><tr><td>Fixed Top-3</td><td class="num">0.398</td><td class="num">0.395</td><td class="num">0.772</td><td class="num">422</td><td class="num">65.7%</td><td class="num">0.0%</td></tr><tr><td>Fixed Top-5</td><td class="num">0.405</td><td class="num">0.417</td><td class="num">0.783</td><td class="num">625</td><td class="num">49.2%</td><td class="num">0.0%</td></tr><tr><td>Fixed Top-7</td><td class="num">0.407</td><td class="num good">0.423</td><td class="num good">0.790</td><td class="num">854</td><td class="num">30.6%</td><td class="num">0.0%</td></tr><tr><td>Fixed Top-10 Baseline</td><td class="num">0.411</td><td class="num">0.419</td><td class="num">0.786</td><td class="num">1,229</td><td class="num">0.0%</td><td class="num">0.0%</td></tr><tr><td>Heuristic</td><td class="num">0.393</td><td class="num">0.414</td><td class="num">0.782</td><td class="num">629</td><td class="num">48.8%</td><td class="num">0.0%</td></tr><tr><td>Safe Adaptive</td><td class="num good">0.417</td><td class="num">0.411</td><td class="num">0.782</td><td class="num">503</td><td class="num good">59.1%</td><td class="num">6.0%</td></tr></table><div class="slide-note">ASQA is exploratory because long answers are harder to evaluate. Safe Adaptive gets the highest F1 while using 59.1% fewer tokens than Fixed Top-10, but coverage is slightly lower, so human checks matter.</div>` }]
+  },
+  {
+    id: 'analysis',
+    nav: '14 · ANALYSIS',
+    name: 'LYARA THE ORACLE',
+    title: '14 · ANALYSIS',
+    char: 'oracle',
+    color: '#a07828',
+    slides: [{ html: `<table class="result-table">
+        <tr><th>Dataset</th><th>Avg. Token Reduction</th><th>Avg. F1 Retention</th><th>Interpretation</th></tr>
+        <tr><td>SciFact</td><td class="num good">73.3%</td><td class="num good">112.7%</td><td>Compact evidence is often enough for claim verification</td></tr>
+        <tr><td>HotpotQA</td><td class="num warn">30.1%</td><td class="num">100.4%</td><td>Multi-hop questions need linked evidence across documents</td></tr>
+        <tr><td>BioASQ</td><td class="num good">50.3%</td><td class="num good">115.7%</td><td>Biomedical factoids benefit from focused evidence</td></tr>
+      </table>
+      <ul>
+        <li>Token savings track task structure — the system adapts to what each task needs.</li>
+        <li>Smaller models are more sensitive to noisy long prompts — Fixed Top-10 is the worst method for Mistral on 2 of 3 datasets.</li>
+        <li>For Mistral on SciFact and BioASQ, compressed contexts improve F1 by removing distracting passages.</li>
+        <li>Better retrieval amplifies the budget controller: cross-encoder reranking on BioASQ increases savings from 52.3% to 76.7%.</li>
+      </ul>` }]
+  },
+  {
+    id: 'annotation',
+    nav: '15 · HUMAN EVALUATION',
+    name: 'PENNA THE SCRIBE',
+    title: '15 · HUMAN EVALUATION',
+    char: 'scribe',
+    color: '#a07828',
+    slides: [{ html: `<ul>
+        <li>Two annotators labelled 120 Safe Adaptive outputs: 40 SciFact, 40 HotpotQA, 40 BioASQ.</li>
+        <li>Agreement: 84 / 120 matched items, 70.0% raw agreement, Cohen's κ = 0.477.</li>
+      </ul>
+      <span class="kicker">LABEL DISTRIBUTION — BOTH ANNOTATORS</span>
+      <div style="margin-top:8px;border:1px solid var(--col);background:rgba(160,120,40,.04);padding:14px 16px;">
+        <div style="display:flex;gap:14px;margin-bottom:12px;font-size:15px;color:#777;line-height:1.4;flex-wrap:wrap;">
+          <div><span style="display:inline-block;width:14px;height:14px;background:#5db88a;margin-right:6px;vertical-align:-2px;"></span>Correct</div>
+          <div><span style="display:inline-block;width:14px;height:14px;background:#c9a044;margin-right:6px;vertical-align:-2px;"></span>Partial</div>
+          <div><span style="display:inline-block;width:14px;height:14px;background:#c96a44;margin-right:6px;vertical-align:-2px;"></span>Incorrect</div>
+          <div><span style="display:inline-block;width:14px;height:14px;background:#6688cc;margin-right:6px;vertical-align:-2px;"></span>Not enough info</div>
+        </div>
+        <div style="display:grid;grid-template-columns:96px 1fr 124px;gap:10px;align-items:center;font-size:16px;color:#555;margin-bottom:8px;">
+          <div>SciFact</div>
+          <div style="height:28px;display:flex;border:1px solid rgba(0,0,0,.12);">
+            <div style="width:61.25%;background:#5db88a;color:#fff;text-align:center;line-height:28px;">49</div>
+            <div style="width:18.75%;background:#c9a044;color:#fff;text-align:center;line-height:28px;">15</div>
+            <div style="width:17.5%;background:#c96a44;color:#fff;text-align:center;line-height:28px;">14</div>
+            <div style="width:2.5%;background:#6688cc;"></div>
+          </div>
+          <div style="text-align:right;color:#777;">80 labels</div>
+        </div>
+        <div style="display:grid;grid-template-columns:96px 1fr 124px;gap:10px;align-items:center;font-size:16px;color:#555;margin-bottom:8px;">
+          <div>HotpotQA</div>
+          <div style="height:28px;display:flex;border:1px solid rgba(0,0,0,.12);">
+            <div style="width:67.5%;background:#5db88a;color:#fff;text-align:center;line-height:28px;">54</div>
+            <div style="width:1.25%;background:#c9a044;"></div>
+            <div style="width:21.25%;background:#c96a44;color:#fff;text-align:center;line-height:28px;">17</div>
+            <div style="width:10%;background:#6688cc;color:#fff;text-align:center;line-height:28px;">8</div>
+          </div>
+          <div style="text-align:right;color:#777;">80 labels</div>
+        </div>
+        <div style="display:grid;grid-template-columns:96px 1fr 124px;gap:10px;align-items:center;font-size:16px;color:#555;margin-bottom:10px;">
+          <div>BioASQ</div>
+          <div style="height:28px;display:flex;border:1px solid rgba(0,0,0,.12);">
+            <div style="width:55%;background:#5db88a;color:#fff;text-align:center;line-height:28px;">44</div>
+            <div style="width:22.5%;background:#c9a044;color:#fff;text-align:center;line-height:28px;">18</div>
+            <div style="width:17.5%;background:#c96a44;color:#fff;text-align:center;line-height:28px;">14</div>
+            <div style="width:5%;background:#6688cc;"></div>
+          </div>
+          <div style="text-align:right;color:#777;">80 labels</div>
+        </div>
+        <div style="display:grid;grid-template-columns:96px 1fr 124px;gap:10px;align-items:center;font-size:16px;color:#555;padding-top:10px;border-top:1px solid rgba(160,120,40,.25);">
+          <div>Overall</div>
+          <div style="height:30px;display:flex;border:1px solid rgba(0,0,0,.12);">
+            <div style="width:61.25%;background:#5db88a;color:#fff;text-align:center;line-height:30px;">147</div>
+            <div style="width:14.17%;background:#c9a044;color:#fff;text-align:center;line-height:30px;">34</div>
+            <div style="width:18.75%;background:#c96a44;color:#fff;text-align:center;line-height:30px;">45</div>
+            <div style="width:5.83%;background:#6688cc;"></div>
+          </div>
+          <div style="text-align:right;color:#777;">240 labels</div>
+        </div>
+      </div>
+      <span class="kicker" style="margin-top:14px;display:block;">WHAT THE HUMAN RESULTS SHOW</span>
+      <ul>
+        <li>Most labels are CORRECT: 147 / 240 = 61.3%; CORRECT + PARTIAL = 75.4%.</li>
+        <li>HotpotQA has the strongest human outcome: 54 CORRECT labels and 26 / 30 agreed examples correct.</li>
+        <li>BioASQ has the most PARTIALLY_CORRECT labels, matching biomedical answers that are relevant but incomplete.</li>
+        <li>Metric check: all high-F1 agreed examples were CORRECT; high semantic examples were 95.9% CORRECT.</li>
+      </ul>
+      <div class="slide-note">Human annotation supports the automatic trends, but also shows why F1, semantic similarity, and coverage should be read together.</div>` }]
+  },
+  {
+    id: 'conclusion',
+    nav: '16 · CONCLUSION',
+    name: 'CAIUS THE KNIGHT',
+    title: '16 · CONCLUSION',
+    char: 'knight',
+    color: '#a07828',
+    slides: [{ html: `<span class="kicker">FINAL TAKEAWAY</span>
+      <span class="big-line">Context size should be a decision.</span>
+      <p>Safe Adaptive sends focused evidence first. If the answer looks risky, it adds more context.</p>
+      <ul>
+        <li>Against Fixed Top-10: 29.6–73.9% fewer tokens, with at least 96.3% of F1 retained.</li>
+        <li>Against Heuristic Rules: 22.6% fewer tokens on average, with 101.8% F1 on average.</li>
+        <li>Exception: on HotpotQA it spends more tokens, but improves F1 by +0.029 to +0.058.</li>
+        <li>No fine-tuning, no extra model calls, no external labels.</li>
+      </ul>
+      <span class="kicker">FUTURE WORK</span>
+      <ul>
+        <li>Try stronger retrieval, calibrate fallback with annotation, and test new domains.</li>
+      </ul>` }]
+  },
+  {
+    id: 'final_question',
+    nav: '17 · FINAL QUESTION',
+    name: 'AUREN THE KING',
+    title: '17 · FINAL QUESTION',
+    char: 'king',
+    color: '#a07828',
+    slides: [{ html: `<p>Efficient RAG should not only ask: did we retrieve useful evidence?</p>
+      <p>It should also ask: how much evidence is enough?</p>` }]
+  }
+];
+
+
+
+// ── State ─────────────────────────────────────────────────────
+let currentIdx = -1, slide = 0;
+
+// ── Build stars ───────────────────────────────────────────────
+function buildStars() {
+  const bg = document.getElementById('stars-bg');
+  for (let i = 0; i < 80; i++) {
+    const s = document.createElement('div'); s.className = 'star';
+    const sz = Math.random() * 2 + 0.5;
+    s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;
+      width:${sz}px;height:${sz}px;
+      --dur:${(Math.random()*4+2).toFixed(1)}s;
+      --del:-${(Math.random()*4).toFixed(1)}s;`;
+    bg.appendChild(s);
+  }
+}
+
+// ── Build nav list ────────────────────────────────────────────
+function buildNav() {
+  const list = document.getElementById('nav-list');
+  SECTIONS.forEach((sec, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'nav-item';
+    btn.dataset.idx = i;
+    btn.textContent = sec.nav;
+    btn.style.setProperty('--col', sec.color);
+    btn.addEventListener('click', () => openSection(i));
+    list.appendChild(btn);
+  });
+}
+
+// ── Open section ──────────────────────────────────────────────
+function openSection(idx) {
+  currentIdx = idx; slide = 0;
+  document.getElementById('welcome').style.display = 'none';
+  document.querySelectorAll('.nav-item').forEach((b, i) => {
+    b.classList.toggle('active', i === idx);
+    b.style.setProperty('--col', SECTIONS[i].color);
+  });
+  applyColor(SECTIONS[idx].color);
+  render();
+}
+
+function applyColor(_col) { /* single consistent color from CSS */ }
+
+function navigate(dir) {
+  if (currentIdx < 0) return;
+  const sec = SECTIONS[currentIdx];
+
+  const newSlide = slide + dir;
+  if (newSlide >= 0 && newSlide < sec.slides.length) {
+    slide = newSlide;
+    render();
+  } else {
+    const nextSection = Math.max(0, Math.min(SECTIONS.length - 1, currentIdx + dir));
+    if (nextSection !== currentIdx) openSection(nextSection);
+  }
+}
+
+function render() {
+  const sec = SECTIONS[currentIdx];
+  drawCharacter(sec.char);
+  document.getElementById('portrait-label').textContent = sec.name;
+  document.getElementById('section-title').textContent = sec.title;
+  document.getElementById('btn-prev').disabled = currentIdx <= 0 && slide <= 0;
+  document.getElementById('btn-next').disabled = currentIdx >= SECTIONS.length - 1 && slide >= sec.slides.length - 1;
+  const subOf = sec.slides.length > 1 ? ` · ${slide + 1}/${sec.slides.length}` : '';
+  document.getElementById('slide-counter').textContent = `${currentIdx + 1} / ${SECTIONS.length}${subOf}`;
+
+  const item = sec.slides[slide];
+  let html = '';
+  if (typeof item === 'string') html = `<p class="slide-para">${item}</p>`;
+  else if (item.html) html = `<div class="slide-block">${item.html}</div>`;
+  showHtml(html);
+  document.getElementById('slide-text').scrollTop = 0;
+  drawDeco(sec.id);
+}
+
+function showHtml(html) {
+  const el = document.getElementById('slide-text');
+  el.innerHTML = `<div class="slide-inner">${html}</div>`;
+}
+
+function typewrite(text) {
+  const el = document.getElementById('slide-text');
+  el.innerHTML = `<div class="slide-inner">${text}</div>`;
+}
+
+// ── Fullscreen ────────────────────────────────────────────────
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  const btn = document.getElementById('btn-fullscreen');
+  if (btn) btn.textContent = document.fullscreenElement ? '⛶ EXIT FULLSCREEN [F]' : '⛶ ENTER FULLSCREEN [F]';
+});
+
+// ── Init ──────────────────────────────────────────────────────
+buildStars();
+buildNav();
+drawIdle();
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'f' || e.key === 'F') { toggleFullscreen(); return; }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown') navigate(1);
+  if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   navigate(-1);
+  if (e.key === 'Escape' && currentIdx >= 0) {
+    currentIdx = -1;
+    document.getElementById('welcome').style.display = 'flex';
+    document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+    document.getElementById('portrait-label').textContent = 'SELECT A CHAPTER';
+    document.getElementById('section-title').textContent = '—';
+    document.getElementById('slide-text').textContent = '';
+    document.getElementById('slide-counter').textContent = '— / —';
+    document.getElementById('btn-prev').disabled = true;
+    document.getElementById('btn-next').disabled = true;
+    document.getElementById('deco-corner').style.display = 'none';
+    drawIdle();
+    applyColor('#ffd700');
+  }
+});
+</script>
+</body>
+</html>

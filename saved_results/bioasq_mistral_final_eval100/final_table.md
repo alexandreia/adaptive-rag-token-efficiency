@@ -1,0 +1,9 @@
+| dataset | method | code_mode | ndcg_at_10 | mrr_at_10 | answer_f1 | answer_coverage | semantic_similarity | f1_retained_vs_top10 | semantic_similarity_retained_vs_top10 | total_tokens | token_reduction_vs_top10 | fallback_rate | docs_used |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| bioasq | No Retrieval | no_retrieval_full | 0.0 | 0.0 | 0.219614 | 0.267007 | 0.652925 | 0.854572 | 1.077252 | 119.2 | 0.969346 | 0.0 | 0.0 |
+| bioasq | Fixed Top-3 | fixed_3_full | 0.636628 | 0.94 | 0.332849 | 0.436172 | 0.750948 | 1.295197 | 1.238979 | 1397.96 | 0.640491 | 0.0 | 3.0 |
+| bioasq | Fixed Top-5 | fixed_5_full | 0.732649 | 0.94 | 0.349134 | 0.44652 | 0.760783 | 1.358565 | 1.255205 | 2246.86 | 0.422183 | 0.0 | 5.0 |
+| bioasq | Fixed Top-7 | fixed_7_full | 0.798412 | 0.94 | 0.329324 | 0.433847 | 0.73715 | 1.281481 | 1.216213 | 3039.82 | 0.21826 | 0.0 | 7.0 |
+| bioasq | Fixed Top-10 | fixed_10_full | 0.868477 | 0.94 | 0.256987 | 0.346258 | 0.606102 | 1.0 | 1.0 | 3888.53 | 0.0 | 0.0 | 10.0 |
+| bioasq | Heuristic Rules | heuristic_rules_full | 0.760688 | 0.94 | 0.332534 | 0.44514 | 0.745378 | 1.29397 | 1.22979 | 2559.79 | 0.341708 | 0.0 | 5.76 |
+| bioasq | Safe Adaptive Context | answer_aware_fallback | 0.825292 | 0.94 | 0.339011 | 0.447153 | 0.758291 | 1.319173 | 1.251094 | 2011.28 | 0.482766 | 0.0 | 7.29 |
