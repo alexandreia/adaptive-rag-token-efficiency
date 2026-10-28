@@ -1,0 +1,8 @@
+| dataset | method | code_mode | ndcg_at_10 | mrr_at_10 | answer_f1 | answer_coverage | semantic_similarity | f1_retained_vs_top10 | semantic_similarity_retained_vs_top10 | total_tokens | token_reduction_vs_top10 | fallback_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| BioASQ | Fixed Top-3 | fixed_3_full | 0.657022 | 0.94 | 0.333771 | 0.508049 | 0.758277 | 102.8% | 100.6% | 1180.96 | 68.8% | 0.0% |
+| BioASQ | Fixed Top-5 | fixed_5_full | 0.767636 | 0.94325 | 0.330169 | 0.516148 | 0.756346 | 101.6% | 100.4% | 1882.55 | 50.2% | 0.0% |
+| BioASQ | Fixed Top-10 | fixed_10_full | 0.894741 | 0.944083 | 0.324817 | 0.501668 | 0.753521 | 100.0% | 100.0% | 3780.05 | 0.0% | 0.0% |
+| BioASQ | Adaptive-k | adaptive_k_full | 0.691551 | 0.941 | 0.337585 | 0.492098 | 0.75529 | 103.9% | 100.2% | 1240.25 | 67.2% | 0.0% |
+| BioASQ | Safe Adaptive Context | answer_aware_fallback | 0.660114 | 0.94 | 0.329591 | 0.508484 | 0.748341 | 101.5% | 99.3% | 896.87 | 76.3% | 4.0% |
+| BioASQ | TACER | task_aware_coverage_ultra | 0.711819 | 0.941 | 0.324302 | 0.485887 | 0.747773 | 99.8% | 99.2% | 805.35 | 78.7% | 1.0% |

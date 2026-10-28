@@ -1,0 +1,101 @@
+run,dataset,model,retriever,comparison,metric,n,mean_difference,ci_low,ci_high,interpretation
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,answer_f1,100,0.005883,-0.013072,0.023603,positive favors Safe Adaptive
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,answer_coverage,100,-0.007453,-0.027372,0.012536,positive favors Safe Adaptive
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,semantic_similarity,100,-0.004008,-0.017842,0.010227,positive favors Safe Adaptive
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,total_tokens,100,-726.06,-823.46275,-621.871,negative means Safe Adaptive uses fewer tokens
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.586884,0.517167,0.644057,positive means Safe Adaptive saves tokens
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,answer_f1,100,0.023946,0.007943,0.040474,positive favors Safe Adaptive
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,answer_coverage,100,-0.003379,-0.024684,0.016653,positive favors Safe Adaptive
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,semantic_similarity,100,0.000595,-0.011342,0.011692,positive favors Safe Adaptive
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,total_tokens,100,-125.6,-218.4725,-18.19475,negative means Safe Adaptive uses fewer tokens
+asqa_llama70b_final_eval100,ASQA,Llama-70B,TF-IDF,Safe Adaptive vs Heuristic Rules,token_reduction,100,0.127526,-0.035304,0.251658,positive means Safe Adaptive saves tokens
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,answer_f1,100,0.003922,-0.011781,0.018804,positive favors Safe Adaptive
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,answer_coverage,100,-0.009,-0.034336,0.015548,positive favors Safe Adaptive
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,semantic_similarity,100,0.003259,-0.011396,0.018481,positive favors Safe Adaptive
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,total_tokens,100,-2683.29,-2827.414,-2523.0355,negative means Safe Adaptive uses fewer tokens
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.755649,0.710293,0.783513,positive means Safe Adaptive saves tokens
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,answer_f1,100,0.001846,-0.014085,0.018758,positive favors Safe Adaptive
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,answer_coverage,100,-0.012759,-0.035622,0.008876,positive favors Safe Adaptive
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,semantic_similarity,100,0.00151,-0.011157,0.014867,positive favors Safe Adaptive
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,total_tokens,100,-935.91,-1081.06075,-786.75625,negative means Safe Adaptive uses fewer tokens
+bioasq_crossenc_llama70b_final_eval100,BioASQ,Llama-70B,Cross-encoder,Safe Adaptive vs Heuristic Rules,token_reduction,100,0.47685,0.408993,0.530454,positive means Safe Adaptive saves tokens
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,answer_f1,100,-0.001687,-0.014164,0.010078,positive favors Safe Adaptive
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,answer_coverage,100,0.007613,-0.010861,0.027702,positive favors Safe Adaptive
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,semantic_similarity,100,0.004703,-0.003316,0.013241,positive favors Safe Adaptive
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,total_tokens,100,-1828.08,-1959.14125,-1689.8935,negative means Safe Adaptive uses fewer tokens
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.515438,0.477298,0.553059,positive means Safe Adaptive saves tokens
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,answer_f1,100,-0.006628,-0.021403,0.008241,positive favors Safe Adaptive
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,answer_coverage,100,-0.005417,-0.033185,0.021831,positive favors Safe Adaptive
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,semantic_similarity,100,-0.001072,-0.014433,0.011649,positive favors Safe Adaptive
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,total_tokens,100,-458.15,-598.27,-313.3405,negative means Safe Adaptive uses fewer tokens
+bioasq_llama70b_final_eval100,BioASQ,Llama-70B,TF-IDF,Safe Adaptive vs Heuristic Rules,token_reduction,100,0.146698,0.064414,0.223592,positive means Safe Adaptive saves tokens
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,answer_f1,100,0.082023,0.050284,0.117817,positive favors Safe Adaptive
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,answer_coverage,100,0.100895,0.055156,0.149364,positive favors Safe Adaptive
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,semantic_similarity,100,0.152189,0.113498,0.195128,positive favors Safe Adaptive
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,total_tokens,100,-1877.25,-2008.204,-1743.613,negative means Safe Adaptive uses fewer tokens
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.484275,0.45099,0.516781,positive means Safe Adaptive saves tokens
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,answer_f1,100,0.006477,-0.02151,0.034157,positive favors Safe Adaptive
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,answer_coverage,100,0.002013,-0.032014,0.038226,positive favors Safe Adaptive
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,semantic_similarity,100,0.012913,-0.013877,0.043261,positive favors Safe Adaptive
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,total_tokens,100,-548.51,-712.1845,-366.0135,negative means Safe Adaptive uses fewer tokens
+bioasq_mistral_final_eval100,BioASQ,Mistral,TF-IDF,Safe Adaptive vs Heuristic Rules,token_reduction,100,0.144642,0.062499,0.220918,positive means Safe Adaptive saves tokens
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,answer_f1,100,-0.013143,-0.047143,0.010857,positive favors Safe Adaptive
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,answer_coverage,100,-0.0075,-0.040125,0.022562,positive favors Safe Adaptive
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,semantic_similarity,100,-0.018806,-0.050508,0.004112,positive favors Safe Adaptive
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,total_tokens,100,-391.12,-446.21625,-336.42275,negative means Safe Adaptive uses fewer tokens
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.236943,0.209656,0.265273,positive means Safe Adaptive saves tokens
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,answer_f1,100,-0.015643,-0.051,0.015009,positive favors Safe Adaptive
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,answer_coverage,100,-0.011667,-0.055,0.028333,positive favors Safe Adaptive
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,semantic_similarity,100,-0.015715,-0.047982,0.008547,positive favors Safe Adaptive
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,total_tokens,100,305.01,255.48925,353.82225,negative means Safe Adaptive uses fewer tokens
+hotpotqa_crossenc_concise_llama70b_final_eval100,HotpotQA,Llama-70B,Cross-encoder,Safe Adaptive vs Heuristic Rules,token_reduction,100,-0.539891,-0.648333,-0.441107,positive means Safe Adaptive saves tokens
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,answer_f1,100,-0.028,-0.065,-0.003,positive favors Safe Adaptive
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,answer_coverage,100,-0.02,-0.053333,0.003333,positive favors Safe Adaptive
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,semantic_similarity,100,-0.028165,-0.06,-0.000556,positive favors Safe Adaptive
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,total_tokens,100,-470.96,-528.8615,-412.98,negative means Safe Adaptive uses fewer tokens
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.282313,0.254538,0.309548,positive means Safe Adaptive saves tokens
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,answer_f1,100,0.029,-0.003,0.068,positive favors Safe Adaptive
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,answer_coverage,100,0.036667,0.006667,0.073333,positive favors Safe Adaptive
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,semantic_similarity,100,0.029444,-0.000556,0.065805,positive favors Safe Adaptive
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,total_tokens,100,120.74,61.797,178.90125,negative means Safe Adaptive uses fewer tokens
+hotpotqa_llama70b_final_eval100,HotpotQA,Llama-70B,TF-IDF,Safe Adaptive vs Heuristic Rules,token_reduction,100,-0.279448,-0.384181,-0.180249,positive means Safe Adaptive saves tokens
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,answer_f1,100,0.023736,-0.023845,0.073173,positive favors Safe Adaptive
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,answer_coverage,100,0.026923,-0.025904,0.08,positive favors Safe Adaptive
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,semantic_similarity,100,0.024634,-0.021074,0.072728,positive favors Safe Adaptive
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,total_tokens,100,-521.88,-586.04275,-459.55,negative means Safe Adaptive uses fewer tokens
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.272335,0.244709,0.300183,positive means Safe Adaptive saves tokens
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,answer_f1,100,0.057732,0.006298,0.112617,positive favors Safe Adaptive
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,answer_coverage,100,0.04,-0.02,0.105,positive favors Safe Adaptive
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,semantic_similarity,100,0.056535,0.005795,0.113142,positive favors Safe Adaptive
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,total_tokens,100,166.61,96.66325,237.7255,negative means Safe Adaptive uses fewer tokens
+hotpotqa_mistral_final_eval100,HotpotQA,Mistral,TF-IDF,Safe Adaptive vs Heuristic Rules,token_reduction,100,-0.317641,-0.430542,-0.210343,positive means Safe Adaptive saves tokens
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,answer_f1,100,0.004341,-0.008031,0.016531,positive favors Safe Adaptive
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,answer_coverage,100,-0.008807,-0.036594,0.016476,positive favors Safe Adaptive
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,semantic_similarity,100,0.001598,-0.010939,0.015608,positive favors Safe Adaptive
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive - Fixed Top-10,total_tokens,100,-2472.57,-2659.33825,-2267.96575,negative means Safe Adaptive uses fewer tokens
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.72429,0.677319,0.758591,positive means Safe Adaptive saves tokens
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,answer_f1,100,-0.002013,-0.012397,0.00897,positive favors Safe Adaptive
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,answer_coverage,100,-0.008247,-0.028765,0.01296,positive favors Safe Adaptive
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,semantic_similarity,100,0.005852,-0.00491,0.01744,positive favors Safe Adaptive
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive - Heuristic Rules,total_tokens,100,-889.7,-1076.60575,-674.1675,negative means Safe Adaptive uses fewer tokens
+scifact_crossenc_llama70b_final_eval100,SciFact,Llama-70B,Cross-encoder,Safe Adaptive vs Heuristic Rules,token_reduction,100,0.442846,0.332353,0.520597,positive means Safe Adaptive saves tokens
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,answer_f1,100,0.003285,-0.008032,0.013787,positive favors Safe Adaptive
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,answer_coverage,100,-0.009065,-0.03131,0.016476,positive favors Safe Adaptive
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,semantic_similarity,100,-0.000369,-0.011904,0.010287,positive favors Safe Adaptive
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive - Fixed Top-10,total_tokens,100,-2478.28,-2659.4885,-2261.58375,negative means Safe Adaptive uses fewer tokens
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.725083,0.670171,0.76318,positive means Safe Adaptive saves tokens
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,answer_f1,100,-0.001218,-0.012164,0.010175,positive favors Safe Adaptive
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,answer_coverage,100,-0.007921,-0.029078,0.013763,positive favors Safe Adaptive
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,semantic_similarity,100,-0.005895,-0.019098,0.006659,positive favors Safe Adaptive
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive - Heuristic Rules,total_tokens,100,-1300.22,-1470.2865,-1098.752,negative means Safe Adaptive uses fewer tokens
+scifact_llama70b_final_eval100,SciFact,Llama-70B,TF-IDF,Safe Adaptive vs Heuristic Rules,token_reduction,100,0.571467,0.498165,0.627192,positive means Safe Adaptive saves tokens
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,answer_f1,100,0.049383,0.028227,0.070975,positive favors Safe Adaptive
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,answer_coverage,100,0.102395,0.046146,0.155013,positive favors Safe Adaptive
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,semantic_similarity,100,0.062122,0.031754,0.094296,positive favors Safe Adaptive
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive - Fixed Top-10,total_tokens,100,-2796.13,-2891.51275,-2698.55275,negative means Safe Adaptive uses fewer tokens
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive vs Fixed Top-10,token_reduction,100,0.737628,0.719285,0.753924,positive means Safe Adaptive saves tokens
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,answer_f1,100,-0.011627,-0.031648,0.009344,positive favors Safe Adaptive
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,answer_coverage,100,-0.0216,-0.069162,0.024106,positive favors Safe Adaptive
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,semantic_similarity,100,-0.011328,-0.036781,0.013993,positive favors Safe Adaptive
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive - Heuristic Rules,total_tokens,100,-1666.74,-1819.4855,-1521.39625,negative means Safe Adaptive uses fewer tokens
+scifact_mistral_final_eval100,SciFact,Mistral,TF-IDF,Safe Adaptive vs Heuristic Rules,token_reduction,100,0.606402,0.577868,0.633285,positive means Safe Adaptive saves tokens

@@ -1,0 +1,25 @@
+dataset,label,label_name,count
+asqa,adaptive_k_full,Adaptive-k,56
+asqa,answer_aware_fallback,Safe Adaptive Context,34
+asqa,coverage_guided_ultra,Coverage-Guided Ultra,23
+asqa,fixed_10_full,Fixed Top-10,75
+asqa,task_aware_coverage_ultra,TACER,12
+bioasq,adaptive_k_full,Adaptive-k,41
+bioasq,answer_aware_fallback,Safe Adaptive Context,44
+bioasq,coverage_guided_ultra,Coverage-Guided Ultra,42
+bioasq,fixed_10_full,Fixed Top-10,65
+bioasq,task_aware_coverage_ultra,TACER,8
+hotpotqa,adaptive_k_full,Adaptive-k,95
+hotpotqa,answer_aware_fallback,Safe Adaptive Context,26
+hotpotqa,coverage_guided_ultra,Coverage-Guided Ultra,69
+hotpotqa,fixed_10_full,Fixed Top-10,10
+msmarco,adaptive_k_full,Adaptive-k,57
+msmarco,answer_aware_fallback,Safe Adaptive Context,55
+msmarco,coverage_guided_ultra,Coverage-Guided Ultra,45
+msmarco,fixed_10_full,Fixed Top-10,35
+msmarco,task_aware_coverage_ultra,TACER,8
+scifact,adaptive_k_full,Adaptive-k,45
+scifact,answer_aware_fallback,Safe Adaptive Context,35
+scifact,coverage_guided_ultra,Coverage-Guided Ultra,71
+scifact,fixed_10_full,Fixed Top-10,32
+scifact,task_aware_coverage_ultra,TACER,17

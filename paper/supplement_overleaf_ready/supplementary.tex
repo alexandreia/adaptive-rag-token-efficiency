@@ -1,0 +1,628 @@
+\documentclass[11pt]{article}
+
+\usepackage[review]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{graphicx}
+\usepackage{placeins}
+\usepackage{float}
+
+\setlength{\textfloatsep}{7pt plus 1pt minus 2pt}
+\setlength{\floatsep}{6pt plus 1pt minus 2pt}
+\setlength{\intextsep}{6pt plus 1pt minus 2pt}
+\setlength{\dbltextfloatsep}{7pt plus 1pt minus 2pt}
+\setlength{\dblfloatsep}{6pt plus 1pt minus 2pt}
+\setlength{\abovecaptionskip}{3pt}
+\setlength{\belowcaptionskip}{3pt}
+
+\title{Supplementary Material: Safe Adaptive Context and TACER}
+\author{Anonymous Submission}
+
+\begin{document}
+\maketitle
+\raggedbottom
+
+\appendix
+
+\section{Implementation Details}
+
+\subsection{Retriever Details}
+
+For a corpus of $N$ documents, inverse document frequency is computed as:
+\[
+\mathrm{idf}(t)=\log\left(\frac{1+N}{1+\mathrm{df}(t)}\right)+1,
+\]
+where $\mathrm{df}(t)$ is the number of documents containing term $t$. Query and document vectors are computed in the same TF-IDF space, and documents are ranked by cosine similarity:
+\[
+\mathrm{sim}(q,d)=\frac{q\cdot d}{\lVert q\rVert \lVert d\rVert}.
+\]
+
+\subsection{Evidence Compression Scoring}
+
+For compact evidence modes, candidate sentences are scored as:
+\[
+\begin{aligned}
+\mathrm{score}(q,s,i) ={}& .40\,O(q,s)+.25\,R(q,s)\\
+&+.20\,P(q,s)+.10\,D(q,s)\\
+&+.05(1+i)^{-1}.
+\end{aligned}
+\]
+Here $O$, $R$, $P$, and $D$ denote unigram overlap, rare query-term coverage, phrase overlap, and token density. The position bonus mildly favors earlier sentences.
+
+\section{Routing and Fallback Details}
+
+TACER uses only query text, retrieval scores, and lexical evidence coverage; it does not use dataset identifiers or an additional LLM call before generation. The query-shape detector labels concise prompts as factoid unless the query contains multi-hop cues such as \emph{which}, \emph{where}, \emph{when}, \emph{whose}, \emph{both}, or \emph{and} and has at least six content words. Non-concise questions are treated as factoid-style questions when they contain a question mark, and otherwise as claim-style inputs.
+
+Evidence complexity is assigned from general query features. A concise query is treated as distributed when it contains connective evidence or at least two capitalized entities and has at least six content words. Otherwise, any query with at least twelve content words, two connective cues, three capitalized entities, or two numeric expressions is treated as distributed; a query with at least seven content words or one capitalized entity is moderate; remaining queries are focused.
+
+\begin{table}[t]
+\centering
+\small
+\caption{TACER routing rules used in the final implementation.}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{ll}
+\toprule
+Condition & Routing action \\
+\midrule
+Concise prompt with bridge evidence, multi-hop shape, or distributed complexity & Use safer Safe Adaptive ladder \\
+Long-answer setting with $>120$ output tokens and non-focused complexity & Use safer Safe Adaptive ladder \\
+Claim-style prompt with at most 120 output tokens & Use compact coverage-guided evidence \\
+Distributed complexity with a non-concentrated ranking & Use safer Safe Adaptive ladder \\
+Focused or concentrated evidence otherwise & Use compact coverage-guided evidence \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Fallback risk rules for evidence-style prompts. Fallback is triggered when total risk is at least 3.}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lr}
+\toprule
+Condition & Risk increment \\
+\midrule
+Empty answer & 10 \\
+Contains weak-answer phrase & +3 \\
+Answer-context overlap $<0.08$ & +3 \\
+Context-query coverage $<0.35$ & +2 \\
+Fewer than 5 answer content words and answer-context overlap $<0.20$ & +2 \\
+Answer-query overlap $<0.04$ & +1 \\
+More than 24 answer content words and answer-context overlap $<0.90$ & +1 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+For concise short-answer prompts, fallback is triggered only for an empty answer or for an answer with more than 18 content words and answer-context overlap below 0.80. These concise-task rules are intentionally conservative because many correct answers are names, dates, places, or short phrases with limited lexical overlap.
+
+\section{Ethics}
+
+The experiments use benchmark-style datasets and generated answers. Because SciFact and BioASQ are biomedical, outputs should not be treated as medical advice or clinical evidence. We evaluate the system as an information retrieval and question-answering method, not as a clinical decision tool.
+
+\section{Full Per-Dataset Results}
+
+The main paper reports compact comparisons to preserve readability. Tables~\ref{tab:full_scifact_tfidf}--\ref{tab:full_asqa_tfidf} provide the full Llama-70B TF-IDF method ladder for each dataset, including fixed baselines, Heuristic Rules, Adaptive-$k$ (score-drop), Safe Adaptive Context, Coverage-Guided Ultra, and TACER.
+
+\subsection{Compression and Budget Diagnostic}
+
+Table~\ref{tab:compression_budget_diagnostic} separates three effects in the original Safe Adaptive pipeline: compressing a fixed context, choosing a smaller budget, and combining adaptive budgeting with fallback. This diagnostic is not repeated in the main paper because the main paper already reports the final ablation, but it provides the mechanism check behind the Safe Adaptive design.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Compression and budget diagnostic for Safe Adaptive Context. Token reduction is relative to Fixed Top-10 for the same dataset.}
+\label{tab:compression_budget_diagnostic}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Dataset & Method & F1 & Semantic & Tokens & Token Red. \\
+\midrule
+SciFact & Fixed Full Context & 0.262 & 0.569 & 3412 & 0.0\% \\
+SciFact & Compressed Fixed Full Context & 0.257 & 0.571 & 2150 & 37.0\% \\
+SciFact & Heuristic Rules & 0.266 & 0.575 & 2234 & 34.5\% \\
+SciFact & Heuristic Rules + Compact Evidence & 0.262 & 0.575 & 1453 & 57.4\% \\
+SciFact & Safe Adaptive Context & 0.265 & 0.569 & 933 & 72.6\% \\
+\midrule
+HotpotQA & Fixed Full Context & 0.765 & 0.768 & 1537 & 0.0\% \\
+HotpotQA & Compressed Fixed Full Context & 0.752 & 0.755 & 1430 & 6.9\% \\
+HotpotQA & Heuristic Rules & 0.708 & 0.711 & 945 & 38.5\% \\
+HotpotQA & Heuristic Rules + Compact Evidence & 0.696 & 0.700 & 902 & 41.3\% \\
+HotpotQA & Safe Adaptive Context & 0.737 & 0.740 & 1066 & 30.6\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\subsection{Full Main TF-IDF Results}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Full Llama-70B TF-IDF results for SciFact. Token reduction is relative to Fixed Top-10.}
+\label{tab:full_scifact_tfidf}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Method & Ctx nDCG & Ctx MRR & F1 & Coverage & Semantic & Tokens & Token Red. & Fallback \\
+\midrule
+No Retrieval & 0.000 & 0.000 & 0.275 & 0.495 & 0.368 & 119 & 96.5\% & 0.0\% \\
+Fixed Top-3 & 0.517 & 0.506 & 0.245 & 0.819 & 0.544 & 1135 & 66.7\% & 0.0\% \\
+Fixed Top-5 & 0.548 & 0.524 & 0.245 & 0.820 & 0.541 & 1785 & 47.7\% & 0.0\% \\
+Fixed Top-7 & 0.559 & 0.528 & 0.245 & 0.827 & 0.548 & 2434 & 28.7\% & 0.0\% \\
+Fixed Top-10 & 0.567 & 0.531 & 0.243 & 0.815 & 0.548 & 3414 & 0.0\% & 0.0\% \\
+Heuristic Rules & 0.549 & 0.524 & 0.245 & 0.819 & 0.546 & 2148 & 37.1\% & 0.0\% \\
+Adaptive-$k$ & 0.492 & 0.486 & 0.251 & 0.818 & 0.545 & 858 & 74.9\% & 0.0\% \\
+Safe Adaptive Context & 0.525 & 0.510 & 0.247 & 0.820 & 0.546 & 1027 & 69.9\% & 10.0\% \\
+Coverage-Guided Ultra & 0.500 & 0.490 & 0.254 & 0.814 & 0.552 & 653 & 80.9\% & 0.0\% \\
+TACER & 0.500 & 0.490 & 0.253 & 0.814 & 0.554 & 654 & 80.9\% & 0.0\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Full Llama-70B TF-IDF results for BioASQ. Token reduction is relative to Fixed Top-10.}
+\label{tab:full_bioasq_tfidf}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Method & Ctx nDCG & Ctx MRR & F1 & Coverage & Semantic & Tokens & Token Red. & Fallback \\
+\midrule
+No Retrieval & 0.000 & 0.000 & 0.202 & 0.234 & 0.532 & 121 & 96.5\% & 0.0\% \\
+Fixed Top-3 & 0.605 & 0.907 & 0.322 & 0.483 & 0.750 & 1140 & 66.7\% & 0.0\% \\
+Fixed Top-5 & 0.710 & 0.908 & 0.326 & 0.498 & 0.751 & 1795 & 47.5\% & 0.0\% \\
+Fixed Top-7 & 0.770 & 0.908 & 0.325 & 0.502 & 0.749 & 2454 & 28.3\% & 0.0\% \\
+Fixed Top-10 & 0.831 & 0.908 & 0.328 & 0.507 & 0.753 & 3421 & 0.0\% & 0.0\% \\
+Heuristic Rules & 0.732 & 0.908 & 0.325 & 0.499 & 0.749 & 2080 & 39.2\% & 0.0\% \\
+Adaptive-$k$ & 0.539 & 0.897 & 0.319 & 0.458 & 0.738 & 918 & 73.2\% & 0.0\% \\
+Safe Adaptive Context & 0.607 & 0.907 & 0.323 & 0.494 & 0.749 & 870 & 74.6\% & 4.0\% \\
+Coverage-Guided Ultra & 0.592 & 0.910 & 0.313 & 0.462 & 0.740 & 679 & 80.1\% & 0.0\% \\
+TACER & 0.581 & 0.910 & 0.314 & 0.464 & 0.740 & 656 & 80.8\% & 0.0\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Full Llama-70B TF-IDF results for HotpotQA. Token reduction is relative to Fixed Top-10.}
+\label{tab:full_hotpotqa_tfidf}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Method & Ctx nDCG & Ctx MRR & F1 & Coverage & Semantic & Tokens & Token Red. & Fallback \\
+\midrule
+No Retrieval & 0.000 & 0.000 & 0.309 & 0.306 & 0.470 & 148 & 91.4\% & 0.0\% \\
+Fixed Top-3 & 0.596 & 0.767 & 0.532 & 0.531 & 0.644 & 557 & 67.7\% & 0.0\% \\
+Fixed Top-5 & 0.641 & 0.780 & 0.555 & 0.555 & 0.663 & 863 & 49.9\% & 0.0\% \\
+Fixed Top-7 & 0.680 & 0.786 & 0.601 & 0.605 & 0.710 & 1192 & 30.8\% & 0.0\% \\
+Fixed Top-10 & 0.717 & 0.790 & 0.645 & 0.651 & 0.747 & 1722 & 0.0\% & 0.0\% \\
+Heuristic Rules & 0.665 & 0.783 & 0.575 & 0.580 & 0.691 & 1080 & 37.3\% & 0.0\% \\
+Adaptive-$k$ & 0.540 & 0.750 & 0.490 & 0.493 & 0.605 & 510 & 70.4\% & 0.0\% \\
+Safe Adaptive Context & 0.717 & 0.790 & 0.627 & 0.630 & 0.730 & 1165 & 32.3\% & 0.0\% \\
+Coverage-Guided Ultra & 0.630 & 0.780 & 0.464 & 0.467 & 0.583 & 452 & 73.7\% & 0.5\% \\
+TACER & 0.716 & 0.791 & 0.627 & 0.630 & 0.724 & 1161 & 32.6\% & 0.0\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Full Llama-70B TF-IDF results for MS MARCO. Token reduction is relative to Fixed Top-10.}
+\label{tab:full_msmarco_tfidf}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Method & Ctx nDCG & Ctx MRR & F1 & Coverage & Semantic & Tokens & Token Red. & Fallback \\
+\midrule
+No Retrieval & 0.000 & 0.000 & 0.101 & 0.136 & 0.283 & 111 & 92.1\% & 0.0\% \\
+Fixed Top-3 & 0.386 & 0.360 & 0.197 & 0.580 & 0.468 & 528 & 62.2\% & 0.0\% \\
+Fixed Top-5 & 0.475 & 0.403 & 0.198 & 0.624 & 0.472 & 786 & 43.8\% & 0.0\% \\
+Fixed Top-7 & 0.535 & 0.429 & 0.198 & 0.621 & 0.475 & 1035 & 26.0\% & 0.0\% \\
+Fixed Top-10 & 0.552 & 0.435 & 0.196 & 0.614 & 0.473 & 1398 & 0.0\% & 0.0\% \\
+Heuristic Rules & 0.487 & 0.409 & 0.201 & 0.617 & 0.476 & 813 & 41.8\% & 0.0\% \\
+Adaptive-$k$ & 0.431 & 0.370 & 0.199 & 0.549 & 0.466 & 718 & 48.6\% & 0.0\% \\
+Safe Adaptive Context & 0.516 & 0.420 & 0.195 & 0.622 & 0.469 & 859 & 38.5\% & 1.0\% \\
+Coverage-Guided Ultra & 0.431 & 0.370 & 0.193 & 0.533 & 0.452 & 642 & 54.1\% & 0.0\% \\
+TACER & 0.431 & 0.370 & 0.195 & 0.523 & 0.456 & 642 & 54.1\% & 0.0\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Full Llama-70B TF-IDF results for ASQA. Token reduction is relative to Fixed Top-10.}
+\label{tab:full_asqa_tfidf}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrrrr}
+\toprule
+Method & Ctx nDCG & Ctx MRR & F1 & Coverage & Semantic & Tokens & Token Red. & Fallback \\
+\midrule
+No Retrieval & 0.000 & 0.000 & 0.217 & 0.167 & 0.402 & 113 & 90.5\% & 0.0\% \\
+Fixed Top-3 & 0.700 & 0.939 & 0.398 & 0.379 & 0.756 & 423 & 64.6\% & 0.0\% \\
+Fixed Top-5 & 0.784 & 0.941 & 0.416 & 0.414 & 0.771 & 646 & 45.9\% & 0.0\% \\
+Fixed Top-7 & 0.814 & 0.943 & 0.412 & 0.417 & 0.775 & 860 & 28.0\% & 0.0\% \\
+Fixed Top-10 & 0.832 & 0.944 & 0.422 & 0.419 & 0.780 & 1194 & 0.0\% & 0.0\% \\
+Heuristic Rules & 0.772 & 0.942 & 0.411 & 0.402 & 0.771 & 669 & 44.0\% & 0.0\% \\
+Adaptive-$k$ & 0.615 & 0.936 & 0.368 & 0.337 & 0.730 & 348 & 70.9\% & 0.0\% \\
+Safe Adaptive Context & 0.703 & 0.939 & 0.402 & 0.380 & 0.765 & 498 & 58.3\% & 9.0\% \\
+Coverage-Guided Ultra & 0.649 & 0.942 & 0.382 & 0.354 & 0.741 & 407 & 65.9\% & 0.0\% \\
+TACER & 0.706 & 0.939 & 0.404 & 0.382 & 0.764 & 484 & 59.4\% & 7.0\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\FloatBarrier
+
+\subsection{External Baseline Results by Dataset}
+
+\begin{table*}[!htbp]
+\centering
+\small
+\caption{Full 100-query external-baseline stress-test results by dataset. Token reduction is relative to Fixed Top-10 within each dataset.}
+\label{tab:external_full_by_dataset}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Dataset & Method & F1 & Semantic & Tokens & Token Red. \\
+\midrule
+SciFact & Fixed Top-10 & 0.231 & 0.497 & 3388 & 0.0\% \\
+SciFact & Adaptive-$k$ (paper) & 0.238 & 0.496 & 2451 & 27.7\% \\
+SciFact & Top-10 + LLMLingua-2 & 0.246 & 0.508 & 929 & 72.6\% \\
+SciFact & Adaptive-$k$ + LLMLingua-2 & 0.240 & 0.501 & 711 & 79.0\% \\
+SciFact & FLARE-lite & 0.247 & 0.501 & 1175 & 65.3\% \\
+SciFact & Safe Adaptive Context & 0.236 & 0.490 & 899 & 73.5\% \\
+SciFact & TACER & 0.240 & 0.501 & 703 & 79.3\% \\
+\midrule
+BioASQ & Fixed Top-10 & 0.333 & 0.751 & 3425 & 0.0\% \\
+BioASQ & Adaptive-$k$ (paper) & 0.336 & 0.760 & 2469 & 27.9\% \\
+BioASQ & Top-10 + LLMLingua-2 & 0.261 & 0.709 & 847 & 75.3\% \\
+BioASQ & Adaptive-$k$ + LLMLingua-2 & 0.263 & 0.710 & 654 & 80.9\% \\
+BioASQ & FLARE-lite & 0.315 & 0.720 & 580 & 83.1\% \\
+BioASQ & Safe Adaptive Context & 0.329 & 0.752 & 788 & 77.0\% \\
+BioASQ & TACER & 0.319 & 0.736 & 651 & 81.0\% \\
+\midrule
+HotpotQA & Fixed Top-10 & 0.647 & 0.750 & 1685 & 0.0\% \\
+HotpotQA & Adaptive-$k$ (paper) & 0.591 & 0.707 & 1199 & 28.9\% \\
+HotpotQA & Top-10 + LLMLingua-2 & 0.424 & 0.566 & 494 & 70.7\% \\
+HotpotQA & Adaptive-$k$ + LLMLingua-2 & 0.401 & 0.564 & 379 & 77.5\% \\
+HotpotQA & FLARE-lite & 0.576 & 0.698 & 1176 & 30.2\% \\
+HotpotQA & Safe Adaptive Context & 0.633 & 0.728 & 1163 & 31.0\% \\
+HotpotQA & TACER & 0.633 & 0.729 & 1155 & 31.4\% \\
+\midrule
+ASQA & Fixed Top-10 & 0.436 & 0.791 & 1195 & 0.0\% \\
+ASQA & Adaptive-$k$ (paper) & 0.433 & 0.783 & 875 & 26.8\% \\
+ASQA & Top-10 + LLMLingua-2 & 0.318 & 0.693 & 357 & 70.1\% \\
+ASQA & Adaptive-$k$ + LLMLingua-2 & 0.321 & 0.692 & 285 & 76.1\% \\
+ASQA & FLARE-lite & 0.342 & 0.686 & 275 & 77.0\% \\
+ASQA & Safe Adaptive Context & 0.414 & 0.764 & 498 & 58.3\% \\
+ASQA & TACER & 0.415 & 0.763 & 516 & 56.8\% \\
+\midrule
+MS MARCO & Fixed Top-10 & 0.181 & 0.466 & 1408 & 0.0\% \\
+MS MARCO & Adaptive-$k$ (paper) & 0.183 & 0.465 & 1221 & 13.3\% \\
+MS MARCO & Top-10 + LLMLingua-2 & 0.152 & 0.446 & 484 & 65.6\% \\
+MS MARCO & Adaptive-$k$ + LLMLingua-2 & 0.153 & 0.445 & 429 & 69.6\% \\
+MS MARCO & FLARE-lite & 0.197 & 0.440 & 332 & 76.4\% \\
+MS MARCO & Safe Adaptive Context & 0.191 & 0.463 & 910 & 35.4\% \\
+MS MARCO & TACER & 0.189 & 0.449 & 655 & 53.5\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+\FloatBarrier
+
+\section{Model Comparison Details}
+
+Table~\ref{tab:supp_model_comparison} reports the smaller-model comparison used to check that the main Llama-70B pattern is not model-specific.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Model comparison in the TF-IDF setting. Each cell reports F1 / token reduction relative to Fixed Top-10 for that model and dataset.}
+\label{tab:supp_model_comparison}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llll}
+\toprule
+Dataset & Method & Llama F1 / Red. & Mistral F1 / Red. \\
+\midrule
+SciFact & Adaptive-$k$ (score-drop) & 0.251 / 74.9\% & 0.259 / 74.0\% \\
+SciFact & Safe Adaptive & 0.247 / 69.9\% & 0.242 / 71.7\% \\
+SciFact & TACER & 0.253 / 80.9\% & 0.246 / 79.4\% \\
+BioASQ & Adaptive-$k$ (score-drop) & 0.319 / 73.2\% & 0.318 / 72.1\% \\
+BioASQ & Safe Adaptive & 0.323 / 74.6\% & 0.305 / 73.2\% \\
+BioASQ & TACER & 0.314 / 80.8\% & 0.316 / 79.8\% \\
+HotpotQA & Adaptive-$k$ (score-drop) & 0.490 / 70.4\% & 0.282 / 71.4\% \\
+HotpotQA & Safe Adaptive & 0.627 / 32.3\% & 0.369 / 30.9\% \\
+HotpotQA & TACER & 0.627 / 32.6\% & 0.374 / 31.1\% \\
+MS MARCO & Adaptive-$k$ (score-drop) & 0.199 / 48.6\% & 0.212 / 50.1\% \\
+MS MARCO & Safe Adaptive & 0.195 / 38.5\% & 0.217 / 35.1\% \\
+MS MARCO & TACER & 0.195 / 54.1\% & 0.209 / 54.1\% \\
+ASQA & Adaptive-$k$ (score-drop) & 0.368 / 70.9\% & 0.351 / 72.6\% \\
+ASQA & Safe Adaptive & 0.402 / 58.3\% & 0.359 / 61.9\% \\
+ASQA & TACER & 0.404 / 59.4\% & 0.359 / 61.9\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+Table~\ref{tab:supp_mistral_full} gives the complete Mistral TF-IDF method ladder. The compact comparison in Table~\ref{tab:supp_model_comparison} reports the main operating points, while this table preserves the full fixed-depth and diagnostic baselines.
+
+\begin{table*}[!htbp]
+\centering
+\scriptsize
+\caption{Full Mistral TF-IDF results by dataset. Token reduction is relative to Fixed Top-10 for the same dataset.}
+\label{tab:supp_mistral_full}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrr}
+\toprule
+Dataset & Method & F1 & Coverage & Semantic & Tokens & Token Red. & Fallback \\
+\midrule
+SciFact & No Retrieval & 0.297 & 0.692 & 0.561 & 143 & 96.2\% & 0.0\% \\
+SciFact & Fixed Top-3 & 0.247 & 0.676 & 0.523 & 1328 & 64.9\% & 0.0\% \\
+SciFact & Fixed Top-5 & 0.244 & 0.674 & 0.516 & 2115 & 44.0\% & 0.0\% \\
+SciFact & Fixed Top-7 & 0.240 & 0.663 & 0.512 & 2881 & 23.8\% & 0.0\% \\
+SciFact & Fixed Top-10 & 0.189 & 0.530 & 0.419 & 3781 & 0.0\% & 0.0\% \\
+SciFact & Heuristic Rules & 0.239 & 0.647 & 0.515 & 2540 & 32.8\% & 0.0\% \\
+SciFact & Adaptive-$k$ (score-drop) & 0.259 & 0.677 & 0.521 & 983 & 74.0\% & 0.0\% \\
+SciFact & Safe Adaptive Context & 0.242 & 0.679 & 0.514 & 1071 & 71.7\% & 7.0\% \\
+SciFact & Coverage-Guided Ultra & 0.246 & 0.694 & 0.526 & 778 & 79.4\% & 0.5\% \\
+SciFact & TACER & 0.246 & 0.692 & 0.525 & 778 & 79.4\% & 0.5\% \\
+\midrule
+BioASQ & No Retrieval & 0.208 & 0.277 & 0.633 & 122 & 96.9\% & 0.0\% \\
+BioASQ & Fixed Top-3 & 0.315 & 0.450 & 0.734 & 1365 & 64.9\% & 0.0\% \\
+BioASQ & Fixed Top-5 & 0.318 & 0.458 & 0.730 & 2178 & 43.9\% & 0.0\% \\
+BioASQ & Fixed Top-7 & 0.309 & 0.444 & 0.717 & 2982 & 23.2\% & 0.0\% \\
+BioASQ & Fixed Top-10 & 0.242 & 0.338 & 0.585 & 3883 & 0.0\% & 0.0\% \\
+BioASQ & Heuristic Rules & 0.309 & 0.446 & 0.721 & 2523 & 35.0\% & 0.0\% \\
+BioASQ & Adaptive-$k$ (score-drop) & 0.318 & 0.426 & 0.727 & 1084 & 72.1\% & 0.0\% \\
+BioASQ & Safe Adaptive Context & 0.305 & 0.442 & 0.732 & 1042 & 73.2\% & 6.0\% \\
+BioASQ & Coverage-Guided Ultra & 0.317 & 0.437 & 0.731 & 815 & 79.0\% & 0.0\% \\
+BioASQ & TACER & 0.316 & 0.440 & 0.733 & 786 & 79.8\% & 0.0\% \\
+\midrule
+HotpotQA & No Retrieval & 0.204 & 0.253 & 0.407 & 145 & 92.9\% & 0.0\% \\
+HotpotQA & Fixed Top-3 & 0.294 & 0.346 & 0.443 & 638 & 68.7\% & 0.0\% \\
+HotpotQA & Fixed Top-5 & 0.333 & 0.387 & 0.481 & 1009 & 50.5\% & 0.0\% \\
+HotpotQA & Fixed Top-7 & 0.358 & 0.414 & 0.510 & 1403 & 31.1\% & 0.0\% \\
+HotpotQA & Fixed Top-10 & 0.385 & 0.442 & 0.525 & 2038 & 0.0\% & 0.0\% \\
+HotpotQA & Heuristic Rules & 0.348 & 0.405 & 0.501 & 1268 & 37.8\% & 0.0\% \\
+HotpotQA & Adaptive-$k$ (score-drop) & 0.282 & 0.345 & 0.433 & 582 & 71.4\% & 0.0\% \\
+HotpotQA & Safe Adaptive Context & 0.369 & 0.418 & 0.528 & 1409 & 30.9\% & 0.0\% \\
+HotpotQA & Coverage-Guided Ultra & 0.258 & 0.306 & 0.402 & 530 & 74.0\% & 0.5\% \\
+HotpotQA & TACER & 0.374 & 0.423 & 0.532 & 1404 & 31.1\% & 0.0\% \\
+\midrule
+MS MARCO & No Retrieval & 0.110 & 0.204 & 0.355 & 114 & 93.0\% & 0.0\% \\
+MS MARCO & Fixed Top-3 & 0.205 & 0.526 & 0.453 & 584 & 64.3\% & 0.0\% \\
+MS MARCO & Fixed Top-5 & 0.214 & 0.562 & 0.468 & 892 & 45.4\% & 0.0\% \\
+MS MARCO & Fixed Top-7 & 0.212 & 0.583 & 0.472 & 1194 & 26.9\% & 0.0\% \\
+MS MARCO & Fixed Top-10 & 0.210 & 0.582 & 0.471 & 1634 & 0.0\% & 0.0\% \\
+MS MARCO & Heuristic Rules & 0.212 & 0.560 & 0.472 & 928 & 43.2\% & 0.0\% \\
+MS MARCO & Adaptive-$k$ (score-drop) & 0.212 & 0.539 & 0.466 & 816 & 50.1\% & 0.0\% \\
+MS MARCO & Safe Adaptive Context & 0.217 & 0.558 & 0.466 & 1061 & 35.1\% & 2.5\% \\
+MS MARCO & Coverage-Guided Ultra & 0.209 & 0.487 & 0.455 & 751 & 54.1\% & 0.0\% \\
+MS MARCO & TACER & 0.209 & 0.486 & 0.456 & 751 & 54.1\% & 0.0\% \\
+\midrule
+ASQA & No Retrieval & 0.264 & 0.229 & 0.586 & 111 & 91.9\% & 0.0\% \\
+ASQA & Fixed Top-3 & 0.364 & 0.349 & 0.735 & 459 & 66.6\% & 0.0\% \\
+ASQA & Fixed Top-5 & 0.369 & 0.361 & 0.749 & 717 & 47.7\% & 0.0\% \\
+ASQA & Fixed Top-7 & 0.361 & 0.342 & 0.742 & 969 & 29.3\% & 0.0\% \\
+ASQA & Fixed Top-10 & 0.366 & 0.351 & 0.749 & 1371 & 0.0\% & 0.0\% \\
+ASQA & Heuristic Rules & 0.372 & 0.352 & 0.745 & 748 & 45.4\% & 0.0\% \\
+ASQA & Adaptive-$k$ (score-drop) & 0.351 & 0.324 & 0.721 & 375 & 72.6\% & 0.0\% \\
+ASQA & Safe Adaptive Context & 0.359 & 0.342 & 0.739 & 522 & 61.9\% & 7.0\% \\
+ASQA & Coverage-Guided Ultra & 0.349 & 0.320 & 0.715 & 456 & 66.8\% & 0.0\% \\
+ASQA & TACER & 0.359 & 0.342 & 0.739 & 522 & 61.9\% & 7.0\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+\subsection{Retriever-Robustness Details}
+
+Table~\ref{tab:tacer_vs_adaptive} gives the full direct comparison between TACER and Adaptive-$k$ (score-drop) across retrieval settings. The main paper reports average behavior and discusses HotpotQA as the clearest distributed-evidence case; this table gives the dataset-level deltas.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Direct comparison between TACER and Adaptive-$k$ (score-drop). Positive F1 delta favors TACER; positive reduction delta means TACER saves more tokens.}
+\label{tab:tacer_vs_adaptive}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Retriever & Dataset & Adaptive-$k$ F1 & TACER F1 & TACER F1 Delta & TACER Reduction Delta \\
+\midrule
+TF-IDF & SciFact & 0.251 & 0.253 & +0.002 & +6.0\% \\
+TF-IDF & BioASQ & 0.319 & 0.314 & -0.006 & +7.6\% \\
+TF-IDF & HotpotQA & 0.490 & 0.627 & +0.137 & -37.8\% \\
+TF-IDF & MS MARCO & 0.199 & 0.195 & -0.005 & +5.5\% \\
+TF-IDF & ASQA & 0.368 & 0.404 & +0.036 & -11.5\% \\
+\midrule
+TF-IDF + CE & SciFact & 0.262 & 0.251 & -0.011 & +5.6\% \\
+TF-IDF + CE & BioASQ & 0.336 & 0.320 & -0.015 & +11.5\% \\
+TF-IDF + CE & HotpotQA & 0.560 & 0.676 & +0.116 & -34.1\% \\
+TF-IDF + CE & MS MARCO & 0.204 & 0.200 & -0.005 & +7.4\% \\
+TF-IDF + CE & ASQA & 0.415 & 0.418 & +0.003 & -1.3\% \\
+\midrule
+Dense + CE & SciFact & 0.264 & 0.255 & -0.009 & +5.5\% \\
+Dense + CE & BioASQ & 0.338 & 0.324 & -0.013 & +11.5\% \\
+Dense + CE & HotpotQA & 0.573 & 0.705 & +0.131 & -34.9\% \\
+Dense + CE & MS MARCO & 0.204 & 0.200 & -0.004 & +7.7\% \\
+Dense + CE & ASQA & 0.415 & 0.417 & +0.002 & -0.4\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\section{Qualitative Failure Examples}
+
+Table~\ref{tab:supp_failure_examples} gives representative examples from the main Llama-70B TF-IDF run. They illustrate the regimes discussed in the main paper: score-only under-selection, long-form evidence need, compression success, and over-compression risk.
+
+\begin{table}[!htbp]
+\centering
+\scriptsize
+\caption{Representative qualitative examples from the main Llama-70B TF-IDF run. Metrics are F1 / coverage / semantic similarity.}
+\label{tab:supp_failure_examples}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{p{0.20\linewidth}p{0.32\linewidth}p{0.22\linewidth}p{0.22\linewidth}}
+\toprule
+Pattern & Query & Score-drop & TACER \\
+\midrule
+Score-only under-selection & HotpotQA: birth date of a Trump campaign consultant & 0.000 / 0.000 / 0.017; 1 doc & 1.000 / 1.000 / 1.000; 10 docs \\
+Long-form evidence need & ASQA: who played the baby in \emph{Baby's Day Out}? & 0.292 / 0.261 / 0.490; 1 doc & 0.706 / 0.739 / 0.889; 3 docs \\
+Compression success & SciFact: hypocretin neurons induce a panic-prone state & 0.216 / 0.889 / 0.800; 3 docs & 0.485 / 0.889 / 0.946; 4 docs \\
+Over-compression risk & BioASQ: is pregabalin effective for sciatica? & 0.661 / 0.794 / 0.944; 1 doc & 0.250 / 0.176 / 0.813; 2 docs \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Qualitative interpretation of common context-selection regimes.}
+\label{tab:regimes}
+\resizebox{0.85\linewidth}{!}{%
+\begin{tabular}{lll}
+\toprule
+Regime & Typical dataset & Best policy behavior \\
+\midrule
+Concentrated evidence & SciFact & Compress aggressively \\
+Focused technical answer & BioASQ & Compress, but preserve conditions \\
+Distributed multi-hop & HotpotQA & Preserve broader evidence \\
+Early-answer web QA & MS MARCO & Small context often sufficient \\
+Long-form synthesis & ASQA & Balance breadth and compression \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\section{Human Annotation Protocol}
+
+The first annotation study validates automatic metrics against human factual judgments. It contains 120 outputs from SciFact, HotpotQA, and BioASQ, sampled across Llama-70B and Mistral. Two annotators agreed on 84 examples, yielding 70.0\% raw agreement and Cohen's $\kappa=0.477$. Table~\ref{tab:supp_metric_validation_labels} gives the agreed label counts.
+
+The targeted TACER annotation set contains 15 HotpotQA and 15 ASQA queries. For each query, four saved Llama-70B outputs are shown in random order: Fixed Top-10, Adaptive-$k$ (paper), Safe Adaptive Context, and TACER. Annotators see only System A/B/C/D labels, the query, reference answer, model answer, and retrieved evidence. Method identities, automatic scores, and token counts are hidden during annotation. Two annotators label all 120 outputs. Exact four-way agreement is 68.3\% with Cohen's $\kappa=0.422$; binary acceptable/unacceptable agreement is 92.5\% with $\kappa=0.688$. Table~\ref{tab:supp_human_eval_dataset} gives the conservative merged split by dataset.
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Targeted annotation split by dataset using the conservative two-annotator merge. Acceptable = correct or partially correct.}
+\label{tab:supp_human_eval_dataset}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Dataset & Method & Corr. & Part. & Inc./NEI & Accept. \\
+\midrule
+HotpotQA & Fixed Top-10 & 10 & 1 & 4 & 73.3\% \\
+HotpotQA & Adaptive-$k$ (paper) & 4 & 0 & 11 & 26.7\% \\
+HotpotQA & Safe Adaptive & 12 & 2 & 1 & 93.3\% \\
+HotpotQA & TACER & 12 & 2 & 1 & 93.3\% \\
+ASQA & Fixed Top-10 & 6 & 7 & 2 & 86.7\% \\
+ASQA & Adaptive-$k$ (paper) & 5 & 9 & 1 & 93.3\% \\
+ASQA & Safe Adaptive & 7 & 7 & 1 & 93.3\% \\
+ASQA & TACER & 7 & 8 & 0 & 100.0\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Human labels for agreed annotation examples in the metric-validation study.}
+\label{tab:supp_metric_validation_labels}
+\resizebox{0.75\linewidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & Agreed & Correct & Partial & Incorrect \\
+\midrule
+SciFact & 27 & 20 & 2 & 5 \\
+HotpotQA & 30 & 26 & 0 & 4 \\
+BioASQ & 27 & 19 & 4 & 4 \\
+Overall & 84 & 65 & 6 & 13 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Alignment between automatic metric buckets and agreed human labels in the metric-validation study.}
+\label{tab:metric_alignment}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Metric & Bucket & Items & Correct & Partially Correct & Incorrect \\
+\midrule
+Token F1 & Low (0.00--0.33) & 33 & 48.5\% & 18.2\% & 33.3\% \\
+Token F1 & Medium (0.34--0.66) & 22 & 90.9\% & 0.0\% & 9.1\% \\
+Token F1 & High (0.67--1.00) & 29 & 100.0\% & 0.0\% & 0.0\% \\
+\midrule
+Semantic & Low (0.00--0.49) & 23 & 47.8\% & 13.0\% & 39.1\% \\
+Semantic & Medium (0.50--0.74) & 12 & 58.3\% & 25.0\% & 16.7\% \\
+Semantic & High (0.75--1.00) & 49 & 95.9\% & 0.0\% & 4.1\% \\
+\midrule
+Coverage & Low (0.00--0.33) & 17 & 17.6\% & 29.4\% & 52.9\% \\
+Coverage & Medium (0.34--0.66) & 14 & 71.4\% & 7.1\% & 21.4\% \\
+Coverage & High (0.67--1.00) & 53 & 98.1\% & 0.0\% & 1.9\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Human annotation label definitions.}
+\label{tab:annotation_labels}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{ll}
+\toprule
+Label & Criterion \\
+\midrule
+CORRECT & Contains the required information and does not contradict the reference or evidence. \\
+PARTIALLY\_CORRECT & Contains some required information but is incomplete, vague, or missing a condition. \\
+INCORRECT & Contradicts the reference/evidence or gives a different answer. \\
+NOT\_ENOUGH\_INFO & Cannot be confidently judged from the query, reference, and evidence shown. \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\small
+\caption{Human annotation sample construction for the metric-validation study.}
+\label{tab:annotation_sample}
+\resizebox{0.85\linewidth}{!}{%
+\begin{tabular}{llp{0.55\linewidth}}
+\toprule
+Dataset & Items & Selection \\
+\midrule
+SciFact & 40 & Stratified examples from Mistral and Llama-70B \\
+HotpotQA & 40 & Examples covering the HotpotQA output distribution \\
+BioASQ & 40 & Stratified examples from Mistral and Llama-70B \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\end{document}

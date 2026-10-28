@@ -1,0 +1,8 @@
+| dataset | method | code_mode | ndcg_at_10 | mrr_at_10 | answer_f1 | answer_coverage | semantic_similarity | f1_retained_vs_top10 | semantic_similarity_retained_vs_top10 | total_tokens | token_reduction_vs_top10 | fallback_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| MSMARCO | Fixed Top-3 | fixed_3_full | 0.638271 | 0.605833 | 0.218329 | 0.659635 | 0.479565 | 108.4% | 100.8% | 539.88 | 62.8% | 0.0% |
+| MSMARCO | Fixed Top-5 | fixed_5_full | 0.706736 | 0.642833 | 0.204462 | 0.647835 | 0.476685 | 101.5% | 100.2% | 792.68 | 45.4% | 0.0% |
+| MSMARCO | Fixed Top-10 | fixed_10_full | 0.730251 | 0.65002 | 0.201479 | 0.647586 | 0.475529 | 100.0% | 100.0% | 1450.78 | 0.0% | 0.0% |
+| MSMARCO | Adaptive-k | adaptive_k_full | 0.714771 | 0.642061 | 0.204335 | 0.644888 | 0.477742 | 101.4% | 100.5% | 1056.47 | 27.2% | 0.0% |
+| MSMARCO | Safe Adaptive Context | answer_aware_fallback | 0.688636 | 0.631292 | 0.204247 | 0.633835 | 0.467324 | 101.4% | 98.3% | 675.91 | 53.4% | 1.0% |
+| MSMARCO | TACER | task_aware_coverage_ultra | 0.714771 | 0.642061 | 0.199704 | 0.635376 | 0.470285 | 99.1% | 98.9% | 949.41 | 34.6% | 0.0% |

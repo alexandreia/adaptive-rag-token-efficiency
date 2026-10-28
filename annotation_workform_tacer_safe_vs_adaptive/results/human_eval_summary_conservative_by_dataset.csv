@@ -1,0 +1,9 @@
+dataset,method,n,correct,partial,incorrect,not_enough_info,acceptable,acceptable_pct
+HotpotQA,Fixed Top-10,15,10,1,3,1,11,73.3
+HotpotQA,Adaptive-k (paper),15,4,0,6,5,4,26.7
+HotpotQA,Safe Adaptive Context,15,12,2,1,0,14,93.3
+HotpotQA,TACER,15,12,2,1,0,14,93.3
+ASQA,Fixed Top-10,15,6,7,2,0,13,86.7
+ASQA,Adaptive-k (paper),15,5,9,1,0,14,93.3
+ASQA,Safe Adaptive Context,15,7,7,1,0,14,93.3
+ASQA,TACER,15,7,8,0,0,15,100.0

@@ -1,0 +1,5 @@
+retriever,queries,ndcg_at_10,mrr_at_10,recall_at_10
+tfidf,200,0.831084,0.908167,0.732893
+tfidf_cross_encoder,200,0.904823,0.942639,0.795612
+dense,200,0.852862,0.923111,0.762721
+dense_cross_encoder,200,0.894741,0.944083,0.786143

@@ -1,0 +1,522 @@
+| run | dataset | model | retriever | method | mode | metric | n | mean | ci_low | ci_high |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.416842 | 0.389945 | 0.444563 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.41105 | 0.377883 | 0.446082 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.782406 | 0.758482 | 0.805028 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 503.41 | 417.31825 | 613.376 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.422684 | 0.397252 | 0.448715 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.449051 | 0.412105 | 0.487127 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.795465 | 0.771963 | 0.817181 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 1107.26 | 1076.53525 | 1139.142 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.410959 | 0.382485 | 0.439209 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.418503 | 0.387149 | 0.450969 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.786414 | 0.762072 | 0.809692 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 1229.47 | 1170.738 | 1292.50725 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.417868 | 0.390193 | 0.446137 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.407669 | 0.374584 | 0.442799 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.780357 | 0.755185 | 0.803631 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 407.04 | 390.99725 | 422.9125 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.397971 | 0.372401 | 0.424909 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.394838 | 0.360918 | 0.426086 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.771982 | 0.747436 | 0.796542 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 421.86 | 398.64975 | 446.3715 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.425843 | 0.397651 | 0.454052 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.442381 | 0.408039 | 0.476371 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.789242 | 0.763747 | 0.813291 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 598.85 | 577.82 | 620.86525 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.404953 | 0.376116 | 0.434055 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.41721 | 0.383208 | 0.449363 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.783399 | 0.75864 | 0.807103 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 625.05 | 594.62625 | 656.40425 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.417404 | 0.392379 | 0.444476 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.439532 | 0.406467 | 0.472936 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.79568 | 0.771937 | 0.816246 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 795.74 | 772.1455 | 819.2305 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.407338 | 0.379054 | 0.435454 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.423125 | 0.390353 | 0.459186 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.790447 | 0.767297 | 0.811873 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 853.67 | 813.9775 | 895.58075 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.416702 | 0.389878 | 0.443559 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.434149 | 0.399383 | 0.468711 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.783903 | 0.759219 | 0.805733 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 595.11 | 554.88975 | 636.902 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.392896 | 0.366068 | 0.420625 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.414429 | 0.382963 | 0.447427 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.781811 | 0.757803 | 0.803965 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 629.01 | 578.123 | 680.72125 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.202069 | 0.181378 | 0.225054 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.158501 | 0.135304 | 0.182634 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.372495 | 0.309574 | 0.433573 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 113.45 | 110.4995 | 117.31 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.203428 | 0.182557 | 0.226034 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.159347 | 0.136429 | 0.184384 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.387392 | 0.326715 | 0.449405 |
+| asqa_llama70b_final_eval100 | ASQA | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | total_tokens | 100 | 112.74 | 110.21 | 115.6815 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.34181 | 0.310512 | 0.374405 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.475374 | 0.4316 | 0.519278 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.776074 | 0.751157 | 0.800362 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 813.63 | 746.5385 | 893.88925 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.341166 | 0.309088 | 0.372787 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.508553 | 0.461175 | 0.55585 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.783089 | 0.756998 | 0.808058 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 2136.71 | 2050.1965 | 2232.805 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.337888 | 0.306593 | 0.37184 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.484374 | 0.439667 | 0.526401 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.772815 | 0.746708 | 0.79706 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 3496.92 | 3357.05825 | 3635.642 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.344154 | 0.311709 | 0.378266 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.476303 | 0.433204 | 0.521709 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.774749 | 0.749432 | 0.798854 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 748.35 | 716.029 | 781.99825 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.333421 | 0.305024 | 0.363095 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.479194 | 0.435079 | 0.521868 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.774012 | 0.749284 | 0.798006 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 1185.91 | 1130.57625 | 1244.334 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.345397 | 0.314646 | 0.380237 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.504421 | 0.460777 | 0.549347 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.780551 | 0.755963 | 0.804584 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 1147.0 | 1095.01675 | 1201.824 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.343271 | 0.313365 | 0.373792 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.49315 | 0.452267 | 0.536726 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.775607 | 0.751068 | 0.799411 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 1854.22 | 1772.32425 | 1933.93925 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.346739 | 0.315419 | 0.381006 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.500998 | 0.456622 | 0.550328 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.788313 | 0.76366 | 0.810043 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 1553.03 | 1484.47125 | 1621.92475 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.336222 | 0.305536 | 0.368864 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.481267 | 0.438915 | 0.523676 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.774164 | 0.74952 | 0.797251 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 2541.01 | 2432.2295 | 2648.80425 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.345288 | 0.314022 | 0.378825 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.483248 | 0.438261 | 0.529882 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.778163 | 0.75252 | 0.802582 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 1082.94 | 1001.211 | 1174.49225 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.339964 | 0.309845 | 0.369426 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.488132 | 0.446503 | 0.533627 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.774564 | 0.750236 | 0.797483 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 1749.54 | 1624.44525 | 1879.627 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.199571 | 0.177808 | 0.221983 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.213894 | 0.181118 | 0.249179 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.4995 | 0.44392 | 0.548329 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 118.9 | 116.33 | 121.65 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.204346 | 0.182603 | 0.227001 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.217608 | 0.187861 | 0.24922 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.541676 | 0.49987 | 0.584784 |
+| bioasq_crossenc_llama70b_final_eval100 | BioASQ | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | total_tokens | 100 | 119.78 | 117.11 | 122.5605 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.342478 | 0.311368 | 0.375428 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.499127 | 0.451 | 0.546611 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.779144 | 0.754808 | 0.803015 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 1668.18 | 1551.25875 | 1794.47325 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.347118 | 0.313942 | 0.380727 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.507899 | 0.461503 | 0.553833 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.781041 | 0.753879 | 0.804436 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 2135.75 | 2043.528 | 2228.29575 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.344165 | 0.31355 | 0.378578 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.491514 | 0.447482 | 0.535887 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.774441 | 0.748355 | 0.799761 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 3496.26 | 3363.2225 | 3633.96025 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.351719 | 0.318917 | 0.387198 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.490403 | 0.443217 | 0.539641 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.781094 | 0.756792 | 0.805303 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 746.6 | 713.0365 | 779.56325 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.340076 | 0.311162 | 0.37229 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.482405 | 0.439965 | 0.523147 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.779562 | 0.756443 | 0.801269 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 1171.74 | 1120.80875 | 1225.19725 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.356456 | 0.326851 | 0.389984 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.510558 | 0.462583 | 0.559906 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.788954 | 0.76486 | 0.81024 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 1156.78 | 1103.162 | 1215.87 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.353789 | 0.32478 | 0.384157 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.512807 | 0.467582 | 0.560331 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.782426 | 0.757935 | 0.805179 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 1860.12 | 1780.27675 | 1941.27025 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.351265 | 0.319811 | 0.386966 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.50321 | 0.458486 | 0.551261 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.787096 | 0.764827 | 0.80758 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 1545.2 | 1477.689 | 1614.8365 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.341206 | 0.310613 | 0.371605 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.492835 | 0.448764 | 0.536533 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.779344 | 0.755082 | 0.801181 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 2524.13 | 2423.594 | 2621.431 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.351002 | 0.318159 | 0.386497 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.495157 | 0.445727 | 0.543792 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.788052 | 0.764341 | 0.809502 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 1313.46 | 1230.3795 | 1406.5935 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.349106 | 0.318172 | 0.380089 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.504544 | 0.456539 | 0.547476 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.780216 | 0.752848 | 0.80257 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 2126.33 | 1986.70575 | 2261.99225 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.204201 | 0.184761 | 0.226141 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.223612 | 0.193408 | 0.259417 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.528342 | 0.480033 | 0.577499 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 120.53 | 117.72975 | 123.35075 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.196992 | 0.176219 | 0.219237 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.214839 | 0.183506 | 0.249706 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.507927 | 0.456337 | 0.558075 |
+| bioasq_llama70b_final_eval100 | BioASQ | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | total_tokens | 100 | 119.88 | 117.24 | 122.8 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.339011 | 0.30543 | 0.37431 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.447153 | 0.401767 | 0.493373 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.758291 | 0.731673 | 0.783219 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 2011.28 | 1871.6695 | 2152.20425 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.341924 | 0.307125 | 0.378572 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.433381 | 0.39215 | 0.477098 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.752232 | 0.721074 | 0.780216 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 2658.78 | 2552.09025 | 2770.68625 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.256987 | 0.230832 | 0.284561 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.346258 | 0.310714 | 0.383195 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.606102 | 0.563964 | 0.648951 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 3888.53 | 3799.558 | 3966.40175 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.336853 | 0.303568 | 0.369875 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.423982 | 0.381197 | 0.46533 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.752297 | 0.722457 | 0.779507 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 894.94 | 856.356 | 935.412 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.332849 | 0.303641 | 0.364903 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.436172 | 0.395308 | 0.480351 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.750948 | 0.72558 | 0.776189 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 1397.96 | 1334.7745 | 1461.7115 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.343797 | 0.312872 | 0.378173 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.465916 | 0.425029 | 0.513512 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.761579 | 0.734187 | 0.786952 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 1420.64 | 1357.28925 | 1488.00225 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.349134 | 0.318434 | 0.382782 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.44652 | 0.404838 | 0.489216 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.760783 | 0.734238 | 0.785737 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 2246.86 | 2140.905 | 2347.24275 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.345532 | 0.312952 | 0.381654 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.45278 | 0.40979 | 0.49728 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.766716 | 0.739349 | 0.790534 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 1916.55 | 1836.65 | 1998.197 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.329324 | 0.299293 | 0.360146 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.433847 | 0.392397 | 0.476692 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.73715 | 0.705043 | 0.768678 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 3039.82 | 2925.56625 | 3148.30175 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.343462 | 0.310343 | 0.377343 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.453885 | 0.409442 | 0.499238 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.766646 | 0.742381 | 0.791601 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 1619.45 | 1509.85475 | 1732.11825 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.332534 | 0.300601 | 0.365782 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.44514 | 0.402967 | 0.490695 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.745378 | 0.713239 | 0.774828 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 2559.79 | 2391.36775 | 2723.2195 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.220461 | 0.199352 | 0.24164 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.267391 | 0.232748 | 0.304056 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.652988 | 0.623279 | 0.681703 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 119.07 | 115.15975 | 123.111 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.219614 | 0.197737 | 0.242018 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.267007 | 0.233572 | 0.304518 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.652925 | 0.622313 | 0.681288 |
+| bioasq_mistral_final_eval100 | BioASQ | Mistral | TF-IDF | No Retrieval | no_retrieval_full | total_tokens | 100 | 119.2 | 115.369 | 123.45025 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.750896 | 0.669083 | 0.824056 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.74891 | 0.673327 | 0.82725 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.819072 | 0.758662 | 0.874662 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 1109.23 | 1093.50975 | 1124.94025 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.746896 | 0.668119 | 0.822748 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.745577 | 0.667042 | 0.8225 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.821078 | 0.762506 | 0.874716 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 1403.87 | 1352.4535 | 1452.38225 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.764039 | 0.682994 | 0.840496 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.75641 | 0.676404 | 0.828333 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.837879 | 0.77963 | 0.891702 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 1500.35 | 1446.0775 | 1554.65225 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.713777 | 0.629274 | 0.790487 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.70891 | 0.624987 | 0.786431 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.785454 | 0.716409 | 0.85249 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 485.34 | 465.86875 | 505.28175 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.737373 | 0.654659 | 0.814713 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.738077 | 0.654737 | 0.816667 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.809881 | 0.747059 | 0.869022 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 499.93 | 476.3085 | 521.8295 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.729634 | 0.645879 | 0.808366 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.723077 | 0.643127 | 0.807 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.800075 | 0.732402 | 0.86014 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 727.35 | 697.707 | 759.05425 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.750111 | 0.669326 | 0.82478 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.750577 | 0.667787 | 0.825848 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.817779 | 0.757317 | 0.875299 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 757.23 | 722.28875 | 793.113 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.738563 | 0.654404 | 0.818693 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.735577 | 0.652806 | 0.812245 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.807505 | 0.747364 | 0.867644 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 994.61 | 956.7385 | 1032.944 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.760706 | 0.681318 | 0.833412 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.753077 | 0.670875 | 0.828333 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.825371 | 0.762698 | 0.88368 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 1046.73 | 1004.1295 | 1090.3 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.732968 | 0.647009 | 0.81095 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.723077 | 0.637244 | 0.803917 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.807329 | 0.743163 | 0.865894 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 771.79 | 723.87925 | 822.30725 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.766539 | 0.684158 | 0.838707 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.760577 | 0.684744 | 0.834758 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.834787 | 0.773484 | 0.888863 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 804.22 | 752.7905 | 855.74875 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.422777 | 0.337471 | 0.510933 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.43391 | 0.343327 | 0.530014 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.545469 | 0.476515 | 0.621977 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 151.37 | 148.60975 | 154.32 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.422539 | 0.335314 | 0.506791 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.437244 | 0.345821 | 0.533354 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.550423 | 0.477356 | 0.621532 |
+| hotpotqa_crossenc_concise_llama70b_final_eval100 | HotpotQA | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | total_tokens | 100 | 151.28 | 148.54925 | 154.34 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.736539 | 0.650869 | 0.813923 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.732244 | 0.648327 | 0.810083 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.740117 | 0.658606 | 0.818081 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 1065.72 | 1050.2685 | 1081.3235 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.752039 | 0.668155 | 0.830667 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.74141 | 0.661404 | 0.82141 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.755009 | 0.673477 | 0.832402 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 1430.34 | 1379.15775 | 1481.3705 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.764539 | 0.686034 | 0.838005 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.752244 | 0.674994 | 0.829175 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.768282 | 0.688436 | 0.843808 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 1536.68 | 1483.01675 | 1591.044 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.604277 | 0.51698 | 0.695984 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.599744 | 0.503333 | 0.686667 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.607136 | 0.508976 | 0.697699 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 483.17 | 463.2465 | 502.312 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.625706 | 0.535379 | 0.715706 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.619744 | 0.529481 | 0.709237 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.628475 | 0.53869 | 0.723009 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 491.96 | 471.52775 | 514.152 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.673706 | 0.585986 | 0.758086 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.663077 | 0.568064 | 0.746667 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.676676 | 0.594435 | 0.761186 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 737.37 | 708.44525 | 766.4705 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.693373 | 0.60403 | 0.774381 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.688077 | 0.598077 | 0.77116 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.69765 | 0.612097 | 0.780851 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 762.23 | 730.006 | 795.97125 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.720039 | 0.638705 | 0.806761 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.708077 | 0.623071 | 0.786417 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.723174 | 0.636885 | 0.802089 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 997.8 | 960.0975 | 1036.0835 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.730396 | 0.641966 | 0.80471 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.725577 | 0.64166 | 0.801417 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.734209 | 0.653552 | 0.808389 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 1047.15 | 1002.82475 | 1091.116 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.695706 | 0.605412 | 0.782123 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.693077 | 0.60641 | 0.778362 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.700245 | 0.615041 | 0.781045 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 902.18 | 848.45075 | 959.6415 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.707539 | 0.618155 | 0.789838 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.695577 | 0.608035 | 0.77391 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.710674 | 0.628477 | 0.792716 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 944.98 | 882.63275 | 1003.24075 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.414285 | 0.325991 | 0.504623 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.424744 | 0.333389 | 0.517 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.417746 | 0.330095 | 0.50307 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 151.36 | 148.63975 | 154.36075 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.424673 | 0.340137 | 0.512135 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.450577 | 0.359487 | 0.544181 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.431219 | 0.344418 | 0.522554 |
+| hotpotqa_llama70b_final_eval100 | HotpotQA | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | total_tokens | 100 | 152.07 | 148.92975 | 155.32 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.539747 | 0.450761 | 0.622908 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.603333 | 0.515 | 0.69 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.553837 | 0.467289 | 0.639457 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 1239.94 | 1222.40725 | 1256.10075 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.537046 | 0.449221 | 0.622117 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.583333 | 0.49 | 0.673333 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.546991 | 0.463128 | 0.638449 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 1710.75 | 1650.1685 | 1769.3855 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.516011 | 0.4295 | 0.6065 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.57641 | 0.486404 | 0.661667 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.529202 | 0.447525 | 0.61291 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 1761.82 | 1694.47975 | 1825.5895 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.428294 | 0.338642 | 0.516779 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.483333 | 0.39 | 0.573375 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.437873 | 0.351172 | 0.523811 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 555.06 | 532.7785 | 578.3705 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.40996 | 0.328883 | 0.50248 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.476667 | 0.385 | 0.57 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.423649 | 0.338165 | 0.513132 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 545.28 | 521.78575 | 569.9455 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.478795 | 0.393502 | 0.566984 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.538077 | 0.444458 | 0.63 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.490233 | 0.406475 | 0.575594 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 866.32 | 831.8085 | 903.21425 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.466554 | 0.377008 | 0.558635 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.508333 | 0.406625 | 0.601708 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.475454 | 0.38738 | 0.566681 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 860.0 | 823.80975 | 896.15125 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.493919 | 0.407663 | 0.582435 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.557308 | 0.466657 | 0.650032 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.505433 | 0.420123 | 0.593619 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 1183.88 | 1141.1795 | 1227.31025 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.507348 | 0.418395 | 0.595635 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.57 | 0.476667 | 0.665 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.519214 | 0.436223 | 0.611997 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 1191.89 | 1144.22575 | 1243.1715 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.488962 | 0.398318 | 0.576511 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.558077 | 0.468071 | 0.651167 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.501907 | 0.417891 | 0.588349 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 1067.21 | 1000.618 | 1130.6745 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.482015 | 0.392861 | 0.570159 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.563333 | 0.475 | 0.653375 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.497302 | 0.412073 | 0.583396 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 1073.33 | 1003.3285 | 1142.6745 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.285285 | 0.204284 | 0.369756 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.336667 | 0.253333 | 0.423417 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.300116 | 0.223812 | 0.382304 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 149.18 | 145.95975 | 152.79 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.291952 | 0.211459 | 0.373148 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.346667 | 0.26325 | 0.433333 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.307187 | 0.227683 | 0.391626 |
+| hotpotqa_mistral_final_eval100 | HotpotQA | Mistral | TF-IDF | No Retrieval | no_retrieval_full | total_tokens | 100 | 149.17 | 145.6395 | 153.04025 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.265369 | 0.242425 | 0.288884 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.793407 | 0.753521 | 0.83333 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.574401 | 0.502383 | 0.646692 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 938.99 | 802.0065 | 1127.582 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.254546 | 0.233213 | 0.277205 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.78737 | 0.746503 | 0.825335 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.569347 | 0.495387 | 0.638045 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 2151.38 | 2061.72 | 2255.3075 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.261028 | 0.23919 | 0.282985 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.802214 | 0.764047 | 0.8405 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.572803 | 0.502667 | 0.643435 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 3411.56 | 3276.0705 | 3561.88725 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.262836 | 0.240593 | 0.284974 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.792107 | 0.752627 | 0.830723 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.571516 | 0.499712 | 0.642717 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 794.43 | 759.62725 | 830.03025 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.264475 | 0.242076 | 0.287977 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.79876 | 0.759014 | 0.835463 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.572698 | 0.497885 | 0.643547 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 1195.51 | 1132.3485 | 1264.18625 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.261558 | 0.239959 | 0.285945 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.799638 | 0.759825 | 0.836892 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.569242 | 0.497502 | 0.639377 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 1224.52 | 1171.05175 | 1281.41 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.260429 | 0.238542 | 0.282413 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.810056 | 0.769111 | 0.847526 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.568449 | 0.493711 | 0.63939 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 1881.62 | 1789.14725 | 1975.721 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.256907 | 0.236607 | 0.279136 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.795556 | 0.755043 | 0.834463 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.565013 | 0.490182 | 0.639145 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 1610.87 | 1534.418 | 1683.5835 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.265034 | 0.243937 | 0.286393 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.813638 | 0.774877 | 0.85082 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.567488 | 0.496527 | 0.637576 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 2524.32 | 2412.10375 | 2651.8205 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.259184 | 0.237182 | 0.281255 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.794112 | 0.754327 | 0.831654 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.568597 | 0.494424 | 0.637213 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 1209.72 | 1125.53275 | 1300.0325 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.267382 | 0.244118 | 0.29142 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.801654 | 0.761355 | 0.841995 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.56855 | 0.495356 | 0.63724 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 1828.69 | 1694.10925 | 1967.224 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.283694 | 0.253476 | 0.311739 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.495952 | 0.421923 | 0.574201 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.388956 | 0.325117 | 0.454217 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 118.57 | 116.51975 | 120.62 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.294086 | 0.262393 | 0.327769 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.50981 | 0.430205 | 0.591203 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.411045 | 0.345782 | 0.474797 |
+| scifact_crossenc_llama70b_final_eval100 | SciFact | Llama-70B | Cross-encoder | No Retrieval | no_retrieval_full | total_tokens | 100 | 119.58 | 117.25 | 122.04075 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.265189 | 0.242859 | 0.287979 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.798939 | 0.757774 | 0.839041 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.568971 | 0.498792 | 0.639922 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 933.48 | 790.70025 | 1141.94375 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.257487 | 0.235677 | 0.276915 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.798055 | 0.756957 | 0.839475 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.570925 | 0.50424 | 0.641316 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 2150.14 | 2053.8805 | 2249.34225 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.261904 | 0.240845 | 0.285491 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.808004 | 0.769394 | 0.846059 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.56934 | 0.496182 | 0.642286 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 3411.76 | 3271.139 | 3550.60125 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.261641 | 0.239606 | 0.283861 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.795672 | 0.75674 | 0.835798 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.572585 | 0.499475 | 0.645913 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 776.04 | 739.716 | 814.36025 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.258731 | 0.235315 | 0.280859 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.798459 | 0.756525 | 0.836078 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.557575 | 0.480125 | 0.629928 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 1130.66 | 1076.218 | 1188.971 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.264971 | 0.242469 | 0.287373 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.802052 | 0.760359 | 0.842172 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.576922 | 0.506577 | 0.648616 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 1177.92 | 1123.06725 | 1234.682 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.263922 | 0.24117 | 0.286949 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.814751 | 0.773903 | 0.852841 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.570074 | 0.497 | 0.641922 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 1773.68 | 1697.5875 | 1853.561 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.262991 | 0.241419 | 0.284181 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.805064 | 0.766608 | 0.843179 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.57765 | 0.502861 | 0.648876 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 1563.29 | 1493.7095 | 1634.09175 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.260914 | 0.239568 | 0.284191 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.801666 | 0.76257 | 0.839765 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.573219 | 0.499953 | 0.641218 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 2445.84 | 2335.83525 | 2552.40975 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.262447 | 0.239527 | 0.284356 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.805923 | 0.768282 | 0.843661 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.574786 | 0.502169 | 0.6486 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 1453.02 | 1367.195 | 1535.346 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.266407 | 0.244206 | 0.288879 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.80686 | 0.768978 | 0.844641 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.574866 | 0.50578 | 0.641564 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 2233.7 | 2100.38875 | 2356.24175 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.283211 | 0.253091 | 0.315816 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.486421 | 0.409449 | 0.56405 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.364928 | 0.302848 | 0.429254 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 118.24 | 116.24975 | 120.47025 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.284872 | 0.253445 | 0.317193 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.487634 | 0.410609 | 0.565545 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.378135 | 0.3163 | 0.439174 |
+| scifact_llama70b_final_eval100 | SciFact | Llama-70B | TF-IDF | No Retrieval | no_retrieval_full | total_tokens | 100 | 118.75 | 116.39 | 121.39 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_f1 | 100 | 0.252913 | 0.225447 | 0.280347 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | answer_coverage | 100 | 0.646978 | 0.603916 | 0.691076 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | semantic_similarity | 100 | 0.426009 | 0.393483 | 0.456546 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Safe Adaptive Context | answer_aware_fallback | total_tokens | 100 | 985.01 | 924.8365 | 1046.20275 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_f1 | 100 | 0.247221 | 0.219222 | 0.277061 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | answer_coverage | 100 | 0.641527 | 0.60031 | 0.683015 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | semantic_similarity | 100 | 0.407015 | 0.37456 | 0.438384 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_10_evidence_ngram_neighbors | fixed_10_evidence_ngram_neighbors | total_tokens | 100 | 2660.7 | 2551.66425 | 2778.307 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | answer_f1 | 100 | 0.20353 | 0.178726 | 0.228837 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | answer_coverage | 100 | 0.544584 | 0.492926 | 0.594145 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | semantic_similarity | 100 | 0.363887 | 0.330517 | 0.397097 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-10 | fixed_10_full | total_tokens | 100 | 3781.14 | 3695.1395 | 3860.3195 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_f1 | 100 | 0.250054 | 0.223624 | 0.277615 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | answer_coverage | 100 | 0.638362 | 0.593533 | 0.684547 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | semantic_similarity | 100 | 0.422178 | 0.392016 | 0.453619 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_3_evidence_ngram_neighbors | fixed_3_evidence_ngram_neighbors | total_tokens | 100 | 926.48 | 884.87675 | 971.4545 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | answer_f1 | 100 | 0.267859 | 0.237759 | 0.297425 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | answer_coverage | 100 | 0.659386 | 0.610993 | 0.70714 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | semantic_similarity | 100 | 0.439481 | 0.408328 | 0.47005 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-3 | fixed_3_full | total_tokens | 100 | 1323.35 | 1256.10475 | 1392.05675 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_f1 | 100 | 0.250564 | 0.222442 | 0.279279 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | answer_coverage | 100 | 0.633236 | 0.587492 | 0.678762 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | semantic_similarity | 100 | 0.418293 | 0.388184 | 0.452312 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_5_evidence_ngram_neighbors | fixed_5_evidence_ngram_neighbors | total_tokens | 100 | 1434.53 | 1368.078 | 1507.77125 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | answer_f1 | 100 | 0.265123 | 0.237977 | 0.294398 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | answer_coverage | 100 | 0.675999 | 0.628511 | 0.724113 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | semantic_similarity | 100 | 0.442579 | 0.411261 | 0.472164 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-5 | fixed_5_full | total_tokens | 100 | 2105.76 | 2012.047 | 2203.722 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_f1 | 100 | 0.259364 | 0.229962 | 0.288637 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | answer_coverage | 100 | 0.659648 | 0.614713 | 0.703024 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | semantic_similarity | 100 | 0.427251 | 0.394752 | 0.45826 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | fixed_7_evidence_ngram_neighbors | fixed_7_evidence_ngram_neighbors | total_tokens | 100 | 1924.61 | 1830.58725 | 2009.52325 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | answer_f1 | 100 | 0.26181 | 0.231178 | 0.292863 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | answer_coverage | 100 | 0.673588 | 0.626689 | 0.717754 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | semantic_similarity | 100 | 0.439126 | 0.406869 | 0.470799 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Fixed Top-7 | fixed_7_full | total_tokens | 100 | 2897.9 | 2783.33175 | 3015.19675 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_f1 | 100 | 0.25804 | 0.230085 | 0.289877 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | answer_coverage | 100 | 0.650273 | 0.605825 | 0.695714 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | semantic_similarity | 100 | 0.425665 | 0.394938 | 0.458072 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | heuristic_rules_evidence_ngram_neighbors | heuristic_rules_evidence_ngram_neighbors | total_tokens | 100 | 1782.8 | 1675.84875 | 1884.72275 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_f1 | 100 | 0.26454 | 0.234817 | 0.295906 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | answer_coverage | 100 | 0.668578 | 0.622189 | 0.716261 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | semantic_similarity | 100 | 0.437337 | 0.404319 | 0.47062 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | Heuristic Rules | heuristic_rules_full | total_tokens | 100 | 2651.75 | 2506.0555 | 2809.1875 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_f1 | 100 | 0.303308 | 0.272747 | 0.333313 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | answer_coverage | 100 | 0.638718 | 0.59378 | 0.686517 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | semantic_similarity | 100 | 0.449526 | 0.421352 | 0.479045 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | no_retrieval_evidence_ngram_neighbors | no_retrieval_evidence_ngram_neighbors | total_tokens | 100 | 141.84 | 137.1095 | 146.72025 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | No Retrieval | no_retrieval_full | answer_f1 | 100 | 0.304012 | 0.272117 | 0.337568 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | No Retrieval | no_retrieval_full | answer_coverage | 100 | 0.638218 | 0.593327 | 0.684182 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | No Retrieval | no_retrieval_full | semantic_similarity | 100 | 0.450881 | 0.420039 | 0.480539 |
+| scifact_mistral_final_eval100 | SciFact | Mistral | TF-IDF | No Retrieval | no_retrieval_full | total_tokens | 100 | 141.78 | 137.06 | 147.0 |

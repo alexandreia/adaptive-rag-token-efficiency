@@ -1,0 +1,47 @@
+{
+  "actions": {
+    "adaptive_k_full": "Adaptive-k",
+    "answer_aware_fallback": "Safe Adaptive Context",
+    "coverage_guided_ultra": "Coverage-Guided Ultra",
+    "fixed_10_full": "Fixed Top-10",
+    "task_aware_coverage_ultra": "TACER"
+  },
+  "examples": 1000,
+  "summaries": [
+    {
+      "accuracy": 0.14,
+      "examples": 200,
+      "oracle_f1_delta": 0.022756039999999998,
+      "oracle_token_ratio": 0.5878069272750053,
+      "split": "heldout_asqa"
+    },
+    {
+      "accuracy": 0.31,
+      "examples": 200,
+      "oracle_f1_delta": 0.036186085,
+      "oracle_token_ratio": 0.46078067775640974,
+      "split": "heldout_bioasq"
+    },
+    {
+      "accuracy": 0.27,
+      "examples": 200,
+      "oracle_f1_delta": 0.025428565,
+      "oracle_token_ratio": 0.3360561083634663,
+      "split": "heldout_hotpotqa"
+    },
+    {
+      "accuracy": 0.16,
+      "examples": 200,
+      "oracle_f1_delta": 0.04548242,
+      "oracle_token_ratio": 0.5879458333494348,
+      "split": "heldout_msmarco"
+    },
+    {
+      "accuracy": 0.225,
+      "examples": 200,
+      "oracle_f1_delta": 0.03043226,
+      "oracle_token_ratio": 0.32421420511595195,
+      "split": "heldout_scifact"
+    }
+  ]
+}

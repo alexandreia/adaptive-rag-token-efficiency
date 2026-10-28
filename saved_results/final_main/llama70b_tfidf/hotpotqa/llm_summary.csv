@@ -1,0 +1,11 @@
+method_name,mode,docs_used,prompt_tokens,completion_tokens,total_tokens,token_reduction_vs_fixed_10,token_source,generation_time_ms,fallback_rate,first_pass_tokens,fallback_tokens,answer_f1,answer_coverage,semantic_similarity,ndcg_at_10,mrr_at_10
+No Retrieval,no_retrieval_full,0.0,143.62,4.295,147.915,0.914093,provider,615.08,0.0,0.0,0.0,0.309072,0.306123,0.470348,0.0,0.0
+Fixed Small Context,fixed_3_full,3.0,552.78,4.14,556.92,0.676548,provider,2501.025,0.0,0.0,0.0,0.53189,0.531027,0.644139,0.596062,0.7675
+Fixed Medium Context,fixed_5_full,5.0,859.21,4.19,863.4,0.498548,provider,679.535,0.0,0.0,0.0,0.555306,0.554611,0.663382,0.64131,0.77975
+Fixed Large Context,fixed_7_full,7.0,1188.005,4.26,1192.265,0.307547,provider,601.28,0.0,0.0,0.0,0.600881,0.605397,0.709987,0.679501,0.786179
+Fixed Full Context,fixed_10_full,10.0,1717.64,4.16,1721.8,0.0,provider,630.43,0.0,0.0,0.0,0.644556,0.65073,0.746732,0.717349,0.790206
+Heuristic Rules,heuristic_rules_full,6.3,1075.59,4.16,1079.75,0.372895,provider,595.235,0.0,0.0,0.0,0.57514,0.579539,0.691306,0.665239,0.782798
+Adaptive-k,adaptive_k_full,2.565,506.165,4.075,510.24,0.703659,provider,4124.53,0.0,0.0,0.0,0.489965,0.492777,0.605493,0.539579,0.749847
+Safe Adaptive Context,answer_aware_fallback,9.96,1160.76,4.13,1164.89,0.323446,provider,819.26,0.0,1164.89,0.0,0.627005,0.630123,0.730021,0.716507,0.790206
+Coverage-Guided Ultra,coverage_guided_ultra,3.405,448.145,4.22,452.365,0.737272,provider,622.43,0.005,448.815,3.55,0.463644,0.466944,0.583081,0.630262,0.780417
+TACER,task_aware_coverage_ultra,9.925,1156.77,4.15,1160.92,0.325752,provider,580.55,0.0,1160.92,0.0,0.627005,0.630123,0.724261,0.715832,0.790873

@@ -1,0 +1,12 @@
+| dataset | method | code_mode | ndcg_at_10 | mrr_at_10 | answer_f1 | answer_coverage | semantic_similarity | f1_retained_vs_top10 | semantic_similarity_retained_vs_top10 | total_tokens | token_reduction_vs_top10 | fallback_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| HotpotQA | No Retrieval | no_retrieval_full | 0.0 | 0.0 | 0.204492 | 0.253147 | 0.407097 | 53.1% | 77.6% | 144.61 | 92.9% | 0.0% |
+| HotpotQA | Fixed Top-3 | fixed_3_full | 0.596062 | 0.7675 | 0.294086 | 0.345519 | 0.443179 | 76.4% | 84.4% | 638.5 | 68.7% | 0.0% |
+| HotpotQA | Fixed Top-5 | fixed_5_full | 0.64131 | 0.77975 | 0.333123 | 0.387385 | 0.480517 | 86.6% | 91.6% | 1008.71 | 50.5% | 0.0% |
+| HotpotQA | Fixed Top-7 | fixed_7_full | 0.679501 | 0.786179 | 0.358436 | 0.413754 | 0.510124 | 93.1% | 97.2% | 1403.3 | 31.1% | 0.0% |
+| HotpotQA | Fixed Top-10 | fixed_10_full | 0.717349 | 0.790206 | 0.38484 | 0.442087 | 0.524856 | 100.0% | 100.0% | 2037.72 | 0.0% | 0.0% |
+| HotpotQA | Heuristic Rules | heuristic_rules_full | 0.665239 | 0.782798 | 0.34771 | 0.405004 | 0.501185 | 90.4% | 95.5% | 1268.18 | 37.8% | 0.0% |
+| HotpotQA | Adaptive-k | adaptive_k_full | 0.539579 | 0.749847 | 0.282173 | 0.345301 | 0.432772 | 73.3% | 82.5% | 582.46 | 71.4% | 0.0% |
+| HotpotQA | Safe Adaptive Context | answer_aware_fallback | 0.716507 | 0.790206 | 0.369449 | 0.41792 | 0.527692 | 96.0% | 100.5% | 1408.97 | 30.9% | 0.0% |
+| HotpotQA | Coverage-Guided Ultra | coverage_guided_ultra | 0.630262 | 0.780417 | 0.257919 | 0.306468 | 0.402309 | 67.0% | 76.7% | 529.72 | 74.0% | 0.5% |
+| HotpotQA | TACER | task_aware_coverage_ultra | 0.715832 | 0.790873 | 0.374449 | 0.42292 | 0.532015 | 97.3% | 101.4% | 1404.07 | 31.1% | 0.0% |

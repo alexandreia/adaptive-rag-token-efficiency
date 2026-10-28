@@ -1,0 +1,11 @@
+dataset,method,code_mode,ndcg_at_10,mrr_at_10,answer_f1,answer_coverage,semantic_similarity,f1_retained_vs_top10,semantic_similarity_retained_vs_top10,total_tokens,token_reduction_vs_top10,fallback_rate
+ASQA,No Retrieval,no_retrieval_full,0.0,0.0,0.21697,0.167465,0.401594,51.5%,51.5%,113.11,90.5%,0.0%
+ASQA,Fixed Top-3,fixed_3_full,0.700285,0.939167,0.397638,0.378596,0.755844,94.3%,96.9%,422.56,64.6%,0.0%
+ASQA,Fixed Top-5,fixed_5_full,0.784446,0.941417,0.415788,0.413732,0.770819,98.6%,98.8%,645.67,45.9%,0.0%
+ASQA,Fixed Top-7,fixed_7_full,0.814437,0.943083,0.411959,0.416574,0.775161,97.7%,99.4%,860.07,28.0%,0.0%
+ASQA,Fixed Top-10,fixed_10_full,0.832459,0.943708,0.421549,0.419307,0.779894,100.0%,100.0%,1194.48,0.0%,0.0%
+ASQA,Heuristic Rules,heuristic_rules_full,0.772155,0.94225,0.410594,0.401821,0.771334,97.4%,98.9%,669.04,44.0%,0.0%
+ASQA,Adaptive-k,adaptive_k_full,0.614887,0.93625,0.368112,0.33681,0.730196,87.3%,93.6%,347.94,70.9%,0.0%
+ASQA,Safe Adaptive Context,answer_aware_fallback,0.703077,0.939167,0.401558,0.37973,0.764826,95.3%,98.1%,497.99,58.3%,9.0%
+ASQA,Coverage-Guided Ultra,coverage_guided_ultra,0.649432,0.941833,0.382296,0.354035,0.741209,90.7%,95.0%,407.31,65.9%,0.0%
+ASQA,TACER,task_aware_coverage_ultra,0.706057,0.939167,0.403627,0.38164,0.763817,95.7%,97.9%,484.4,59.4%,7.0%

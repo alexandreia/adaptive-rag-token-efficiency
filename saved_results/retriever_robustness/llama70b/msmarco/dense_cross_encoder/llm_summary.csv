@@ -1,0 +1,7 @@
+method_name,mode,docs_used,prompt_tokens,completion_tokens,total_tokens,token_reduction_vs_fixed_10,token_source,generation_time_ms,fallback_rate,first_pass_tokens,fallback_tokens,answer_f1,answer_coverage,semantic_similarity,ndcg_at_10,mrr_at_10
+Fixed Small Context,fixed_3_full,3.0,469.345,69.155,538.5,0.627968,provider,3214.73,0.0,0.0,0.0,0.220423,0.663857,0.47963,0.648271,0.615833
+Fixed Medium Context,fixed_5_full,5.0,717.785,73.625,791.41,0.45324,provider,3274.435,0.0,0.0,0.0,0.204187,0.646827,0.478003,0.716382,0.652333
+Fixed Full Context,fixed_10_full,10.0,1371.675,75.78,1447.455,0.0,provider,3308.935,0.0,0.0,0.0,0.201178,0.657331,0.479121,0.741465,0.660234
+Adaptive-k,adaptive_k_full,7.16,996.745,74.52,1071.265,0.259898,provider,3266.14,0.0,0.0,0.0,0.204395,0.647243,0.478882,0.723584,0.650609
+Safe Adaptive Context,answer_aware_fallback,4.94,604.515,71.995,676.51,0.532621,provider,3242.795,0.01,665.285,11.225,0.203376,0.632295,0.468757,0.696483,0.640042
+TACER,task_aware_coverage_ultra,7.17,885.52,73.68,959.2,0.33732,provider,3293.87,0.0,959.2,0.0,0.200122,0.634993,0.470085,0.723584,0.650609

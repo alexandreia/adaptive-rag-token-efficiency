@@ -1,0 +1,840 @@
+\documentclass[11pt]{article}
+
+\usepackage[preprint]{acl}
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{float}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{url}
+\usepackage{amsmath}
+\usepackage{placeins}
+
+\title{TACER: Task-Aware Context and Evidence Routing for Token-Efficient Retrieval-Augmented Generation}
+
+\author{Andreia Alexa \And Simon Backhaus Brudzewski \And Karlis Martins Auce \AND Joel Vazquez \And Sheraz Ahmad}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+Retrieval-Augmented Generation (RAG) systems commonly pass a fixed number of retrieved documents to the generator, even when a query could be answered from less evidence. This wastes prompt tokens, increases latency, and can introduce distracting context. We present TACER, a lightweight task-aware context and evidence-routing controller for token-efficient RAG. TACER extends Safe Adaptive Context by routing between compact evidence, broader selected context, and answer-aware fallback according to retrieval-side signals, answer form, and evidence structure. We evaluate on five datasets--SciFact, BioASQ, HotpotQA, MS MARCO, and ASQA--with Llama-3.3-70B and Mistral, comparing against fixed top-$k$, heuristic rules, Adaptive-$k$, and Safe Adaptive Context. We also test robustness under TF-IDF, TF-IDF with cross-encoder reranking, and dense retrieval with cross-encoder reranking. Across retriever settings, TACER retains approximately 98--100\% of Fixed Top-10 F1 on average while reducing provider-reported token use by 56--62\%. The results show that retrieval-score-only adaptation is useful but incomplete: it can under-select evidence for multi-hop and long-form tasks, while task-aware routing gives a more stable quality--efficiency trade-off.
+\end{abstract}
+
+\section{Introduction}
+
+Retrieval-Augmented Generation (RAG) improves language-model answers by retrieving external evidence and placing it in the prompt (Lewis et al., 2020). The dominant implementation pattern is simple: retrieve a ranked list and pass a fixed number of documents, usually the top-$k$, to the generator. This is convenient, but it treats context depth as a global constant rather than a query-level decision. A biomedical factoid question may need one sentence, a scientific claim may need a small evidence span, a multi-hop question may require several documents, and a long-form ambiguous question may require broader synthesis.
+
+Fixed retrieval depth is therefore inefficient in two ways. First, it spends unnecessary prompt tokens on easy or concentrated-evidence queries. Second, it can reduce answer quality by placing useful evidence among distractors. Prior work has shown that large language models can be distracted by irrelevant context (Shi et al., 2023), and that long-context factuality depends strongly on how useful information is positioned and attended to (Wu et al., 2024). Token-efficient RAG is not only a cost problem; it is also a context-control problem.
+
+This paper studies context selection as a post-retrieval decision. Given an initially retrieved candidate set, how much evidence should enter the prompt, and in what form? This separates context allocation from retrieval. A stronger retriever can improve the candidate order, but it still does not decide whether the generator should see one compact span, three full documents, sentence neighborhoods from several documents, or a broader fallback context.
+
+This distinction becomes more important as RAG systems move from narrow factoid QA to heterogeneous applications. In a single deployment, users may ask definitional biomedical questions, multi-hop comparison questions, ambiguous questions with several valid interpretations, or web-style questions where one passage contains the answer and the remaining documents mainly add noise. A fixed context depth forces all of these cases into the same prompt shape. A score-only adaptive policy improves on this by changing the number of documents, but it still assumes that the retrieval score curve is a sufficient proxy for evidence need. Our results show that this assumption is often useful, but not reliable enough across tasks.
+
+Our first controller, Safe Adaptive Context, addressed this problem by combining a lightweight budget predictor, evidence compression, and answer-aware fallback. It first attempted a smaller context and expanded only when the generated answer looked weak or unsupported. This produced strong token reductions on SciFact, HotpotQA, and BioASQ while maintaining competitive automatic quality scores.
+
+The expanded study introduces TACER: Task-Aware Context and Evidence Routing. TACER keeps the lightweight design of Safe Adaptive Context but makes the policy explicitly task-aware. It routes between compact and safer context construction strategies depending on whether evidence appears concentrated or distributed, and whether the question is likely to require short factual extraction, multi-hop reasoning, or longer explanatory synthesis. The central claim is that adaptive context selection is not merely choosing $k$ from a score curve. Retrieval-score shape is useful, but it does not fully capture evidence need.
+
+The key design principle is to spend tokens only when they protect answer quality. On concentrated evidence, TACER behaves like an aggressive context compressor. On distributed evidence, it behaves more like a conservative controller that preserves breadth. This makes the method different from both fixed top-$k$ RAG and from pure Adaptive-$k$: it changes not only the size of the context, but also the evidence form and the risk tolerance of the first pass.
+
+We evaluate this claim on five datasets: SciFact for scientific claim verification, BioASQ for biomedical factoid QA, HotpotQA for multi-hop QA, MS MARCO for web-style passage QA, and ASQA for ambiguous long-form QA. We test two generators, Llama-3.3-70B and Mistral, and three retrieval conditions: TF-IDF, TF-IDF plus cross-encoder reranking, and dense retrieval plus cross-encoder reranking. This setup lets us ask whether TACER remains useful across task types, model scales, and retriever strength.
+
+We study three research questions:
+\begin{itemize}
+\item \textbf{RQ1:} Can adaptive context selection reduce token usage while preserving answer quality across heterogeneous RAG tasks?
+\item \textbf{RQ2:} When does retrieval-score-only Adaptive-$k$ fail, and can task-aware routing reduce these failures?
+\item \textbf{RQ3:} Do context-selection gains persist under stronger retrieval pipelines?
+\end{itemize}
+
+Our contributions are fourfold. First, we introduce TACER, a task-aware context and evidence-routing controller that extends Safe Adaptive Context beyond a single conservative fallback policy. Second, we compare TACER against fixed top-$k$, heuristic rules, Adaptive-$k$, and Safe Adaptive Context across five datasets and two generators. Third, we evaluate robustness under TF-IDF, TF-IDF with cross-encoder reranking, and dense retrieval with cross-encoder reranking. Fourth, we use a structured human annotation study to analyze how automatic metrics relate to human factual judgments. Code and materials are available online.\footnote{\url{https://github.com/Joel-Vazquez-Lopez/adaptive-rag-token-efficiency}}
+
+The paper is organized as follows. Section 2 reviews adaptive retrieval, context compression, and long-context distractor effects. Section 3 defines the context-selection setting and presents TACER. Section 4 describes datasets, models, retrieval conditions, and metrics. Section 5 reports main results, retriever robustness, model robustness, and human metric validation. Section 6 discusses the broader implications and failure modes.
+
+\section{Related Work}
+
+\paragraph{Retrieval-Augmented Generation.}
+RAG improves generation by retrieving evidence and conditioning the language model on that evidence (Lewis et al., 2020). Open-domain QA systems have long used retrieval as a way to ground generation or reading comprehension, including dense retrieval methods such as DPR (Karpukhin et al., 2020). Retrieval benchmarks such as BEIR evaluate ranking quality across domains (Thakur et al., 2021). Most RAG pipelines, however, still require a context-construction step after retrieval. Our work focuses on this step: once the candidate list exists, what should be sent to the generator?
+
+This focus differs from work that primarily improves the retriever. Better retrieval increases the chance that useful evidence appears in the candidate set, but it does not fully determine prompt construction. A high-quality top-10 list can still contain redundant or distracting passages, and a high-scoring first passage can still be insufficient for multi-hop reasoning. We therefore treat retrieval and context allocation as complementary stages.
+
+\paragraph{Adaptive Retrieval and Adaptive-$k$.}
+Several approaches study when to retrieve or when to retrieve more. FLARE retrieves when generation appears uncertain (Jiang et al., 2023a), while Self-RAG trains models to critique retrieval and generation through reflection tokens (Asai et al., 2023). Adaptive-$k$ is closest to our setting because it selects the number of passages from the query-passage similarity distribution without fine-tuning or extra LLM calls (Taguchi et al., 2025). We use an Adaptive-$k$-style score-drop baseline because it is lightweight and strong. TACER follows the same practical motivation, but extends the decision from how many passages to include to how evidence should be structured and when a task requires safer broader context.
+
+The difference is subtle but important. Adaptive-$k$ asks whether the retrieval score distribution suggests a natural cutoff. TACER asks whether that cutoff is safe for the answer type. If a question is single-hop and evidence is concentrated, the two decisions may agree. If the task requires connecting facts across documents, the largest score drop may be a poor proxy for sufficient evidence. Our experiments use Adaptive-$k$ as the main competitive baseline precisely because it represents a strong, simple, and practical alternative.
+
+\paragraph{Context Compression.}
+Prompt-compression methods such as LLMLingua, Selective Context, and RECOMP reduce input length by selecting, deleting, or rewriting context (Jiang et al., 2023b; Li et al., 2023; Xu et al., 2023). TACER differs in two ways. First, its compression is intentionally cheap: it selects query-relevant sentence neighborhoods and does not require an additional model call. Second, compression is not applied uniformly. TACER treats compression as useful when evidence is concentrated but risky when answer strings, conditions, or multi-hop facts are distributed.
+
+This also distinguishes TACER from compression methods whose primary goal is minimizing prompt length. In our setting, compression is one action available to a controller. The controller may choose not to compress aggressively when the evidence pattern suggests that coverage is more important than brevity. This framing is closer to budgeted evidence allocation than to standalone prompt compression.
+
+\paragraph{Reranking and Dense Retrieval.}
+Cross-encoder reranking and dense retrieval are widely used to improve retrieval quality. Dense retrievers such as DPR learn semantic query-passage matching (Karpukhin et al., 2020), while cross-encoder rerankers score query-document pairs jointly and often improve top-rank precision (Nogueira and Cho, 2019). Sentence embedding models such as Sentence-BERT also provide efficient vector representations for semantic retrieval (Reimers and Gurevych, 2019). We include TF-IDF with cross-encoder reranking and dense retrieval with cross-encoder reranking to test whether context routing remains useful when the ranking is stronger.
+
+\paragraph{Distractors and Long Context.}
+Irrelevant or poorly placed context can harm generation when useful evidence is mixed with distractors (Shi et al., 2023). Mechanistic work also suggests that long-context factuality depends on how retrieval-related attention patterns behave (Wu et al., 2024). These findings motivate context routing: a RAG system should not assume that more context is always safer.
+
+Our work connects these observations to an operational question: how should a system decide when to keep context broad and when to compress it? TACER provides one lightweight answer. It does not attempt to model internal attention directly; instead, it uses retrieval-side and evidence-coverage signals to choose a prompt construction strategy before generation, with fallback when the generated answer appears risky.
+
+\section{Method}
+
+\subsection{Problem Definition}
+
+For a query $q$, a retriever returns a ranked list
+\[
+R_q = [(d_1,s_1), \ldots, (d_{10},s_{10})],
+\]
+where $d_i$ is the document at rank $i$ and $s_i$ is the retrieval score. A context policy transforms this list into prompt context $C_q$. The generator then produces an answer $a_q$ from $q$ and $C_q$.
+
+All methods in a retrieval condition share the same candidate list. Fixed baselines use prefixes of the list. Adaptive methods decide how much of the list to use and whether to include full documents or compressed evidence spans. This isolates context selection from retrieval.
+
+We measure the cost of a policy as the provider-reported total tokens used to obtain the final answer. For methods with fallback, this includes both the first-pass attempt and any fallback generation. This is stricter than counting only the final prompt, because a failed first pass still costs tokens in real use.
+
+\subsection{Fixed Top-$k$ Baselines}
+
+The fixed baselines pass the same number of full documents for every query: Top-3, Top-5, and Top-10. Fixed Top-10 is the expensive reference point for token-reduction calculations. It is not treated as a guaranteed quality upper bound, because longer prompts can include distractors and sometimes reduce answer quality.
+
+Including multiple fixed baselines is important because a comparison only against Top-10 can overstate the value of an adaptive method. If Top-3 already performs as well as Top-10 on a dataset, then token savings against Top-10 are less meaningful. We therefore use fixed baselines both as practical competitors and as a diagnostic for whether the dataset benefits from broader context.
+
+\subsection{Heuristic Rules}
+
+The Heuristic Rules baseline selects a budget from retrieval-score gaps and query length. A sharp score drop after the first few documents suggests concentrated evidence; a flatter score curve suggests ambiguity or distributed evidence and receives more context. Short queries use tighter thresholds because they are often underspecified, while longer claim-style queries can use slightly lower thresholds because they contain more lexical evidence cues. This baseline is explainable and adds essentially no latency beyond retrieval.
+
+The heuristic is intentionally simple. It represents what a practitioner might build without training a budget predictor or adding another model call. It is also a useful contrast to TACER because it uses retrieval scores but does not construct compressed evidence and does not inspect answer risk after generation.
+
+\subsection{Adaptive-$k$ Baseline}
+
+Adaptive-$k$ selects the cutoff from the retrieval-score distribution. Our implementation chooses the largest adjacent drop in normalized top-10 scores and returns the corresponding prefix. This makes Adaptive-$k$ a strong lightweight baseline: it requires no training, no extra LLM call, and no answer-time critique.
+
+The limitation is that score shape does not always encode evidence need. A large score gap may indicate one dominant document, but a multi-hop question can still require another lower-scored document. Conversely, a flatter distribution may reflect lexical noise rather than genuine need for all documents. TACER is designed around this gap between retrieval confidence and answer evidence requirement.
+
+\subsection{Evidence Compression}
+
+For compact evidence modes, each selected document is split into sentences. Candidate sentences are scored using lexical overlap, rare query-term matches, phrase overlap, token density, and a small position bonus. The highest-scoring sentence and its immediate neighbors are retained. This produces local evidence spans rather than isolated sentences, preserving short explanatory context while reducing prompt length. Appendix~\ref{app:evidence-scoring} gives the scoring formula.
+
+The neighborhood step is important. Selecting only the highest-overlap sentence can remove definitions, negations, or conditions that appear in the preceding or following sentence. Keeping immediate neighbors is a cheap way to preserve local coherence while still reducing the context substantially. This design is especially useful for scientific abstracts, where the sentence containing a query term may depend on a previous sentence for the entity or experimental setup.
+
+\subsection{Safe Adaptive Context}
+
+Safe Adaptive Context is the conservative predecessor to TACER. It predicts an initial budget from retrieval-side features: query length, lexical diversity, top scores, score gaps, score mass, score ratios, entropy, and normalized entropy. For evidence-style tasks it uses compact evidence spans; for concise QA tasks it uses sentence packing over the retrieved pool. After generation, a risk checker looks for empty or weak answers, low answer-context overlap, poor query coverage, short-answer grounding failures, and suspicious verbosity. If the first answer appears risky, the controller expands context and regenerates. Fallback cost is counted cumulatively.
+
+This policy is designed to be safe rather than maximally cheap. It accepts that some first-pass attempts may be too small and treats fallback as a recovery mechanism. In practice, fallback rates are low in most final runs, but the presence of fallback changes the policy's behavior: it can attempt compact evidence without fully committing to it.
+
+\subsection{TACER}
+
+TACER extends Safe Adaptive Context by treating context construction as routing. It estimates whether the query is better served by aggressive compression or by safer broader evidence. The policy uses retrieval-side features and query/evidence signals rather than an additional LLM call.
+
+\subsubsection{Routing Signals}
+
+TACER uses three families of signals. The first family measures retrieval concentration: top scores, adjacent score gaps, score mass in the first few ranks, and normalized entropy. Concentrated distributions suggest that a small number of documents dominate the ranking. The second family measures query and evidence coverage: query length, overlap between query terms and candidate evidence spans, phrase coverage, and whether useful evidence appears in several documents. The third family captures answer-form risk. Short factoid or claim-verification prompts can often tolerate compact evidence, while multi-hop and explanatory prompts are more likely to require broader context.
+
+\subsubsection{Routing Actions}
+
+The controller chooses among three actions. The first is aggressive compact evidence, where TACER keeps only a small number of high-coverage spans. The second is safer selected context, where it preserves broader evidence across multiple documents. The third is answer-aware fallback, where an initially compact answer is regenerated with expanded context if the first answer appears unsupported. These actions make TACER a routing policy rather than a single compression rule.
+
+\begin{figure*}[t]
+\centering
+\fbox{
+\begin{minipage}{0.94\linewidth}
+\small
+\textbf{TACER routing policy.}
+Given query $q$ and ranked candidates $R_q$:
+\begin{enumerate}
+\item Compute retrieval features: top scores, score gaps, score mass, entropy, normalized entropy, and query length.
+\item Score candidate evidence spans for lexical and phrase-level query coverage.
+\item Estimate whether evidence is concentrated or distributed.
+\item If evidence is concentrated, build compact evidence from the strongest spans.
+\item If evidence is distributed or the query appears multi-hop or explanatory, route to a safer broader context policy.
+\item Generate the answer.
+\item If the answer appears empty, weakly grounded, or unsupported, expand context and regenerate.
+\end{enumerate}
+\end{minipage}
+}
+\caption{High-level TACER routing procedure. TACER uses retrieval-side and evidence-coverage signals to choose between compact and safer context construction.}
+\label{fig:tacer_algorithm}
+\end{figure*}
+
+The policy has two intended behaviors. On concentrated-evidence tasks, such as many SciFact and BioASQ examples, TACER can be more aggressive than Safe Adaptive Context because compact evidence is often sufficient. On distributed-evidence tasks, such as HotpotQA and some ASQA examples, TACER should avoid the failure mode of selecting too little evidence simply because the retrieval-score curve has a large early drop.
+
+TACER is therefore not a universal compressor. It is a lightweight operating policy for allocating context according to evidence structure. It makes no claim of factual correctness guarantees; it aims to improve the quality--efficiency trade-off under practical constraints.
+
+\subsection{Computational Cost}
+
+TACER is designed to add little overhead beyond retrieval and generation. Its routing features are computed from the already available ranked list and simple lexical evidence scoring. Unlike methods that ask an LLM to judge the query before generation, TACER does not introduce a separate pre-generation model call. The only additional LLM cost occurs when answer-aware fallback is triggered, and fallback cost is included in all reported token totals.
+
+\section{Experimental Setup}
+
+\subsection{Datasets}
+
+We evaluate on five datasets selected to stress different evidence patterns. Table~\ref{tab:datasets} summarizes the dataset roles.
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Datasets used in the expanded evaluation.}
+\label{tab:datasets}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llllrr}
+\toprule
+Dataset & Domain & Task Type & Evidence Pattern & Calibration & Evaluation \\
+\midrule
+SciFact & Scientific/biomedical & Claim verification & Concentrated evidence & 50 & 200 \\
+BioASQ & Biomedical & Factoid QA & Focused but technical evidence & 50 & 200 \\
+HotpotQA & General-domain & Multi-hop QA & Distributed evidence & 50 & 200 \\
+MS MARCO & Web passages & Passage QA & Often early-answer evidence & 50 & 200 \\
+ASQA & General-domain & Ambiguous long-form QA & Explanatory/synthesis evidence & 50 & 200 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+SciFact answer-level metrics use synthetic gpt-oss-120b references because the dataset does not provide natural-language QA-style answers. Retrieval metrics still use the original relevance labels. The other datasets use prepared reference answers from their source data or simplified JSONL conversions.
+
+The five datasets are deliberately heterogeneous. SciFact and BioASQ test whether compact biomedical evidence is enough. HotpotQA tests whether the controller can avoid under-selecting evidence for multi-hop reasoning. MS MARCO tests a web-passage setting where the answer is often available early in the ranking. ASQA tests longer ambiguous questions where lexical F1 is less reliable and broader synthesis may be useful. This mix is central to the evaluation because a context policy that works only for one evidence pattern is not sufficient for general RAG.
+
+The 50-example calibration split is used only to tune lightweight routing and budget behavior. It is not included in final reported evaluation scores. The 200-example evaluation split is fixed across methods so that token and quality comparisons are paired by query.
+
+\subsection{Models}
+
+Llama-3.3-70B-Instruct is the main generator. Mistral is used as a smaller local model to test model robustness. Both are run at temperature 0. Final reported runs require provider-reported token counts; runs without provider token usage are rejected. This avoids relying on approximate local token estimates.
+
+The two-model setup tests whether the context-policy conclusions depend on model scale. Larger models may be better at ignoring distractors or synthesizing partial evidence, while smaller local models may be more sensitive to prompt shape. If a policy only works for one generator, it is less useful as a general RAG controller.
+
+\subsection{Retrieval Conditions}
+
+The main condition uses TF-IDF retrieval because it is transparent and isolates context allocation from retriever sophistication. We also evaluate two stronger settings: TF-IDF with cross-encoder reranking and dense retrieval with cross-encoder reranking. These conditions test whether TACER remains useful when candidate ordering improves.
+
+The retriever-robustness experiments are not intended as a retrieval benchmark. Instead, they ask whether context allocation remains important after improving the ranking. A strong context policy should not depend entirely on weaknesses of TF-IDF. If TACER only helped under TF-IDF, then its value would be limited to weak retrieval settings. If it remains competitive under reranking and dense retrieval, then the result supports a broader conclusion about post-retrieval context control.
+
+\subsection{Compared Methods}
+
+Table~\ref{tab:methods} summarizes the methods. The main comparisons focus on Fixed Top-10, Adaptive-$k$, Safe Adaptive Context, and TACER. Fixed Top-3 and Top-5 are included to show that no fixed $k$ is universally best.
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Compared context-selection methods.}
+\label{tab:methods}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lllll}
+\toprule
+Method & Budget Signal & Compression & Fallback & Task/Evidence Awareness \\
+\midrule
+Fixed Top-3/5/10 & Fixed constant & No & No & No \\
+Heuristic Rules & Score gaps + query length & No & No & Weak \\
+Adaptive-$k$ & Score distribution & No & No & No \\
+Safe Adaptive Context & Predicted budget + answer risk & Yes & Yes & Moderate \\
+TACER & Score shape + evidence coverage + task routing & Yes & Yes & Stronger \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+\subsection{Metrics}
+
+We evaluate answer quality with token F1, answer coverage, and semantic similarity. Retrieval quality is measured with nDCG@10 and MRR@10. Efficiency is measured with provider-reported total tokens and token reduction relative to Fixed Top-10 under the same dataset, model, and retriever. We also report fallback rate for methods with fallback.
+
+Token F1 is useful but imperfect. It can penalize correct paraphrases and reward short generic answers. Semantic similarity can over-credit domain-related but incomplete answers. We therefore interpret metrics jointly and use human annotation as a metric-validity check.
+
+We report token reduction relative to Fixed Top-10 because Top-10 represents the common expensive RAG setting. However, we also compare against Top-3, Top-5, and Adaptive-$k$ because a method that only improves over Top-10 may not be practically compelling. The strongest result is therefore not simply high token reduction, but high quality retention at a competitive token budget.
+
+\section{Results}
+
+\subsection{Main TF-IDF Results}
+
+Table~\ref{tab:main_tfidf} reports the main Llama-70B TF-IDF results. TACER gives the strongest overall story when quality and token reduction are considered together. It is highly efficient on concentrated-evidence datasets, and it avoids the largest Adaptive-$k$ failures on HotpotQA and ASQA.
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Main Llama-70B TF-IDF results. Reductions are relative to Fixed Top-10.}
+\label{tab:main_tfidf}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrrrl}
+\toprule
+Dataset & Fixed F1 & Adaptive-$k$ F1 / Red. & Safe F1 / Red. & TACER F1 / Red. & TACER--Adaptive F1 & Takeaway \\
+\midrule
+SciFact & 0.243 & 0.251 / 74.9\% & 0.247 / 69.9\% & 0.253 / 80.9\% & +0.002 & Highly efficient on concentrated evidence \\
+BioASQ & 0.328 & 0.319 / 73.2\% & 0.323 / 74.6\% & 0.314 / 80.8\% & -0.006 & Safe is quality-preserving; TACER is aggressive \\
+HotpotQA & 0.645 & 0.490 / 70.4\% & 0.627 / 32.3\% & 0.627 / 32.6\% & +0.137 & Routing avoids score-only under-selection \\
+MS MARCO & 0.196 & 0.199 / 48.6\% & 0.195 / 38.5\% & 0.195 / 54.1\% & -0.005 & Small contexts are strong with good ranking \\
+ASQA & 0.422 & 0.368 / 70.9\% & 0.402 / 58.3\% & 0.404 / 59.4\% & +0.036 & Better long-form quality retention \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+The main failure mode of Adaptive-$k$ appears on HotpotQA. It reduces token use by 70.4\%, but F1 drops from 0.645 to 0.490. TACER uses more context, saving 32.6\%, but recovers most of the answer quality with F1 0.627. This is exactly the trade-off TACER is designed to make: spend tokens when the task requires distributed evidence.
+
+SciFact shows the opposite regime. Evidence is often concentrated, so TACER can be aggressive. It achieves the highest F1 among the compared methods and reduces tokens by 80.9\%. ASQA is intermediate: TACER gives up some token savings compared with Adaptive-$k$, but improves F1 by 0.036.
+
+BioASQ illustrates a useful boundary case. TACER saves 80.8\% of tokens, but its F1 is slightly below Safe Adaptive Context and Adaptive-$k$. This does not invalidate the method; rather, it shows that biomedical factoid answering can reward a slightly more conservative policy. The distinction between Safe Adaptive Context and TACER is therefore meaningful: Safe Adaptive is the safer operating point, while TACER is the more aggressive task-aware point.
+
+MS MARCO also resists a simple interpretation. Adaptive-$k$ and smaller fixed contexts are highly competitive, suggesting that many questions are answered from early passages and that Top-10 often adds little. This dataset shows why the paper does not claim that TACER should replace every simpler policy. Instead, TACER is valuable as a robust controller across heterogeneous tasks, especially when the system cannot know in advance which evidence regime it is facing.
+
+\subsection{Coverage and Semantic Similarity}
+
+Table~\ref{tab:quality_metrics} reports the complementary quality metrics for the main TF-IDF setting. These values are important because token F1 alone can be misleading. Answer coverage measures how much of the reference answer is recovered, while semantic similarity captures meaning-level relatedness. Together, they show whether token reductions preserve answer content beyond surface lexical overlap.
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Complementary quality metrics in the main Llama-70B TF-IDF setting. Reductions are relative to Fixed Top-10.}
+\label{tab:quality_metrics}
+\resizebox{0.88\linewidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Dataset & Method & F1 & Coverage & Semantic & Token Red. \\
+\midrule
+SciFact & Fixed Top-10 & 0.243 & 0.815 & 0.548 & 0.0\% \\
+SciFact & Adaptive-$k$ & 0.251 & 0.818 & 0.545 & 74.9\% \\
+SciFact & Safe Adaptive Context & 0.247 & 0.820 & 0.546 & 69.9\% \\
+SciFact & TACER & 0.253 & 0.814 & 0.554 & 80.9\% \\
+\midrule
+BioASQ & Fixed Top-10 & 0.328 & 0.507 & 0.753 & 0.0\% \\
+BioASQ & Adaptive-$k$ & 0.319 & 0.458 & 0.738 & 73.2\% \\
+BioASQ & Safe Adaptive Context & 0.323 & 0.494 & 0.749 & 74.6\% \\
+BioASQ & TACER & 0.314 & 0.464 & 0.740 & 80.8\% \\
+\midrule
+HotpotQA & Fixed Top-10 & 0.645 & 0.651 & 0.747 & 0.0\% \\
+HotpotQA & Adaptive-$k$ & 0.490 & 0.493 & 0.605 & 70.4\% \\
+HotpotQA & Safe Adaptive Context & 0.627 & 0.630 & 0.730 & 32.3\% \\
+HotpotQA & TACER & 0.627 & 0.630 & 0.724 & 32.6\% \\
+\midrule
+MS MARCO & Fixed Top-10 & 0.196 & 0.614 & 0.473 & 0.0\% \\
+MS MARCO & Adaptive-$k$ & 0.199 & 0.549 & 0.466 & 48.6\% \\
+MS MARCO & Safe Adaptive Context & 0.195 & 0.622 & 0.469 & 38.5\% \\
+MS MARCO & TACER & 0.195 & 0.523 & 0.456 & 54.1\% \\
+\midrule
+ASQA & Fixed Top-10 & 0.422 & 0.419 & 0.780 & 0.0\% \\
+ASQA & Adaptive-$k$ & 0.368 & 0.337 & 0.730 & 70.9\% \\
+ASQA & Safe Adaptive Context & 0.402 & 0.380 & 0.765 & 58.3\% \\
+ASQA & TACER & 0.404 & 0.382 & 0.764 & 59.4\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+The complementary metrics reinforce the main interpretation. On HotpotQA, Adaptive-$k$ does not merely lose lexical F1; it also drops from 0.651 to 0.493 coverage and from 0.747 to 0.605 semantic similarity. TACER recovers most of both metrics. On ASQA, TACER improves over Adaptive-$k$ in F1, coverage, and semantic similarity, which supports the claim that task-aware routing is useful for longer explanatory answers. On SciFact, TACER achieves the best semantic similarity while also giving the largest token reduction. BioASQ and MS MARCO remain more mixed, showing that aggressive routing can trade away some coverage even when F1 remains competitive.
+
+\subsection{Fixed-$k$ Brittleness}
+
+The fixed baselines show why choosing one global retrieval depth is unsatisfactory. In some datasets, Top-3 or Top-5 is close to or better than Top-10, suggesting that full context includes distractors or unnecessary material. In HotpotQA, however, Top-10 is much stronger because multi-hop evidence is distributed. This variation supports the central premise of the paper: context depth should be adaptive, but the adaptation must reflect task structure.
+
+This point is important for interpreting token reduction. If Top-3 performs as well as Top-10, then reducing tokens relative to Top-10 is easy and does not require a sophisticated policy. The hard setting is when smaller fixed contexts fail but full Top-10 is expensive. HotpotQA is the clearest example: smaller contexts and Adaptive-$k$ save tokens but lose quality. TACER's advantage is that it recognizes the need for broader evidence and accepts a lower token reduction to protect answer quality.
+
+\subsection{Average Behavior Across Retrievers}
+
+Table~\ref{tab:averages} averages retention and token reduction across five datasets for each retrieval setting. Under TF-IDF, Adaptive-$k$ saves the most tokens but drops to 93.1\% F1 retention. TACER retains 98.4\% F1 while reducing tokens by 61.6\%, improving the quality--efficiency balance. Under stronger retrievers, the gap narrows but the same pattern remains: TACER and Safe Adaptive are more stable quality-preserving policies.
+
+The average table also highlights a practical deployment choice. If the objective is maximum token savings and some quality loss is acceptable, Adaptive-$k$ is attractive. If the objective is to preserve quality while still saving many tokens, Safe Adaptive Context and TACER are safer. TACER occupies the middle ground: more aggressive than Safe Adaptive in the TF-IDF setting, but less brittle than Adaptive-$k$ on distributed-evidence tasks.
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Average behavior across five datasets. Retention is relative to Fixed Top-10 under the same retriever.}
+\label{tab:averages}
+\resizebox{0.94\linewidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Retriever & Method & Avg F1 Retained & Avg Semantic Retained & Avg Token Reduction & Avg Fallback \\
+\midrule
+TF-IDF & Adaptive-$k$ & 93.1\% & 94.2\% & 67.6\% & 0.0\% \\
+TF-IDF & Safe Adaptive Context & 98.4\% & 98.8\% & 54.7\% & 4.8\% \\
+TF-IDF & TACER & 98.4\% & 98.1\% & 61.6\% & 1.4\% \\
+\midrule
+TF-IDF + CE & Adaptive-$k$ & 97.6\% & 97.2\% & 60.2\% & 0.0\% \\
+TF-IDF + CE & Safe Adaptive Context & 99.7\% & 98.9\% & 60.3\% & 2.2\% \\
+TF-IDF + CE & TACER & 98.8\% & 98.8\% & 58.0\% & 0.6\% \\
+\midrule
+Dense + CE & Adaptive-$k$ & 98.1\% & 97.1\% & 58.2\% & 0.0\% \\
+Dense + CE & Safe Adaptive Context & 99.8\% & 98.8\% & 58.1\% & 2.8\% \\
+Dense + CE & TACER & 99.8\% & 99.1\% & 56.1\% & 1.3\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+\subsection{Retriever Robustness}
+
+Table~\ref{tab:hotpot_retrievers} focuses on HotpotQA across retrievers because it best exposes the weakness of score-only context selection. Even with stronger retrieval, Adaptive-$k$ under-selects evidence and loses substantial F1. TACER preserves much more quality in all three retrieval settings.
+
+\begin{table}[t]
+\centering
+\small
+\caption{HotpotQA under stronger retrievers.}
+\label{tab:hotpot_retrievers}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrr}
+\toprule
+Retriever & Method & F1 & F1 Retained & Token Reduction \\
+\midrule
+TF-IDF & Adaptive-$k$ & 0.490 & 76.0\% & 70.4\% \\
+TF-IDF & TACER & 0.627 & 97.3\% & 32.6\% \\
+\midrule
+TF-IDF + CE & Adaptive-$k$ & 0.560 & 79.7\% & 65.9\% \\
+TF-IDF + CE & TACER & 0.676 & 96.3\% & 31.8\% \\
+\midrule
+Dense + CE & Adaptive-$k$ & 0.573 & 79.1\% & 66.4\% \\
+Dense + CE & TACER & 0.705 & 97.2\% & 31.5\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+This result is important because it rules out a simple explanation that Adaptive-$k$ fails only because TF-IDF is weak. Dense retrieval with cross-encoder reranking improves the ranking, but Adaptive-$k$ still loses quality on HotpotQA. The problem is evidence need: multi-hop questions often require more than the score curve suggests.
+
+The HotpotQA result is the strongest evidence for task-aware routing. If retrieval score gaps were sufficient, Adaptive-$k$ should recover under cross-encoder or dense reranking. Instead, it remains far below TACER. This suggests that context sufficiency depends on the relationship between documents, not only their individual scores. A lower-ranked document can be essential because it supplies the second hop.
+
+\subsection{TACER vs. Adaptive-$k$ Across Retrievers}
+
+Table~\ref{tab:tacer_vs_adaptive} summarizes the direct TACER--Adaptive-$k$ comparison across retrieval settings. TACER consistently improves HotpotQA F1 by more than 0.11 across all retrievers. It also improves ASQA F1 in every retriever setting. On BioASQ and SciFact, Adaptive-$k$ remains very competitive, but TACER often saves more tokens.
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Direct comparison between TACER and Adaptive-$k$. Positive F1 delta favors TACER; positive reduction delta means TACER saves more tokens.}
+\label{tab:tacer_vs_adaptive}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Retriever & Dataset & Adaptive-$k$ F1 & TACER F1 & TACER F1 Delta & TACER Reduction Delta \\
+\midrule
+TF-IDF & SciFact & 0.251 & 0.253 & +0.002 & +6.0\% \\
+TF-IDF & BioASQ & 0.319 & 0.314 & -0.006 & +7.6\% \\
+TF-IDF & HotpotQA & 0.490 & 0.627 & +0.137 & -37.8\% \\
+TF-IDF & MS MARCO & 0.199 & 0.195 & -0.005 & +5.5\% \\
+TF-IDF & ASQA & 0.368 & 0.404 & +0.036 & -11.5\% \\
+\midrule
+TF-IDF + CE & SciFact & 0.262 & 0.251 & -0.011 & +5.6\% \\
+TF-IDF + CE & BioASQ & 0.336 & 0.320 & -0.015 & +11.5\% \\
+TF-IDF + CE & HotpotQA & 0.560 & 0.676 & +0.116 & -34.1\% \\
+TF-IDF + CE & ASQA & 0.415 & 0.418 & +0.003 & -1.3\% \\
+\midrule
+Dense + CE & SciFact & 0.264 & 0.255 & -0.009 & +5.5\% \\
+Dense + CE & BioASQ & 0.338 & 0.324 & -0.013 & +11.5\% \\
+Dense + CE & HotpotQA & 0.573 & 0.705 & +0.131 & -34.9\% \\
+Dense + CE & ASQA & 0.415 & 0.417 & +0.002 & -0.4\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+The table shows that TACER is not a universal replacement for Adaptive-$k$ in every metric cell. Rather, it changes the operating point. When evidence is concentrated, score-only adaptation is already strong and sometimes slightly better in F1. When evidence is distributed, TACER spends more tokens to avoid severe quality loss. This is the intended behavior of a task-aware policy.
+
+This comparison also clarifies the main novelty. TACER does not win by always selecting fewer tokens than Adaptive-$k$. It wins by being willing to disagree with Adaptive-$k$ when the task suggests that the score cutoff is risky. The token-reduction deltas are therefore mixed by design: positive on concentrated datasets such as SciFact and BioASQ, negative on HotpotQA where preserving evidence breadth matters more.
+
+\subsection{Model Robustness}
+
+Table~\ref{tab:model_comparison} compares Llama-70B and Mistral under TF-IDF. The trends are broadly consistent across model scales. On HotpotQA, Adaptive-$k$ loses substantial quality for both models, while TACER is much closer to Fixed Top-10. On SciFact and BioASQ, TACER remains highly token-efficient.
+
+Mistral also shows that smaller models are not automatically helped by more context. On SciFact and BioASQ, compressed or adaptive contexts often perform competitively with full Top-10. This is consistent with the distractor argument: a smaller model may have less capacity to ignore irrelevant evidence. For practical local RAG systems, context routing may therefore be especially useful.
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Model comparison in the TF-IDF setting. Each cell reports F1 / token reduction relative to Fixed Top-10 for that model and dataset.}
+\label{tab:model_comparison}
+\resizebox{0.92\linewidth}{!}{%
+\begin{tabular}{llrrr}
+\toprule
+Dataset & Method & Llama F1 / Red. & Mistral F1 / Red. & Mistral Fixed Top-10 F1 \\
+\midrule
+SciFact & Adaptive-$k$ & 0.251 / 74.9\% & 0.259 / 74.0\% & 0.189 \\
+SciFact & Safe Adaptive Context & 0.247 / 69.9\% & 0.242 / 71.7\% & 0.189 \\
+SciFact & TACER & 0.253 / 80.9\% & 0.246 / 79.4\% & 0.189 \\
+\midrule
+BioASQ & Adaptive-$k$ & 0.319 / 73.2\% & 0.318 / 72.1\% & 0.242 \\
+BioASQ & Safe Adaptive Context & 0.323 / 74.6\% & 0.305 / 73.2\% & 0.242 \\
+BioASQ & TACER & 0.314 / 80.8\% & 0.316 / 79.8\% & 0.242 \\
+\midrule
+HotpotQA & Adaptive-$k$ & 0.490 / 70.4\% & 0.282 / 71.4\% & 0.385 \\
+HotpotQA & Safe Adaptive Context & 0.627 / 32.3\% & 0.369 / 30.9\% & 0.385 \\
+HotpotQA & TACER & 0.627 / 32.6\% & 0.374 / 31.1\% & 0.385 \\
+\midrule
+MS MARCO & Adaptive-$k$ & 0.199 / 48.6\% & 0.212 / 50.1\% & 0.210 \\
+MS MARCO & Safe Adaptive Context & 0.195 / 38.5\% & 0.217 / 35.1\% & 0.210 \\
+MS MARCO & TACER & 0.195 / 54.1\% & 0.209 / 54.1\% & 0.210 \\
+\midrule
+ASQA & Adaptive-$k$ & 0.368 / 70.9\% & 0.351 / 72.6\% & 0.366 \\
+ASQA & Safe Adaptive Context & 0.402 / 58.3\% & 0.359 / 61.9\% & 0.366 \\
+ASQA & TACER & 0.404 / 59.4\% & 0.359 / 61.9\% & 0.366 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+\subsection{Human Annotation as Metric Validation}
+\label{sec:human-annotation}
+
+Automatic metrics are useful for comparing many runs, but they do not fully measure factual correctness. We therefore include the structured human annotation study from the Safe Adaptive evaluation as a metric-validation analysis. The annotation set contains 120 outputs: 40 from SciFact, 40 from HotpotQA, and 40 from BioASQ. Annotators saw the query, reference answer, model answer, and retrieved evidence, then labeled each answer as CORRECT, PARTIALLY\_CORRECT, INCORRECT, or NOT\_ENOUGH\_INFO.
+
+Two annotators independently labeled each item. They agreed on 84 of 120 examples, giving 70.0\% raw agreement and Cohen's $\kappa = 0.477$, which indicates moderate agreement. The moderate value is informative: factual RAG evaluation contains real borderline cases, especially between correct, partially correct, and incomplete answers.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Human labels for agreed annotation examples only.}
+\label{tab:annotation_agreed}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Dataset & Agreed Items & Correct & Partial & Incorrect \\
+\midrule
+SciFact & 27 & 20 & 2 & 5 \\
+HotpotQA & 30 & 26 & 0 & 4 \\
+BioASQ & 27 & 19 & 4 & 4 \\
+Overall & 84 & 65 & 6 & 13 \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table*}[t]
+\centering
+\small
+\caption{Alignment between automatic metric buckets and agreed human labels.}
+\label{tab:metric_alignment}
+\resizebox{0.82\linewidth}{!}{%
+\begin{tabular}{llrrrr}
+\toprule
+Metric & Bucket & Items & Correct & Partially Correct & Incorrect \\
+\midrule
+Token F1 & Low (0.00--0.33) & 33 & 48.5\% & 18.2\% & 33.3\% \\
+Token F1 & Medium (0.34--0.66) & 22 & 90.9\% & 0.0\% & 9.1\% \\
+Token F1 & High (0.67--1.00) & 29 & 100.0\% & 0.0\% & 0.0\% \\
+\midrule
+Semantic & Low (0.00--0.49) & 23 & 47.8\% & 13.0\% & 39.1\% \\
+Semantic & Medium (0.50--0.74) & 12 & 58.3\% & 25.0\% & 16.7\% \\
+Semantic & High (0.75--1.00) & 49 & 95.9\% & 0.0\% & 4.1\% \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+The annotation results support the use of automatic metrics as directional signals. High Token F1 and high semantic similarity are strongly associated with human-correct answers. However, low-F1 examples are mixed: many are still judged correct or partially correct. This confirms that token F1 can underestimate acceptable answers, especially when they are paraphrased.
+
+\subsection{Failure-Mode Analysis}
+
+The results suggest three recurring failure modes. To make the analysis concrete, Table~\ref{tab:failure_examples} reports representative per-query examples from the main Llama-70B TF-IDF run. These examples are not selected as aggregate proof; rather, they illustrate the mechanisms behind the dataset-level patterns.
+
+\begin{table*}[t]
+\centering
+\small
+\setlength{\tabcolsep}{3pt}
+\caption{Representative per-query examples from the main Llama-70B TF-IDF run. Metrics are F1 / coverage / semantic similarity.}
+\label{tab:failure_examples}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lp{0.29\linewidth}lll}
+\toprule
+Pattern & Query & Adaptive-$k$ & TACER & Interpretation \\
+\midrule
+Score-only under-selection &
+HotpotQA: birth date of a Trump campaign consultant &
+0.000 / 0.000 / 0.017; 1 doc, 384 tok &
+1.000 / 1.000 / 1.000; 10 docs, 1154 tok &
+The score cutoff selected too little evidence for a multi-hop question; TACER spent more tokens and recovered the answer. \\
+\midrule
+Long-form evidence need &
+ASQA: who played the baby in \textit{Baby's Day Out}? &
+0.292 / 0.261 / 0.490; 1 doc, 166 tok &
+0.706 / 0.739 / 0.889; 3 docs, 461 tok &
+The answer requires multiple names and roles; compact one-document evidence missed important answer parts. \\
+\midrule
+Compression success &
+SciFact: hypocretin neurons induce a panic-prone state &
+0.216 / 0.889 / 0.800; 3 docs, 1309 tok &
+0.485 / 0.889 / 0.946; 4 docs, 585 tok &
+TACER removed distracting context while preserving the evidence needed for the claim. \\
+\midrule
+Over-compression risk &
+BioASQ: is pregabalin effective for sciatica? &
+0.661 / 0.794 / 0.944; 1 doc, 763 tok &
+0.250 / 0.176 / 0.813; 2 docs, 440 tok &
+TACER saved tokens but lost important negative-result details; this is a case where a conservative policy is preferable. \\
+\midrule
+Early-answer web QA &
+MS MARCO: where do roseate spoonbills live? &
+0.667 / 1.000 / 0.364; 1 doc, 170 tok &
+0.049 / 0.143 / 0.164; 1 doc, 191 tok &
+The answer was already available in a concise early passage; routing did not help and generation missed the short reference. \\
+\bottomrule
+\end{tabular}%
+}
+\end{table*}
+
+The first failure mode is \textit{score-only under-selection}. This occurs when Adaptive-$k$ selects a small prefix because the retrieval-score curve has a clear drop, but the task still requires evidence from later documents. HotpotQA is the clearest example, and the failure persists under stronger retrievers.
+
+The second failure mode is \textit{over-compression}. Compact evidence can remove distractors, but it can also remove conditions, negations, or secondary facts. This is most relevant for BioASQ and ASQA, where answer quality may depend on explanatory context rather than one sentence. Safe Adaptive Context is often stronger in this regime because it is more conservative.
+
+The third failure mode is \textit{metric mismatch}. Some generated answers are semantically acceptable but have low token overlap with the reference, especially in long-form QA. Conversely, biomedical answers can receive high semantic similarity because they contain related terminology while still being incomplete. This motivates reporting multiple metrics and using human annotation as a check.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Qualitative interpretation of common context-selection regimes.}
+\label{tab:regimes}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{lll}
+\toprule
+Regime & Typical Dataset & Best Policy Behavior \\
+\midrule
+Concentrated evidence & SciFact & Compress aggressively \\
+Focused technical answer & BioASQ & Compress, but preserve conditions \\
+Distributed multi-hop & HotpotQA & Preserve broader evidence \\
+Early-answer web QA & MS MARCO & Small context often sufficient \\
+Long-form synthesis & ASQA & Balance breadth and compression \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\section{Discussion}
+
+The main result is that context selection is not just a budget problem. Adaptive-$k$ is a strong and efficient baseline, but it relies on the retrieval-score curve. That curve often works for concentrated-evidence tasks, but it can fail when evidence is distributed. HotpotQA is the clearest case: score-only selection saves tokens, but removes evidence needed for multi-hop reasoning. TACER spends more tokens in this regime and preserves much more quality.
+
+TACER also shows that aggressive compression can be useful when applied selectively. On SciFact, TACER reduces tokens by over 80\% in the TF-IDF setting while slightly improving F1 over Fixed Top-10. This suggests that compression can remove distractors rather than merely shortening prompts. On BioASQ, the trade-off is more delicate: Safe Adaptive Context is more quality-preserving, while TACER is more aggressive. This distinction is useful in practice because different deployments may prefer different points on the quality--cost curve.
+
+The fixed baselines are not merely sanity checks. They show that no single $k$ works best everywhere. Top-3 and Top-5 can be competitive on MS MARCO and BioASQ, while Top-10 remains important on HotpotQA. This means that choosing a fixed $k$ is a hidden policy decision. TACER makes that policy explicit and query-dependent.
+
+Stronger retrievers improve the operating point but do not solve context allocation. Cross-encoder and dense reranking improve retrieval metrics, and Adaptive-$k$ becomes stronger under these settings. However, the HotpotQA failure remains. This suggests that retrieval quality and context routing are complementary: retrieval decides what is available, while routing decides what the generator should actually see.
+
+The human annotation study also affects how the results should be read. Automatic metrics are useful, but imperfect. High F1 and high semantic similarity usually correspond to human-correct answers, but low F1 can still include correct paraphrases. For this reason, our claims emphasize quality retention and trade-offs rather than exact metric superiority in every cell.
+
+\paragraph{What TACER contributes beyond Adaptive-$k$.}
+The most important difference is not the use of a different cutoff. Adaptive-$k$ adapts context size from the score curve. TACER adapts the context policy from the expected evidence structure. This means that TACER can intentionally choose a less token-efficient prompt when the task appears to require it. In the results, this behavior is visible on HotpotQA: TACER sacrifices token savings to preserve quality. It is also visible on SciFact and BioASQ, where TACER often compresses more aggressively because evidence is more localized.
+
+\paragraph{What TACER contributes beyond Safe Adaptive Context.}
+Safe Adaptive Context is conservative. It provides a strong quality-preserving baseline, especially when fallback is useful. TACER is more explicitly routed: it attempts to identify when aggressive compression is appropriate and when broader context is needed. In practice, this means TACER can improve token reduction in concentrated-evidence settings while maintaining the safety behavior needed for distributed tasks. The two methods are therefore complementary operating points rather than mutually exclusive alternatives.
+
+\paragraph{Practical implications.}
+For a production RAG system, the choice of context policy should depend on risk tolerance. If the application is high-stakes and token cost is secondary, Safe Adaptive Context may be preferable. If the application needs substantial cost reduction while preserving average quality, TACER is attractive. If the task distribution is known to be concentrated and low-risk, Adaptive-$k$ may be sufficient. The broader lesson is that context selection should be treated as a configurable policy layer, not as a fixed constant hidden inside the retriever.
+
+\section{Conclusion}
+
+We presented TACER, a task-aware context and evidence-routing controller for token-efficient RAG. Across five datasets, two generator scales, and three retrieval settings, TACER substantially reduces provider-reported token usage while maintaining competitive answer quality. The central lesson is that retrieval-score-only adaptation is useful but incomplete. Adaptive-$k$ is highly efficient when evidence is concentrated, but it can under-select evidence for multi-hop and long-form tasks. TACER addresses this by routing between compact and safer context strategies according to task and evidence structure, offering a more stable quality--efficiency trade-off without fine-tuning, a learned critic, or extra pre-generation LLM calls.
+
+\section*{Limitations}
+
+The evaluation is controlled rather than exhaustive. Although we expand to five datasets, the final evaluation uses prepared 200-query splits rather than full benchmark-scale testing. Some dataset conversions are simplified, and SciFact answer-level metrics rely on synthetic gpt-oss-120b references because SciFact does not provide natural-language QA answers. Automatic metrics are imperfect, especially for biomedical and long-form answers. The human annotation study validates metric behavior but does not yet compare TACER and Adaptive-$k$ directly. TACER is also heuristic: its routing rules are interpretable but not learned from large-scale calibration data. Future work should learn routing policies, report uncertainty estimates, expand human evaluation, and test the method in production-style RAG systems.
+
+\section*{Ethics Statement}
+
+The experiments use benchmark-style datasets and generated answers. Because SciFact and BioASQ are biomedical, outputs should not be treated as medical advice or clinical evidence. We evaluate the system as an information retrieval and question-answering method, not as a clinical decision tool. Token-efficient RAG can reduce compute and cost, but aggressive compression can also remove useful evidence. Any deployment should monitor factuality and uncertainty, especially in high-stakes domains.
+
+\section*{Reproducibility}
+
+Code, prepared data, saved result tables, retrieval rankings, and paper-summary artifacts are available online.\footnote{\url{https://github.com/Joel-Vazquez-Lopez/adaptive-rag-token-efficiency}} The implementation is under \texttt{src/adaptive\_retrieval/}; experiment runners are under \texttt{scripts/}; prepared datasets are under \texttt{data/}; and final result artifacts are under \texttt{saved\_results/}. Final reported runs used temperature 0 and required provider-reported token counts.
+
+\section*{AI Contributions}
+
+AI writing and coding assistants were used to support drafting, editing, LaTeX formatting, table organization, presentation preparation, and parts of the coding structure. The authors made all experimental design decisions, reviewed the code and system behavior to ensure that the implemented pipeline matched the intended methods, checked all results and interpretations, and edited the final wording and reported claims.
+
+\section*{Author Contributions}
+
+\begin{center}
+\small
+\begin{tabular}{p{0.22\linewidth}p{0.70\linewidth}}
+\toprule
+Author & Contributions \\
+\midrule
+Joel Vazquez &
+Project lead. Proposed, developed, and tested the adaptive-context idea; ran the main local and hosted model experiments; generated synthetic SciFact answer references; coordinated dataset expansion, system design, result interpretation, repository organization, report writing, and presentation preparation. \\
+\midrule
+Andreia Alexa &
+Contributed nDCG@10 and MRR@10 metrics, fixed Top-$k$ baselines, Heuristic Rules design and testing, annotation UI design, annotation data extraction and guidelines, report review and editing, and presentation materials. \\
+\midrule
+Simon Backhaus Brudzewski &
+Annotated samples for the human evaluation study; implemented the semantic similarity metric; calculated Cohen's kappa; interpreted annotation results; contributed the human annotation analysis; prepared annotation slides and reviewed the HTML presentation. \\
+\midrule
+Karlis Martins Auce &
+Developed and tested cross-encoder reranking, ran related experiments, and contributed to the presentation. \\
+\midrule
+Sheraz Ahmad &
+Prepared dataset material for the main experiments, annotated samples for the human evaluation study, and contributed to the presentation. \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section*{References}
+
+Asai, A., Wu, Z., Wang, Y., Sil, A., \& Hajishirzi, H. (2023). Self-RAG: Learning to retrieve, generate, and critique through self-reflection. arXiv preprint arXiv:2310.11511.
+
+Jiang, Z., Xu, F. F., Gao, L., Sun, Z., Liu, Q., Dwivedi-Yu, J., Yang, Y., Callan, J., \& Neubig, G. (2023a). Active retrieval augmented generation. arXiv preprint arXiv:2305.06983.
+
+Jiang, H., Wu, Q., Lin, C.-Y., Yang, P., \& Qiu, X. (2023b). LLMLingua: Compressing prompts for accelerated inference of large language models. arXiv preprint arXiv:2310.05736.
+
+Karpukhin, V., Oguz, B., Min, S., Lewis, P., Wu, L., Edunov, S., Chen, D., \& Yih, W.-t. (2020). Dense passage retrieval for open-domain question answering. Proceedings of EMNLP 2020.
+
+Lewis, P., Perez, E., Piktus, A., Petroni, F., Karpukhin, V., Goyal, N., Kuttler, H., Lewis, M., Yih, W.-t., Rocktaschel, T., Riedel, S., \& Kiela, D. (2020). Retrieval-augmented generation for knowledge-intensive NLP tasks. Advances in Neural Information Processing Systems.
+
+Li, Y., Dong, B., Lin, C., \& Guerin, F. (2023). Compressing context to enhance inference efficiency of large language models. arXiv preprint arXiv:2310.06201.
+
+Nogueira, R., \& Cho, K. (2019). Passage re-ranking with BERT. arXiv preprint arXiv:1901.04085.
+
+Reimers, N., \& Gurevych, I. (2019). Sentence-BERT: Sentence embeddings using Siamese BERT-networks. Proceedings of EMNLP-IJCNLP 2019.
+
+Robertson, S., \& Zaragoza, H. (2009). The probabilistic relevance framework: BM25 and beyond. Foundations and Trends in Information Retrieval.
+
+Shi, F., Chen, X., Misra, K., Scales, N., Dohan, D., Chi, E., Scharli, N., \& Zhou, D. (2023). Large language models can be easily distracted by irrelevant context. Proceedings of ICML 2023.
+
+Taguchi, Y., Maekawa, S., \& Bhutani, N. (2025). Efficient Context Selection for Long-Context QA: No Tuning, No Iteration, Just Adaptive-k. arXiv preprint arXiv:2506.08479.
+
+Thakur, N., Reimers, N., Ruckle, A., Srivastava, A., \& Gurevych, I. (2021). BEIR: A heterogeneous benchmark for zero-shot evaluation of information retrieval models. arXiv preprint arXiv:2104.08663.
+
+Wu, W., Wang, Y., Xiao, G., Peng, H., \& Fu, Y. (2024). Retrieval head mechanistically explains long-context factuality. arXiv preprint arXiv:2404.15574.
+
+Xu, F. F., Shi, W., \& Choi, E. (2023). RECOMP: Improving retrieval-augmented LMs with context compression and selective augmentation. arXiv preprint arXiv:2310.04408.
+
+\appendix
+\onecolumn
+
+\section{Implementation Details}
+
+\subsection{Retriever Details}
+\label{app:retriever-details}
+
+For a corpus of $N$ documents, inverse document frequency is computed as:
+\begin{equation}
+\mathrm{idf}(t) = \log\left(\frac{1 + N}{1 + \mathrm{df}(t)}\right) + 1,
+\end{equation}
+where $\mathrm{df}(t)$ is the number of documents containing term $t$. Query and document vectors are computed in the same TF-IDF space, and documents are ranked by cosine similarity:
+\begin{equation}
+\mathrm{sim}(q,d) = \frac{q \cdot d}{\lVert q \rVert \lVert d \rVert}.
+\end{equation}
+
+\subsection{Evidence Compression Scoring}
+\label{app:evidence-scoring}
+
+For compact evidence modes, candidate sentences are scored as:
+\begin{equation}
+\begin{split}
+\mathrm{score}(q,s,i) ={}& 0.40 \cdot \mathrm{overlap}(q,s)
++ 0.25 \cdot \mathrm{rare}(q,s) \\
+&+ 0.20 \cdot \mathrm{phrase}(q,s)
++ 0.10 \cdot \mathrm{density}(q,s) \\
+&+ 0.05 \cdot (1 / (1 + i)).
+\end{split}
+\end{equation}
+
+The overlap term captures unigram query-term matches, rare gives higher weight to less frequent query terms, phrase captures bigram and trigram matches, density rewards compact sentences with many query-relevant tokens, and the position bonus mildly favors earlier sentences.
+
+\section{Additional Full Results}
+
+Full per-query outputs, full method ladders, retrieval rankings, and combined summary tables are stored in the repository under \texttt{saved\_results/}. In particular, \texttt{saved\_results/final\_main/} contains model-comparison runs, \texttt{saved\_results/retriever\_robustness/} contains reranking and dense-retrieval runs, and \texttt{saved\_results/paper\_summary/} contains the paper-facing tables and plots.
+
+\subsection{Result Artifact Map}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Main result artifact locations.}
+\label{tab:artifact_map}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{ll}
+\toprule
+Path & Contents \\
+\midrule
+\texttt{saved\_results/final\_main/llama70b\_tfidf/} & Main Llama-70B TF-IDF runs \\
+\texttt{saved\_results/final\_main/mistral\_tfidf/} & Mistral TF-IDF model-comparison runs \\
+\texttt{saved\_results/retriever\_robustness/} & TF-IDF+CE and Dense+CE robustness runs \\
+\texttt{saved\_results/retrieval\_rankings/} & Precomputed retrieval rankings and retrieval metrics \\
+\texttt{saved\_results/paper\_summary/} & Paper-facing tables, combined CSVs, and Pareto plots \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\section{Reproducibility Commands}
+
+The experiments were run in batches to avoid losing progress when hosted API calls failed or rate limits were reached. Batch outputs were then merged into final tables. The following commands illustrate the workflow; exact paths and model names are stored in the repository scripts.
+
+\begin{verbatim}
+python scripts/run_llm_batches.py \
+  --documents data/bioasq_250/documents.jsonl \
+  --queries data/bioasq_250/queries_eval_200.jsonl \
+  --dev-queries data/bioasq_250/queries_calibration_50.jsonl \
+  --dataset-name BioASQ \
+  --output-root outputs/final_batches/bioasq_llama70b \
+  --model meta-llama/Llama-3.3-70B-Instruct \
+  --api-url https://api.berget.ai/v1 \
+  --api-key-env BERGET_API_KEY \
+  --max-output-tokens 80 \
+  --batch-size 20 \
+  --total 200 \
+  --seed 0 \
+  --require-provider-tokens \
+  --methods fixed_3 fixed_5 fixed_10 adaptive_k \
+            answer_aware_fallback task_aware_coverage_ultra
+\end{verbatim}
+
+Retriever robustness runs use precomputed ranking files:
+
+\begin{verbatim}
+scripts/run_retriever_robustness_batches.sh \
+  hotpotqa dense_cross_encoder 200
+\end{verbatim}
+
+Summary tables and plots are generated with:
+
+\begin{verbatim}
+python scripts/build_paper_summary_artifacts.py
+\end{verbatim}
+
+\section{Additional Method Details}
+
+\subsection{Fallback Risk Signals}
+
+The answer-aware fallback checker uses surface-level runtime signals rather than a learned verifier. It flags answers that are empty, contain weak-answer phrases, have low answer-context overlap, have poor query-term coverage, or appear suspiciously verbose for a concise answer setting. These signals are heuristic and imperfect, but they are cheap and do not require an additional model call.
+
+\subsection{Why Fallback Cost Is Counted Cumulatively}
+
+When fallback is triggered, the first answer attempt has already consumed prompt and completion tokens. We therefore count both first-pass and fallback tokens. This makes token reduction conservative and reflects real API cost. A method cannot appear cheaper simply because it discards a failed first attempt.
+
+\subsection{Why Dense Retrieval Is Not the Final Answer}
+
+Dense retrieval and reranking improve candidate order, but they do not decide how much context the generator should receive. The HotpotQA dense+CE results show this clearly: Adaptive-$k$ still under-selects evidence despite stronger ranking. This supports the claim that context routing remains useful after retrieval improvements.
+
+\section{Human Annotation Protocol}
+\label{app:annotation-protocol}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Human annotation label definitions.}
+\label{tab:annotation_labels}
+\resizebox{\linewidth}{!}{%
+\begin{tabular}{ll}
+\toprule
+Label & Criterion \\
+\midrule
+CORRECT & Contains the required information and does not contradict the reference. \\
+PARTIALLY\_CORRECT & Contains some required information but is incomplete, vague, or missing a condition. \\
+INCORRECT & Contradicts the reference or gives a different answer. \\
+NOT\_ENOUGH\_INFO & Cannot be confidently judged from the query, reference, and evidence shown. \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[H]
+\centering
+\small
+\caption{Human annotation sample construction.}
+\label{tab:annotation_sample}
+\begin{tabular}{llp{0.55\linewidth}}
+\toprule
+Dataset & Items & Selection \\
+\midrule
+SciFact & 40 & Stratified examples from Mistral and Llama-70B \\
+HotpotQA & 40 & Examples covering the HotpotQA output distribution \\
+BioASQ & 40 & Stratified examples from Mistral and Llama-70B \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\end{document}

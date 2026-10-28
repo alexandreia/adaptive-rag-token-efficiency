@@ -1,12 +1,35 @@
-# Adaptive RAG for Token Efficiency
+# Safe Adaptive Context and TACER
 
-This is the GitHub-ready version of our real Adaptive Context experiment.
+This repository contains the code, data files, saved outputs, annotation
+materials, and presentation assets for our project:
 
-The project tests whether an LLM/RAG system can use less context while keeping answer quality close to a fixed top-10 baseline.
+**Safe Adaptive Context and TACER: Task-Aware Evidence Routing for
+Token-Efficient Retrieval-Augmented Generation**
 
-The important method is:
+The project asks a focused question:
 
-> **Safe Adaptive Context**: answer first with compact evidence, check whether the answer looks risky, and only then expand to full top-10 context.
+> Given the same initially retrieved top-10 candidate documents, can a RAG
+> system decide how much evidence to send to the generator, and in what form,
+> while keeping answer quality close to a fixed Top-10 baseline?
+
+The repository contains two related context controllers:
+
+- **Safe Adaptive Context**, a lightweight controller that starts with limited
+  evidence and expands when the generated answer appears weak or unsupported.
+- **TACER**, a task-aware extension that routes between compact evidence and
+  safer broader context using retrieval-side and evidence-coverage signals.
+
+## Main Result
+
+Across five datasets, two generators, and stronger retriever settings, Safe
+Adaptive Context and TACER substantially reduce provider-reported token use while
+preserving most Fixed Top-10 answer quality.
+
+In the five-dataset external-baseline stress test, Safe Adaptive Context retains
+**99.8%** of Fixed Top-10 F1 with **55.0%** token reduction, while TACER retains
+**99.4%** with **60.4%** token reduction. The contribution is not universal
+quality improvement, but practical quality-preserving efficiency through
+task-aware context control.
 
 ## Contributors
 
@@ -14,290 +37,231 @@ The important method is:
 - Simon Backhaus Brudzewski
 - Karlis Martins Auce
 - Joel Vazquez
-- Sheraz Ahmad 
+- Sheraz Ahmad
 
-## What The Pipeline Does
+## What The System Does
 
-For each SciFact query:
+All methods start from the same retrieved candidate pool. The retriever returns
+the top-10 documents with TF-IDF cosine similarity. The systems differ only in
+how that retrieved list is converted into prompt context.
 
-1. Load the SciFact biomedical abstracts.
-2. Retrieve top-10 candidate documents with TF-IDF cosine retrieval.
-3. Compare fixed and adaptive context methods.
-4. Send the selected context to Mistral through Ollama.
-5. Record real provider token counts from Ollama when available.
-6. Measure answer F1, tokens, latency, and fallback rate.
+Safe Adaptive Context has three main parts:
 
-## Full System Workflow
+1. **Adaptive budget prediction**
+   - Uses retrieval-side signals such as query length, top scores, score gaps,
+     score entropy, and score concentration.
+   - Chooses an initial context budget before calling the generator.
 
-This is the complete work the system does from start to finish.
+2. **Evidence compression**
+   - Splits selected documents into sentences.
+   - Scores sentences by lexical overlap, rare query-term matches, phrase
+     overlap, token density, and position.
+   - Keeps high-scoring sentence neighborhoods rather than isolated sentences.
 
-### 1. Load The Dataset
+3. **Answer-aware fallback**
+   - Generates an answer from the compact context.
+   - Checks runtime answer-risk signals such as empty answers, weak grounding,
+     low answer-context overlap, and malformed short answers.
+   - Expands context only when the answer looks risky.
 
-The system reads:
+The goal is not simply to compress every prompt. The goal is to spend context
+where it helps and save tokens where evidence is concentrated.
 
-```text
-data/scifact/documents.jsonl
-data/scifact/queries_150_seed0.jsonl
-```
+TACER adds explicit task/evidence routing. It asks whether the query appears to
+need concentrated evidence, distributed multi-hop evidence, or longer synthesis,
+then chooses compact coverage-guided evidence, broader selected context, or
+fallback-enabled expansion.
 
-Documents contain scientific abstracts. Queries contain the claim/question,
-the gold relevant document ids, and reference text for evaluation.
+## Datasets
 
-### 2. Build The Retriever
+The submitted paper uses five datasets with 50 calibration examples and 200
+held-out evaluation examples per dataset:
 
-The system builds a TF-IDF representation of the document collection.
+| Dataset | Task Type | Notes |
+|---|---|---|
+| SciFact | Biomedical claim verification | Gold qrels are original; QA-style reference answers were synthetically generated for answer-level metrics |
+| HotpotQA | Multi-hop question answering | Requires broader evidence coverage |
+| BioASQ | Biomedical factoid QA | Uses concise biomedical answers |
+| MS MARCO | Web passage QA | Often early-answer evidence |
+| ASQA | Ambiguous long-form QA | Requires broader synthesis and careful compression |
 
-TF-IDF means:
-
-- common words get lower importance
-- rare/informative words get higher importance
-- each document becomes a sparse vector of word weights
-
-This is used to compare a query with every document.
-
-### 3. Retrieve Candidate Documents
-
-For each query, the system retrieves a ranked list of candidate documents using
-cosine similarity.
-
-The retrieval stage produces the same top candidate list for every method.
-The difference is what each method decides to send to the LLM.
-
-### 4. Run Fixed Baselines
-
-The fixed baselines are:
-
-- `no_retrieval`
-- `fixed_3_full`
-- `fixed_5_full`
-- `fixed_10_full`
-
-`no_retrieval` sends no documents. It is the closed-book baseline.
-
-The fixed top-k methods always send the same number of full documents.
-
-They answer the question:
-
-> What happens if we use a normal fixed top-k RAG system?
-
-`fixed_10_full` is the main expensive baseline.
-
-### 4b. Planned Heuristic Adaptive Model
-
-### TODO MAIN IDEA SO FAR
-
-This method would use simple rules, such as query length and retrieval score,
-to choose k before generation.
-
-It is useful because it tests whether a lightweight rule system is enough, or
-whether the learned/safe adaptive model gives a better tradeoff.
-
-### 5. Train The Basic Adaptive Budget Model
-
-The system builds a simple adaptive budget model using the evaluation split.
-
-It uses cheap features such as:
-
-- query length
-- top retrieval score
-- score gaps between retrieved documents
-- score entropy
-- whether evidence is concentrated or spread across documents
-
-The model predicts whether the query should use a small or large context budget.
-
-This is the Basic Adaptive model.
-
-### 6. Compress Evidence
-
-For compact methods, the system does not send the whole document text.
-Instead, it uses:
+SciFact does not provide natural-language QA-style gold answers in the same
+format as the QA datasets. For answer-level metrics only, we generated SciFact
+reference answers with `gpt-oss-120b`. Retrieval metrics such as nDCG@10 and
+MRR@10 still use the original dataset qrels. See:
 
 ```text
-evidence_ngram_neighbors
-```
-
-This means:
-
-1. split each document into sentences
-2. score sentences by word/phrase overlap with the query
-3. keep the strongest evidence sentences
-4. keep neighboring sentences too, so the evidence still has context
-
-This creates a smaller evidence package for the LLM.
-
-### 7. Run Safe Adaptive Context
-
-Safe Adaptive Context is our main model.
-
-It works in two passes:
-
-First pass:
-
-1. choose an adaptive context budget
-2. compress the chosen documents into evidence spans
-3. ask Mistral to answer
-
-Safety check:
-
-1. inspect the generated answer
-2. check whether it is empty, too short, uncertain, or poorly grounded
-
-Fallback:
-
-1. if the answer looks risky, expand to full top-10 documents
-2. ask Mistral again
-3. count both the first-pass cost and fallback cost
-
-This is the main idea:
-
-> easy queries stay cheap, hard queries get more context.
-
-### 8. Call Mistral Through Ollama
-
-The system sends prompts to:
-
-```text
-http://localhost:11434/v1/chat/completions
-```
-
-This is Ollama's OpenAI-compatible API.
-
-The model is called with:
-
-```text
-temperature = 0.0
-```
-
-This makes generation as deterministic as possible.
-
-### 9. Record Real Token Counts
-
-For final runs, use:
-
-```bash
---require-provider-tokens
-```
-
-This forces the system to use token counts reported by the model/provider.
-
-The important token fields are:
-
-- prompt tokens
-- completion tokens
-- total tokens
-
-### 10. Evaluate Results
-
-The system evaluates:
-
-- answer F1
-- total tokens
-- token reduction vs fixed top-10
-- generation time
-- time reduction vs fixed top-10
-- fallback rate
-
-The final report table is saved as:
-
-```text
-outputs/<run_name>/final_table.csv
+docs/SCIFACT_LLM_GOLD_REPRODUCIBILITY.md
 ```
 
 ## Methods Compared
 
-| Method | Code mode | Meaning |
+| Method | Code Mode | Meaning |
 |---|---|---|
-| No Retrieval | `no_retrieval` | Closed-book baseline; Mistral answers without retrieved documents |
-| Fixed Top-3 | `fixed_3_full` | Always send 3 full documents |
-| Fixed Top-5 | `fixed_5_full` | Always send 5 full documents |
-| Fixed Top-7 | `fixed_7_full` | Always send 7 full documents |
-| Fixed Top-10 | `fixed_10_full` | Always send 10 full documents; expensive baseline |
-| Heuristic Rules | `heuristic_rules_full` | Rule-based controller using query length and retrieval score gaps |
-| Basic Adaptive + Compact Evidence | `learned_budget_evidence_ngram_neighbors` | Predict a budget, then send compact evidence spans |
-| Safe Adaptive Context | `answer_aware_fallback` | Try compact adaptive evidence first; expand to full top-10 only if the answer looks weak |
+| No Retrieval | `no_retrieval` | Closed-book generation without retrieved context |
+| Fixed Top-3 | `fixed_3_full` | Always sends the top 3 full documents |
+| Fixed Top-5 | `fixed_5_full` | Always sends the top 5 full documents |
+| Fixed Top-7 | `fixed_7_full` | Always sends the top 7 full documents |
+| Fixed Top-10 | `fixed_10_full` | Always sends the top 10 full documents; main expensive baseline |
+| Heuristic Rules | `heuristic_rules_full` | Rule-based context controller using retrieval score gaps and query length |
+| Adaptive-k | `adaptive_k_full` | Lightweight score-drop baseline |
+| Adaptive-k (paper) | `adaptive_k_official_full` | Paper-faithful largest-gap/buffer baseline |
+| LLMLingua-2 | `llmlingua2_top10`, `llmlingua2_adaptive_k_official` | External prompt-compression baselines |
+| FLARE-lite | `flare_lite` | Answer-risk expansion baseline |
+| Safe Adaptive Context | `answer_aware_fallback` | Starts compact, checks answer risk, and expands only when needed |
+| TACER | `task_aware_coverage_ultra` | Routes between compact evidence and safer broader context |
 
+## Submitted Paper Artifacts
 
-## Folder Structure
+The submitted paper artifacts are under:
 
 ```text
-adaptive_rag_github/
-├── data/scifact/
-│   ├── documents.jsonl
-│   ├── queries_all.jsonl
-│   ├── queries_150_seed0.jsonl
-│   └── README.md
-├── scripts/
-│   └── run_experiment.py
-├── docs/
-│   └── CODE_WALKTHROUGH.md
-├── src/adaptive_retrieval/
-│   ├── budget_experiment.py
-│   ├── data.py
-│   ├── learned_budget.py
-│   ├── llm_budget.py
-│   ├── metrics.py
-│   ├── retriever.py
-│   └── text.py
+paper/submitted_groundlm_2026/
+```
+
+Paper-facing summary tables are under:
+
+```text
+saved_results/paper_summary/
+saved_results/publication_stats/
+```
+
+## Final Results at a Glance
+
+Safe Adaptive Context compared with Fixed Top-10:
+
+| Dataset | Model | Fixed F1 | Safe F1 | Fixed Tokens | Safe Tokens | Token Reduction |
+|---|---:|---:|---:|---:|---:|---:|
+| SciFact | Mistral | 0.204 | 0.253 | 3,781 | 985 | 73.9% |
+| SciFact | Llama-70B | 0.262 | 0.265 | 3,412 | 933 | 72.6% |
+| HotpotQA | Mistral | 0.516 | 0.540 | 1,762 | 1,240 | 29.6% |
+| HotpotQA | Llama-70B | 0.765 | 0.737 | 1,537 | 1,066 | 30.6% |
+| BioASQ | Mistral | 0.257 | 0.339 | 3,889 | 2,011 | 48.3% |
+| BioASQ | Llama-70B | 0.344 | 0.342 | 3,496 | 1,668 | 52.3% |
+
+Safe Adaptive Context compared with the Heuristic Rules baseline:
+
+| Dataset | Model | Heuristic F1 | Safe F1 | Heuristic Tokens | Safe Tokens | Token vs Heuristic |
+|---|---:|---:|---:|---:|---:|---:|
+| SciFact | Mistral | 0.265 | 0.253 | 2,652 | 985 | -62.9% |
+| SciFact | Llama-70B | 0.266 | 0.265 | 2,234 | 933 | -58.2% |
+| HotpotQA | Mistral | 0.482 | 0.540 | 1,073 | 1,240 | +15.5% |
+| HotpotQA | Llama-70B | 0.708 | 0.737 | 945 | 1,066 | +12.8% |
+| BioASQ | Mistral | 0.333 | 0.339 | 2,560 | 2,011 | -21.4% |
+| BioASQ | Llama-70B | 0.349 | 0.342 | 2,126 | 1,668 | -21.5% |
+
+The comparison with Heuristic Rules is important because the heuristic is already
+adaptive. Safe Adaptive is cheaper on SciFact and BioASQ, while on HotpotQA it
+spends more tokens than the heuristic because multi-hop questions often need
+broader evidence. In those HotpotQA settings, the extra context improves F1.
+
+## Human Annotation Study
+
+Automatic metrics are useful but incomplete, so we also ran a structured human
+annotation study.
+
+- 120 Safe Adaptive outputs
+- 40 examples each from SciFact, HotpotQA, and BioASQ
+- Two independent annotators
+- Labels: `CORRECT`, `PARTIALLY_CORRECT`, `INCORRECT`, `NOT_ENOUGH_INFO`
+- Raw agreement: 70.0%
+- Cohen's kappa: 0.477
+
+The annotation materials are under:
+
+```text
+annotation_workform/
+```
+
+The browser workform is self-contained and can be opened locally:
+
+```text
+annotation_workform/index.html
+```
+
+The agreement calculator is:
+
+```text
+annotation_workform/kappa.html
+```
+
+## Repository Structure
+
+```text
+.
+├── annotation_workform/        # Human annotation interface and kappa tool
+├── data/                       # Prepared dataset files
+│   ├── asqa_candidate/
+│   ├── bioasq_candidate/
+│   ├── hotpotqa/
+│   ├── hotpotqa_final/
+│   └── scifact/
+├── docs/                       # Plain-language docs and reproducibility notes
+├── saved_results/              # Final result tables and saved LLM outputs
+├── scripts/                    # Experiment and data-preparation scripts
+├── src/adaptive_retrieval/     # Main implementation
+├── src_cross_enc/              # Cross-encoder reranking variant
+├── rpg_presentation_prototype.html
 ├── PROJECT_PLAN.md
 ├── README.md
 └── requirements.txt
 ```
 
-## Dataset
+## Important Files
 
-Dataset: SciFact from BEIR.
-
-This repo includes:
-
-- `data/scifact/documents.jsonl`: 5,183 scientific abstracts.
-- `data/scifact/queries_150_seed0.jsonl`: fixed 150-query sample.
-
-The query file contains:
-
-- query text
-- relevant document ids from qrels
-- reference answer text
-
-## Possible Extra Datasets
-
-The must-ship version uses SciFact because that is the agreed course dataset.
-If we have time, the same code structure can be tested on three more BEIR-style
-datasets:
-
-| Dataset | Why It Helps |
+| File | Purpose |
 |---|---|
-| NFCorpus | More diverse biomedical/nutrition queries; useful for testing whether the controller handles less uniform data |
-| FiQA | Financial question answering; useful for checking if the method works outside biomedical text |
-| TREC-COVID | Scientific/medical COVID retrieval; useful as another high-stakes scientific retrieval setting |
+| `scripts/run_experiment.py` | Main experiment runner for fixed, heuristic, and Safe Adaptive methods |
+| `scripts/run_cross_encoder_experiment.py` | Cross-encoder reranking experiment runner |
+| `scripts/run_table_b_ablation.py` | Component ablation runner |
+| `src/adaptive_retrieval/llm_budget.py` | Main LLM pipeline, context policies, and answer-aware fallback |
+| `src/adaptive_retrieval/retriever.py` | TF-IDF cosine retrieval |
+| `src/adaptive_retrieval/learned_budget.py` | Lightweight adaptive budget predictor |
+| `src/adaptive_retrieval/metrics.py` | Token F1, coverage, semantic metrics, MRR, and nDCG@10 |
+| `docs/CODE_WALKTHROUGH.md` | Plain-language code walkthrough |
+| `docs/FULL_SYSTEM_EXPLANATION.md` | Full system explanation |
+| `docs/SCIFACT_LLM_GOLD_REPRODUCIBILITY.md` | How SciFact synthetic references were generated |
 
-These datasets are not required for the core submission, but they would make the
-project stronger because they test generalization beyond one dataset.
-We may need to use other datasets to prove if is able to generalize. 
+The best file to inspect first is:
 
-## Install
+```text
+src/adaptive_retrieval/llm_budget.py
+```
 
-Install Ollama:
+The main Safe Adaptive function is:
+
+```text
+answer_aware_fallback_run(...)
+```
+
+## Installation
+
+Create an environment and install dependencies:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+For local Mistral runs, install and start Ollama:
 
 ```bash
 brew install ollama
-```
-
-Download/test Mistral:
-
-```bash
+ollama serve
 ollama run mistral "What is the capital of Spain?"
 ```
 
-Install Python requirements:
+The local Ollama API should be available at:
 
-```bash
-pip install -r requirements.txt
+```text
+http://localhost:11434/v1
 ```
 
 ## Dry Run
 
-Use this to check that the code works without calling the LLM:
+Use a dry run to check that loading, retrieval, and table writing work without
+calling the LLM:
 
 ```bash
 python3 scripts/run_experiment.py \
@@ -306,16 +270,16 @@ python3 scripts/run_experiment.py \
   --output-dir outputs/dry_run
 ```
 
-Dry-run results are only a pipeline check. They are not final LLM results.
+Dry-run outputs are only a pipeline check. They are not final LLM results.
 
-## Real Ollama Run
+## Example Mistral Run
 
-Run 50 SciFact queries:
+Run 50 SciFact examples with local Mistral through Ollama:
 
 ```bash
 python3 scripts/run_experiment.py \
   --documents data/scifact/documents.jsonl \
-  --queries data/scifact/queries_150_seed0.jsonl \
+  --queries data/scifact/queries_150_seed0_llm_gold_v2.jsonl \
   --dataset-name SciFact \
   --output-dir outputs/scifact_mistral_50 \
   --model mistral \
@@ -326,142 +290,92 @@ python3 scripts/run_experiment.py \
   --require-provider-tokens
 ```
 
-Run the full 150-query sample:
+For final reported runs, provider-reported token counts were required whenever
+available:
 
 ```bash
-python3 scripts/run_experiment.py \
-  --documents data/scifact/documents.jsonl \
-  --queries data/scifact/queries_150_seed0.jsonl \
-  --dataset-name SciFact \
-  --output-dir outputs/scifact_mistral_150 \
-  --model mistral \
-  --api-url http://localhost:11434/v1 \
-  --no-api-key \
-  --max-eval-queries 150 \
-  --seed 0 \
-  --require-provider-tokens
+--require-provider-tokens
 ```
 
-## Reproducibility
+## Saved Results
 
-The project uses a fixed query sample:
-
-```text
-data/scifact/queries_150_seed0.jsonl
-```
-
-The runner also has:
-
-```bash
---seed 0
-```
-
-Important caveat:
-
-With the same code, same query file, same seed, same Ollama version, same Mistral
-model, and same machine settings, the run should be reproducible.
-
-However, local LLM generation can still vary slightly if the Ollama version,
-model build, backend, or hardware settings change. So the method comparison
-should be stable, but exact generated text may not be byte-for-byte identical
-forever across different machines or future model versions.
-
-## Outputs
-
-Each run writes:
-
-```text
-outputs/<run_name>/llm_answers_by_query.csv
-outputs/<run_name>/llm_summary.csv
-outputs/<run_name>/retrieval_summary.csv
-outputs/<run_name>/final_table.csv
-outputs/<run_name>/final_table.md
-```
-
-The file for the report is:
-
-```text
-outputs/<run_name>/final_table.csv
-```
-
-## Saved Results And Ablations
-
-Final saved result tables are kept in:
+Final saved outputs are under:
 
 ```text
 saved_results/
 ```
 
-The ablation section is:
+Important result folders include:
 
 ```text
+saved_results/scifact_mistral_final_eval100/
+saved_results/scifact_llama70b_final_eval100/
+saved_results/hotpotqa_mistral_final_eval100/
+saved_results/hotpotqa_llama70b_final_eval100/
+saved_results/bioasq_mistral_final_eval100/
+saved_results/bioasq_llama70b_final_eval100/
+saved_results/asqa_llama70b_final_eval100/
 saved_results/ablation/
 ```
 
-It contains:
-
-- `table_b_scifact_llama70b_component_ablation_25/`: Table B component ablation for Safe Adaptive Context.
-- `context_compression/`: compression-focused ablation across completed runs.
-
-Table B isolates the main parts of Safe Adaptive Context:
-
-- adaptive budget
-- compact evidence compression
-- fallback expansion
-
-## What Each Important File Does
-
-| File | What It Does |
-|---|---|
-| `scripts/run_experiment.py` | Main script. Loads data, runs methods, writes tables |
-| `scripts/run_table_b_ablation.py` | Focused Table B component ablation script |
-| `src/adaptive_retrieval/data.py` | Reads `documents.jsonl` and `queries.jsonl` |
-| `src/adaptive_retrieval/text.py` | Tokenization, TF-IDF vectors, token estimates |
-| `src/adaptive_retrieval/retriever.py` | Retrieves top documents with TF-IDF cosine similarity |
-| `src/adaptive_retrieval/budget_experiment.py` | Small helper for retrieval-side budget metrics |
-| `src/adaptive_retrieval/learned_budget.py` | Basic adaptive budget predictor |
-| `src/adaptive_retrieval/llm_budget.py` | Main LLM pipeline and Safe Adaptive Context model |
-| `src/adaptive_retrieval/metrics.py` | Token F1, coverage, precision, recall, MRR, nDCG@10 |
-
-The file to understand first is:
+Each run typically contains:
 
 ```text
-src/adaptive_retrieval/llm_budget.py
+final_table.csv
+final_table.md
+llm_answers_by_query.csv
+llm_summary.csv
+retrieval_summary.csv
+merged_summary.csv
 ```
 
-The function to understand first is:
-
-```text
-answer_aware_fallback_run(...)
-```
-
-For a plain-language explanation of the code, read:
-
-```text
-docs/CODE_WALKTHROUGH.md
-```
+Exact files vary slightly by experiment type.
 
 ## Metrics
 
 | Metric | Meaning |
 |---|---|
-| `answer_f1` | Token-overlap F1 between generated answer and reference text |
-| `total_tokens` | Prompt + completion tokens |
-| `token_reduction_vs_top10` | Token saving compared with fixed top-10 |
-| `generation_time_ms` | Generation latency |
-| `time_reduction_vs_top10` | Time saving compared with fixed top-10 |
-| `fallback_rate` | How often Safe Adaptive expanded to full top-10 |
+| Token F1 | Lexical overlap between generated answer and reference answer |
+| Answer coverage | Recall-style coverage of reference answer tokens |
+| Semantic similarity | Embedding-style similarity between generated and reference answer |
+| nDCG@10 | Whether relevant documents appear high in the retrieved top-10 list |
+| MRR@10 | Reciprocal-rank retrieval quality |
+| Total tokens | Provider-reported prompt plus completion tokens |
+| Token reduction | Token saving relative to Fixed Top-10 |
+| Fallback rate | How often Safe Adaptive expands context after the first answer |
 
+Token F1 is useful but imperfect: it can penalize correct paraphrases and reward
+short answer forms. For that reason, the final analysis interprets Token F1
+together with semantic similarity, answer coverage, retrieval metrics, and human
+annotation.
 
-| Category | Metric | What It Shows |
-|---|---|---|
-| `Retrieval quality` | nDCG@10 | Are relevant documents ranked high? |
-| `Answer quality` | Token F1 | Does the generated answer overlap with the reference? |
-| `Efficiency` | Total tokens | How expensive is the context and generation? |
-| `Efficiency` | Token reduction | How much token usage is reduced compared with fixed top-10? |
-| `Latency` | Generation time | Is the method faster or slower? |
-| `Safety behavior` | Fallback rate | How often does Safe Adaptive expand to more context? |
+## Reproducibility Notes
 
-## Important Note
+The final reported runs used:
 
-Token F1 is useful but imperfect. It measures lexical overlap, so correct paraphrases can still score low. In addition for that we also evaluate nDCG@10 to measure whether relevant documents appear high in the ranked list. 
+- temperature `0`
+- fixed evaluation samples
+- provider-reported token counts when available
+- the same retrieved candidate pool for fixed, heuristic, and adaptive methods
+
+Local LLM outputs may still vary slightly across Ollama versions, model builds,
+hardware backends, or hosted API changes. The saved outputs in `saved_results/`
+are therefore the source of the final reported tables.
+
+## Presentation
+
+The HTML presentation prototype is:
+
+```text
+rpg_presentation_prototype.html
+```
+
+## Project Takeaway
+
+The main lesson is that context size should be treated as a decision, not a
+constant. Fixed Top-10 is simple, but it often sends more context than the model
+needs. Plain compression is also not enough, because some tasks, especially
+multi-hop QA, need broader evidence. Safe Adaptive Context combines adaptive
+budgeting, lightweight evidence compression, and answer-aware fallback so the
+system can save tokens when evidence is concentrated and spend more when the task
+requires it.

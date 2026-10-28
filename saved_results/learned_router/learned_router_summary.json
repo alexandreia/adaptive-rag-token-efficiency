@@ -1,0 +1,26 @@
+{
+  "actions": {
+    "adaptive_k_full": "Adaptive-k",
+    "answer_aware_fallback": "Safe Adaptive Context",
+    "coverage_guided_ultra": "Coverage-Guided Ultra",
+    "fixed_10_full": "Fixed Top-10",
+    "task_aware_coverage_ultra": "TACER"
+  },
+  "examples": 1000,
+  "summaries": [
+    {
+      "accuracy": 0.3405889884763124,
+      "examples": 781,
+      "oracle_f1_delta": 0.033016714468629964,
+      "oracle_token_ratio": 0.45985728367491985,
+      "split": "train"
+    },
+    {
+      "accuracy": 0.2831050228310502,
+      "examples": 219,
+      "oracle_f1_delta": 0.028634794520547947,
+      "oracle_token_ratio": 0.4575900083193665,
+      "split": "test"
+    }
+  ]
+}

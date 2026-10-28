@@ -1,0 +1,8 @@
+| dataset | method | code_mode | ndcg_at_10 | mrr_at_10 | answer_f1 | answer_coverage | semantic_similarity | f1_retained_vs_top10 | semantic_similarity_retained_vs_top10 | total_tokens | token_reduction_vs_top10 | fallback_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| ASQA | Fixed Top-3 | fixed_3_full | 0.778819 | 0.985 | 0.41765 | 0.409386 | 0.778701 | 98.5% | 99.4% | 468.35 | 64.9% | 0.0% |
+| ASQA | Fixed Top-5 | fixed_5_full | 0.867755 | 0.98625 | 0.42402 | 0.429768 | 0.783787 | 100.0% | 100.0% | 687.68 | 48.4% | 0.0% |
+| ASQA | Fixed Top-10 | fixed_10_full | 0.898356 | 0.98625 | 0.424214 | 0.435775 | 0.783762 | 100.0% | 100.0% | 1333.86 | 0.0% | 0.0% |
+| ASQA | Adaptive-k | adaptive_k_full | 0.812373 | 0.98625 | 0.415177 | 0.402254 | 0.778364 | 97.9% | 99.3% | 474.69 | 64.4% | 0.0% |
+| ASQA | Safe Adaptive Context | answer_aware_fallback | 0.779659 | 0.985 | 0.412086 | 0.411551 | 0.780425 | 97.1% | 99.6% | 483.24 | 63.8% | 4.0% |
+| ASQA | TACER | task_aware_coverage_ultra | 0.78039 | 0.985 | 0.418344 | 0.413872 | 0.781312 | 98.6% | 99.7% | 492.65 | 63.1% | 3.0% |

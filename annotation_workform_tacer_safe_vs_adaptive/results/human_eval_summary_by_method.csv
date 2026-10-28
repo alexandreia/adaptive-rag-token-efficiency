@@ -1,0 +1,5 @@
+Method,N,Correct,Partial,Incorrect,Not enough info,Correct %,Correct+Partial %,Avg tokens
+Fixed Top-10,30,19,8,2,1,63.3%,90.0%,1504.7
+Adaptive-k,30,12,9,4,5,40.0%,70.0%,1168.1
+Safe Adaptive Context,30,22,8,0,0,73.3%,100.0%,795.3
+TACER,30,24,6,0,0,80.0%,100.0%,766.7

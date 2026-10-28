@@ -1,0 +1,23 @@
+dataset,method,code_mode,ndcg_at_10,mrr_at_10,answer_f1,answer_coverage,semantic_similarity,f1_retained_vs_top10,semantic_similarity_retained_vs_top10,total_tokens,token_reduction_vs_top10,fallback_rate
+HotpotQA,No Retrieval,no_retrieval_full,0.0,0.0,0.309072,0.306123,0.470348,48.0%,63.0%,147.91,91.4%,0.0%
+HotpotQA,Fixed Top-3,fixed_3_full,0.596062,0.7675,0.53189,0.531027,0.644139,82.5%,86.3%,556.92,67.7%,0.0%
+HotpotQA,Fixed Top-5,fixed_5_full,0.64131,0.77975,0.555306,0.554611,0.663382,86.2%,88.8%,863.4,49.9%,0.0%
+HotpotQA,Fixed Top-7,fixed_7_full,0.679501,0.786179,0.600881,0.605397,0.709987,93.2%,95.1%,1192.27,30.8%,0.0%
+HotpotQA,Fixed Top-10,fixed_10_full,0.717349,0.790206,0.644556,0.65073,0.746732,100.0%,100.0%,1721.8,0.0%,0.0%
+HotpotQA,Heuristic Rules,heuristic_rules_full,0.665239,0.782798,0.57514,0.579539,0.691306,89.2%,92.6%,1079.75,37.3%,0.0%
+HotpotQA,Adaptive-k,adaptive_k_full,0.539579,0.749847,0.489965,0.492777,0.605493,76.0%,81.1%,510.24,70.4%,0.0%
+HotpotQA,Safe Adaptive Context,answer_aware_fallback,0.716507,0.790206,0.627005,0.630123,0.730021,97.3%,97.8%,1164.89,32.3%,0.0%
+HotpotQA,Coverage-Guided Ultra,coverage_guided_ultra,0.630262,0.780417,0.463644,0.466944,0.583081,71.9%,78.1%,452.37,73.7%,0.5%
+HotpotQA,TACER,task_aware_coverage_ultra,0.715832,0.790873,0.627005,0.630123,0.724261,97.3%,97.0%,1160.92,32.6%,0.0%
+HotpotQA,Fixed Top-3,fixed_3_full,0.800442,0.950833,0.644421,0.646373,0.740106,91.8%,93.1%,591.64,66.1%,0.0%
+HotpotQA,Fixed Top-5,fixed_5_full,0.828549,0.951833,0.66308,0.673956,0.761823,94.4%,95.8%,903.75,48.3%,0.0%
+HotpotQA,Fixed Top-10,fixed_10_full,0.86106,0.952389,0.702358,0.70573,0.795138,100.0%,100.0%,1746.72,0.0%,0.0%
+HotpotQA,Adaptive-k,adaptive_k_full,0.740696,0.947222,0.559929,0.55998,0.684042,79.7%,86.0%,595.61,65.9%,0.0%
+HotpotQA,Safe Adaptive Context,answer_aware_fallback,0.856837,0.952389,0.689445,0.695706,0.775636,98.2%,97.5%,1195.4,31.6%,0.0%
+HotpotQA,TACER,task_aware_coverage_ultra,0.855651,0.952389,0.676029,0.687039,0.763998,96.3%,96.1%,1191.86,31.8%,0.0%
+HotpotQA,Fixed Top-3,fixed_3_full,0.801574,0.953333,0.646921,0.652623,0.744062,89.2%,91.6%,591.87,65.8%,0.0%
+HotpotQA,Fixed Top-5,fixed_5_full,0.832321,0.954583,0.683631,0.695647,0.77894,94.3%,95.9%,906.53,47.6%,0.0%
+HotpotQA,Fixed Top-10,fixed_10_full,0.874641,0.955139,0.725215,0.73573,0.812608,100.0%,100.0%,1731.27,0.0%,0.0%
+HotpotQA,Adaptive-k,adaptive_k_full,0.743762,0.952222,0.573469,0.57573,0.692947,79.1%,85.3%,582.41,66.4%,0.0%
+HotpotQA,Safe Adaptive Context,answer_aware_fallback,0.868499,0.955139,0.701984,0.714956,0.788718,96.8%,97.1%,1190.94,31.2%,0.0%
+HotpotQA,TACER,task_aware_coverage_ultra,0.867179,0.953889,0.704719,0.716563,0.791356,97.2%,97.4%,1186.7,31.5%,0.0%

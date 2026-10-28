@@ -1,0 +1,8 @@
+| dataset | method | code_mode | ndcg_at_10 | mrr_at_10 | answer_f1 | answer_coverage | semantic_similarity | f1_retained_vs_top10 | semantic_similarity_retained_vs_top10 | total_tokens | token_reduction_vs_top10 | fallback_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| HotpotQA | Fixed Top-3 | fixed_3_full | 0.801574 | 0.953333 | 0.646921 | 0.652623 | 0.744062 | 89.2% | 91.6% | 591.87 | 65.8% | 0.0% |
+| HotpotQA | Fixed Top-5 | fixed_5_full | 0.832321 | 0.954583 | 0.683631 | 0.695647 | 0.77894 | 94.3% | 95.9% | 906.53 | 47.6% | 0.0% |
+| HotpotQA | Fixed Top-10 | fixed_10_full | 0.874641 | 0.955139 | 0.725215 | 0.73573 | 0.812608 | 100.0% | 100.0% | 1731.27 | 0.0% | 0.0% |
+| HotpotQA | Adaptive-k | adaptive_k_full | 0.743762 | 0.952222 | 0.573469 | 0.57573 | 0.692947 | 79.1% | 85.3% | 582.41 | 66.4% | 0.0% |
+| HotpotQA | Safe Adaptive Context | answer_aware_fallback | 0.868499 | 0.955139 | 0.701984 | 0.714956 | 0.788718 | 96.8% | 97.1% | 1190.94 | 31.2% | 0.0% |
+| HotpotQA | TACER | task_aware_coverage_ultra | 0.867179 | 0.953889 | 0.704719 | 0.716563 | 0.791356 | 97.2% | 97.4% | 1186.7 | 31.5% | 0.0% |

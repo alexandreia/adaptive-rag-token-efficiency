@@ -1,0 +1,8 @@
+| dataset | method | code_mode | ndcg_at_10 | mrr_at_10 | answer_f1 | answer_coverage | semantic_similarity | f1_retained_vs_top10 | semantic_similarity_retained_vs_top10 | total_tokens | token_reduction_vs_top10 | fallback_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| SciFact | Fixed Top-3 | fixed_3_full | 0.640479 | 0.6375 | 0.24901 | 0.832253 | 0.545052 | 101.1% | 99.3% | 1211.4 | 67.7% | 0.0% |
+| SciFact | Fixed Top-5 | fixed_5_full | 0.655171 | 0.644 | 0.251202 | 0.828757 | 0.547587 | 102.0% | 99.8% | 1944.08 | 48.2% | 0.0% |
+| SciFact | Fixed Top-10 | fixed_10_full | 0.6802 | 0.653591 | 0.246389 | 0.823517 | 0.548904 | 100.0% | 100.0% | 3752.56 | 0.0% | 0.0% |
+| SciFact | Adaptive-k | adaptive_k_full | 0.602259 | 0.605833 | 0.261691 | 0.830441 | 0.548551 | 106.2% | 99.9% | 868.04 | 76.9% | 0.0% |
+| SciFact | Safe Adaptive Context | answer_aware_fallback | 0.640479 | 0.6375 | 0.248663 | 0.827221 | 0.549058 | 100.9% | 100.0% | 920.85 | 75.5% | 3.5% |
+| SciFact | TACER | task_aware_coverage_ultra | 0.620226 | 0.620833 | 0.25104 | 0.815124 | 0.551125 | 101.9% | 100.4% | 656.5 | 82.5% | 0.0% |

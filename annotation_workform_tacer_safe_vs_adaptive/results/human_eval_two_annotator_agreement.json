@@ -1,0 +1,52 @@
+{
+  "n": 120,
+  "exact_agreement_count": 82,
+  "exact_agreement_pct": 68.333,
+  "cohens_kappa": 0.422273,
+  "binary_acceptability_agreement_count": 111,
+  "binary_acceptability_agreement_pct": 92.5,
+  "binary_acceptability_kappa": 0.6875,
+  "annotator1_counts": {
+    "CORRECT": 77,
+    "PARTIALLY_CORRECT": 31,
+    "INCORRECT": 6,
+    "NOT_ENOUGH_INFO": 6
+  },
+  "annotator2_counts": {
+    "CORRECT": 72,
+    "PARTIALLY_CORRECT": 27,
+    "INCORRECT": 21
+  },
+  "confusion_labels": [
+    "CORRECT",
+    "PARTIALLY_CORRECT",
+    "INCORRECT",
+    "NOT_ENOUGH_INFO"
+  ],
+  "confusion_matrix": [
+    [
+      63,
+      14,
+      0,
+      0
+    ],
+    [
+      9,
+      13,
+      9,
+      0
+    ],
+    [
+      0,
+      0,
+      6,
+      0
+    ],
+    [
+      0,
+      0,
+      6,
+      0
+    ]
+  ]
+}

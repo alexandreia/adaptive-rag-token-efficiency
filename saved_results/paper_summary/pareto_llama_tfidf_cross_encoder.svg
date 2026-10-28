@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="580" viewBox="0 0 900 580">
+<rect width="100%" height="100%" fill="white"/>
+<text x="450.0" y="32" text-anchor="middle" font-family="Arial" font-size="20" font-weight="700">Llama-70B TF-IDF + Cross-Encoder</text>
+<line x1="90" y1="485" x2="870" y2="485" stroke="#333"/>
+<line x1="90" y1="70" x2="90" y2="485" stroke="#333"/>
+<text x="450.0" y="552" text-anchor="middle" font-family="Arial" font-size="15">Token reduction vs Fixed Top-10 (%)</text>
+<text transform="translate(24 290.0) rotate(-90)" text-anchor="middle" font-family="Arial" font-size="15">F1 retained vs Fixed Top-10 (%)</text>
+<line x1="90.0" y1="485" x2="90.0" y2="490" stroke="#333"/>
+<text x="90.0" y="507" text-anchor="middle" font-family="Arial" font-size="12">20</text>
+<line x1="201.4" y1="485" x2="201.4" y2="490" stroke="#333"/>
+<text x="201.4" y="507" text-anchor="middle" font-family="Arial" font-size="12">30</text>
+<line x1="312.9" y1="485" x2="312.9" y2="490" stroke="#333"/>
+<text x="312.9" y="507" text-anchor="middle" font-family="Arial" font-size="12">40</text>
+<line x1="424.3" y1="485" x2="424.3" y2="490" stroke="#333"/>
+<text x="424.3" y="507" text-anchor="middle" font-family="Arial" font-size="12">50</text>
+<line x1="535.7" y1="485" x2="535.7" y2="490" stroke="#333"/>
+<text x="535.7" y="507" text-anchor="middle" font-family="Arial" font-size="12">60</text>
+<line x1="647.1" y1="485" x2="647.1" y2="490" stroke="#333"/>
+<text x="647.1" y="507" text-anchor="middle" font-family="Arial" font-size="12">70</text>
+<line x1="758.6" y1="485" x2="758.6" y2="490" stroke="#333"/>
+<text x="758.6" y="507" text-anchor="middle" font-family="Arial" font-size="12">80</text>
+<line x1="870.0" y1="485" x2="870.0" y2="490" stroke="#333"/>
+<text x="870.0" y="507" text-anchor="middle" font-family="Arial" font-size="12">90</text>
+<line x1="85" y1="440.9" x2="90" y2="440.9" stroke="#333"/>
+<text x="80" y="444.9" text-anchor="end" font-family="Arial" font-size="12">70</text>
+<line x1="90" y1="440.9" x2="870" y2="440.9" stroke="#e8e8e8"/>
+<line x1="85" y1="352.6" x2="90" y2="352.6" stroke="#333"/>
+<text x="80" y="356.6" text-anchor="end" font-family="Arial" font-size="12">80</text>
+<line x1="90" y1="352.6" x2="870" y2="352.6" stroke="#e8e8e8"/>
+<line x1="85" y1="264.3" x2="90" y2="264.3" stroke="#333"/>
+<text x="80" y="268.3" text-anchor="end" font-family="Arial" font-size="12">90</text>
+<line x1="90" y1="264.3" x2="870" y2="264.3" stroke="#e8e8e8"/>
+<line x1="85" y1="176.0" x2="90" y2="176.0" stroke="#333"/>
+<text x="80" y="180.0" text-anchor="end" font-family="Arial" font-size="12">100</text>
+<line x1="90" y1="176.0" x2="870" y2="176.0" stroke="#e8e8e8"/>
+<line x1="85" y1="87.7" x2="90" y2="87.7" stroke="#333"/>
+<text x="80" y="91.7" text-anchor="end" font-family="Arial" font-size="12">110</text>
+<line x1="90" y1="87.7" x2="870" y2="87.7" stroke="#e8e8e8"/>
+<circle cx="621.5" cy="166.2" r="5.5" fill="#7c8a99" opacity="0.82"/>
+<circle cx="404.2" cy="158.3" r="5.5" fill="#a3772b" opacity="0.82"/>
+<circle cx="724.0" cy="121.2" r="5.5" fill="#d14f42" opacity="0.82"/>
+<circle cx="708.4" cy="168.0" r="5.5" fill="#2f6f9f" opacity="0.82"/>
+<circle cx="786.4" cy="159.2" r="5.5" fill="#16805a" opacity="0.82"/>
+<rect x="621.0" y="159.5" width="10" height="10" fill="#7c8a99" opacity="0.82"/>
+<rect x="408.1" y="169.2" width="10" height="10" fill="#a3772b" opacity="0.82"/>
+<rect x="602.0" y="145.4" width="10" height="10" fill="#d14f42" opacity="0.82"/>
+<rect x="721.3" y="163.9" width="10" height="10" fill="#2f6f9f" opacity="0.82"/>
+<rect x="730.2" y="186.9" width="10" height="10" fill="#16805a" opacity="0.82"/>
+<polygon points="603.7,241.4 610.7,248.4 603.7,255.4 596.7,248.4" fill="#7c8a99" opacity="0.82"/>
+<polygon points="405.3,218.4 412.3,225.4 405.3,232.4 398.3,225.4" fill="#a3772b" opacity="0.82"/>
+<polygon points="601.5,348.2 608.5,355.2 601.5,362.2 594.5,355.2" fill="#d14f42" opacity="0.82"/>
+<polygon points="219.3,184.9 226.3,191.9 219.3,198.9 212.3,191.9" fill="#2f6f9f" opacity="0.82"/>
+<polygon points="221.5,201.6 228.5,208.6 221.5,215.6 214.5,208.6" fill="#16805a" opacity="0.82"/>
+<polygon points="566.9,94.8 573.9,107.8 559.9,107.8" fill="#7c8a99" opacity="0.82"/>
+<polygon points="373.0,155.7 380.0,168.7 366.0,168.7" fill="#a3772b" opacity="0.82"/>
+<polygon points="170.2,156.6 177.2,169.6 163.2,169.6" fill="#d14f42" opacity="0.82"/>
+<polygon points="462.2,156.6 469.2,169.6 455.2,169.6" fill="#2f6f9f" opacity="0.82"/>
+<polygon points="252.7,176.9 259.7,189.9 245.7,189.9" fill="#16805a" opacity="0.82"/>
+<circle cx="590.3" cy="189.2" r="5.5" fill="white" stroke="#7c8a99" stroke-width="2" opacity="0.95"/>
+<circle cx="406.5" cy="176.0" r="5.5" fill="white" stroke="#a3772b" stroke-width="2" opacity="0.95"/>
+<circle cx="584.7" cy="194.5" r="5.5" fill="white" stroke="#d14f42" stroke-width="2" opacity="0.95"/>
+<circle cx="578.1" cy="201.6" r="5.5" fill="white" stroke="#2f6f9f" stroke-width="2" opacity="0.95"/>
+<circle cx="570.3" cy="188.3" r="5.5" fill="white" stroke="#16805a" stroke-width="2" opacity="0.95"/>
+<rect x="600" y="50" width="260" height="155" fill="white" stroke="#ddd"/>
+<text x="615" y="75" font-family="Arial" font-size="13" font-weight="700">Method color</text>
+<circle cx="621" cy="91" r="5" fill="#7c8a99"/>
+<text x="635" y="95" font-family="Arial" font-size="12">Fixed Top-3</text>
+<circle cx="621" cy="111" r="5" fill="#a3772b"/>
+<text x="635" y="115" font-family="Arial" font-size="12">Fixed Top-5</text>
+<circle cx="621" cy="131" r="5" fill="#d14f42"/>
+<text x="635" y="135" font-family="Arial" font-size="12">Adaptive-k</text>
+<circle cx="621" cy="151" r="5" fill="#2f6f9f"/>
+<text x="635" y="155" font-family="Arial" font-size="12">Safe Adaptive Context</text>
+<circle cx="621" cy="171" r="5" fill="#16805a"/>
+<text x="635" y="175" font-family="Arial" font-size="12">TACER</text>
+<text x="615" y="210" font-family="Arial" font-size="12">Shapes encode datasets.</text>
+</svg>

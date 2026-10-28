@@ -1,0 +1,7 @@
+| Dataset | Fixed F1 | Adaptive-k F1 / Red. | Safe F1 / Red. | TACER F1 / Red. | TACER vs Adaptive-k F1 | Takeaway |
+| --- | --- | --- | --- | --- | --- | --- |
+| SciFact | 0.243 | 0.251 / 74.9% | 0.247 / 69.9% | 0.253 / 80.9% | +0.002 | TACER is highly efficient on concentrated evidence |
+| BioASQ | 0.328 | 0.319 / 73.2% | 0.323 / 74.6% | 0.314 / 80.8% | -0.006 | Safe is quality-preserving; TACER is aggressive |
+| HotpotQA | 0.645 | 0.490 / 70.4% | 0.627 / 32.3% | 0.627 / 32.6% | +0.137 | Safe/TACER avoid score-only under-selection |
+| MSMARCO | 0.196 | 0.199 / 48.6% | 0.195 / 38.5% | 0.195 / 54.1% | -0.005 | Small contexts are strong with good ranking |
+| ASQA | 0.422 | 0.368 / 70.9% | 0.402 / 58.3% | 0.404 / 59.4% | +0.036 | TACER preserves long-form quality better than Adaptive-k |

@@ -1,0 +1,12 @@
+| dataset | method | code_mode | ndcg_at_10 | mrr_at_10 | answer_f1 | answer_coverage | semantic_similarity | f1_retained_vs_top10 | semantic_similarity_retained_vs_top10 | total_tokens | token_reduction_vs_top10 | fallback_rate |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| MSMARCO | No Retrieval | no_retrieval_full | 0.0 | 0.0 | 0.110206 | 0.203631 | 0.354508 | 52.5% | 75.3% | 113.83 | 93.0% | 0.0% |
+| MSMARCO | Fixed Top-3 | fixed_3_full | 0.385599 | 0.36 | 0.204767 | 0.526017 | 0.453407 | 97.5% | 96.3% | 584.15 | 64.3% | 0.0% |
+| MSMARCO | Fixed Top-5 | fixed_5_full | 0.474519 | 0.40325 | 0.21418 | 0.561793 | 0.467596 | 102.0% | 99.4% | 891.99 | 45.4% | 0.0% |
+| MSMARCO | Fixed Top-7 | fixed_7_full | 0.535107 | 0.428607 | 0.212372 | 0.583407 | 0.471981 | 101.1% | 100.3% | 1194.05 | 26.9% | 0.0% |
+| MSMARCO | Fixed Top-10 | fixed_10_full | 0.552481 | 0.434579 | 0.210042 | 0.581682 | 0.470603 | 100.0% | 100.0% | 1634.11 | 0.0% | 0.0% |
+| MSMARCO | Heuristic Rules | heuristic_rules_full | 0.487252 | 0.40894 | 0.212097 | 0.560452 | 0.471773 | 101.0% | 100.2% | 927.88 | 43.2% | 0.0% |
+| MSMARCO | Adaptive-k | adaptive_k_full | 0.431013 | 0.37028 | 0.211923 | 0.538944 | 0.466006 | 100.9% | 99.0% | 815.55 | 50.1% | 0.0% |
+| MSMARCO | Safe Adaptive Context | answer_aware_fallback | 0.515606 | 0.420329 | 0.216949 | 0.558001 | 0.46594 | 103.3% | 99.0% | 1061.11 | 35.1% | 2.5% |
+| MSMARCO | Coverage-Guided Ultra | coverage_guided_ultra | 0.431013 | 0.37028 | 0.209388 | 0.486688 | 0.455057 | 99.7% | 96.7% | 750.55 | 54.1% | 0.0% |
+| MSMARCO | TACER | task_aware_coverage_ultra | 0.431013 | 0.37028 | 0.208927 | 0.486158 | 0.455508 | 99.5% | 96.8% | 750.6 | 54.1% | 0.0% |

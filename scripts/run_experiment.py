@@ -30,7 +30,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from adaptive_retrieval.data import load_documents, load_queries
-from adaptive_retrieval.llm_budget import LLMConfig, run_llm_budget_experiment, write_llm_outputs
+from adaptive_retrieval.llm_budget import (
+    LLMConfig,
+    load_precomputed_rankings,
+    run_llm_budget_experiment,
+    write_llm_outputs,
+)
 
 
 # These are the systems we actually run.
@@ -39,6 +44,7 @@ from adaptive_retrieval.llm_budget import LLMConfig, run_llm_budget_experiment, 
 # early prototype. The useful comparisons now are:
 # - fixed baselines
 # - heuristic baseline
+# - Adaptive-k baseline
 # - Safe Adaptive Context, which now expands progressively inside one model
 METHODS_TO_RUN = [
     "no_retrieval",
@@ -47,7 +53,25 @@ METHODS_TO_RUN = [
     "fixed_7",
     "fixed_10",
     "heuristic_rules",
+    "adaptive_k",
+    "adaptive_k_paper",
+    "adaptive_k_official",
+    "llmlingua2_top10",
+    "llmlingua2_adaptive_k_official",
+    "flare_lite",
+    "guarded_adaptive_k",
+    "guarded_predicate_compact",
+    "discourse_preserving_compact",
     "answer_aware_fallback",
+    "safe_adaptive_v2",
+    "coverage_guided_adaptive",
+    "coverage_guided_ultra",
+    "task_aware_coverage_ultra",
+    "routed_predicate_adaptive",
+    "routed_guarded_adaptive",
+    "routed_safe_guarded_adaptive",
+    "merged_evidence_brief",
+    "hybrid_safe_adaptive",
 ]
 
 
@@ -60,7 +84,26 @@ FINAL_TABLE_ROWS = {
     "fixed_7_full": "Fixed Top-7",
     "fixed_10_full": "Fixed Top-10",
     "heuristic_rules_full": "Heuristic Rules",
+    "adaptive_k_full": "Adaptive-k",
+    "adaptive_k_paper_full": "Adaptive-k (paper)",
+    "adaptive_k_official_full": "Adaptive-k (paper)",
+    "llmlingua2_top10": "Fixed Top-10 + LLMLingua-2",
+    "llmlingua2_adaptive_k_official": "Adaptive-k (paper) + LLMLingua-2",
+    "flare_lite": "FLARE-lite",
+    "guarded_adaptive_k_full": "Guarded Adaptive-k",
+    "guarded_adaptive_k_evidence_ngram_neighbors": "Guarded Adaptive-k + Compact Evidence",
+    "guarded_predicate_compact": "Guarded Predicate Compact",
+    "discourse_preserving_compact": "Discourse-Preserving Compact",
     "answer_aware_fallback": "Safe Adaptive Context",
+    "safe_adaptive_v2": "Safe Adaptive Context v2",
+    "coverage_guided_adaptive": "Coverage-Guided Safe Adaptive",
+    "coverage_guided_ultra": "Coverage-Guided Ultra",
+    "task_aware_coverage_ultra": "TACER",
+    "routed_predicate_adaptive": "Routed Predicate Adaptive",
+    "routed_guarded_adaptive": "Routed Guarded Adaptive Context",
+    "routed_safe_guarded_adaptive": "Routed Safe Guarded Adaptive Context",
+    "merged_evidence_brief": "Merged Evidence Brief",
+    "hybrid_safe_adaptive": "Hybrid Safe Adaptive",
 }
 
 
@@ -82,6 +125,10 @@ def find_row(rows, mode):
     raise RuntimeError(f"Missing result row: {mode}")
 
 
+def available_modes(rows):
+    return {row["mode"] for row in rows}
+
+
 def build_final_table(answer_summary, dataset_name):
     # Make one small table for the report.
     baseline = find_row(answer_summary, "fixed_10_full")
@@ -91,7 +138,10 @@ def build_final_table(answer_summary, dataset_name):
     baseline_tokens = as_float(baseline, "total_tokens")
 
     rows = []
+    present_modes = available_modes(answer_summary)
     for mode, method_name in FINAL_TABLE_ROWS.items():
+        if mode not in present_modes:
+            continue
         row = find_row(answer_summary, mode)
 
         f1 = as_float(row, "answer_f1")
@@ -180,7 +230,24 @@ def main():
     # Dataset paths.
     parser.add_argument("--documents", type=Path, default=Path("data/scifact/documents.jsonl"))
     parser.add_argument("--queries", type=Path, default=Path("data/scifact/queries_150_seed0.jsonl"))
+    parser.add_argument(
+        "--dev-queries",
+        type=Path,
+        default=None,
+        help="Optional calibration/dev query file. If set, --queries is used entirely as eval data.",
+    )
     parser.add_argument("--dataset-name", default="SciFact")
+    parser.add_argument(
+        "--rankings-file",
+        type=Path,
+        default=None,
+        help="Optional precomputed retrieval_rankings.csv file from build_retrieval_rankings.py.",
+    )
+    parser.add_argument(
+        "--retriever-name",
+        default=None,
+        help="Retriever row name inside --rankings-file, e.g. tfidf_cross_encoder, dense, dense_cross_encoder.",
+    )
 
     # Output folder.
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/scifact_run"))
@@ -204,6 +271,23 @@ def main():
     parser.add_argument("--max-eval-queries", type=int, default=50)
     parser.add_argument("--eval-start-index", type=int, default=0)
     parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument(
+        "--methods",
+        nargs="+",
+        default=METHODS_TO_RUN,
+        choices=METHODS_TO_RUN,
+        help="Run only these methods. Useful for cheaper batch runs.",
+    )
+    parser.add_argument(
+        "--compression-modes",
+        nargs="+",
+        default=["full", "evidence_ngram_neighbors"],
+        choices=["full", "evidence_ngram_neighbors"],
+        help=(
+            "Compression modes for ordinary baselines. Use 'full' for cheap "
+            "experiments when compact baseline rows are not needed."
+        ),
+    )
 
     args = parser.parse_args()
     set_seed(args.seed)
@@ -211,6 +295,13 @@ def main():
     print("Loading data...")
     documents = load_documents(args.documents)
     queries = load_queries(args.queries)
+    dev_queries = load_queries(args.dev_queries) if args.dev_queries else None
+    eval_ranked_override = None
+    if args.rankings_file or args.retriever_name:
+        if not args.rankings_file or not args.retriever_name:
+            raise SystemExit("--rankings-file and --retriever-name must be used together.")
+        print(f"Loading precomputed rankings: {args.retriever_name}")
+        eval_ranked_override = load_precomputed_rankings(args.rankings_file, documents, args.retriever_name)
 
     print("Configuring model...")
     config = LLMConfig(
@@ -233,11 +324,13 @@ def main():
         config=config,
         max_eval_queries=args.max_eval_queries,
         eval_start_index=args.eval_start_index,
-        modes=METHODS_TO_RUN,
-        compression_modes=["full", "evidence_ngram_neighbors"],
+        modes=args.methods,
+        compression_modes=args.compression_modes,
         oracle_strategy="minimum_sufficient",
         sufficiency_ratio=0.95,
         threshold_strategy="heuristic",
+        dev_queries_override=dev_queries,
+        eval_ranked_override=eval_ranked_override,
     )
 
     # Save detailed outputs from the real model pipeline.

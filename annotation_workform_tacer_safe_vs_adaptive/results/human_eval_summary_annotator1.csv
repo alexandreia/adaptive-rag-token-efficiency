@@ -1,0 +1,5 @@
+method,n,correct,partial,incorrect,not_enough_info,acceptable,acceptable_pct
+Fixed Top-10,30,19,8,2,1,27,90.0
+Adaptive-k (paper),30,12,9,4,5,21,70.0
+Safe Adaptive Context,30,22,8,0,0,30,100.0
+TACER,30,24,6,0,0,30,100.0

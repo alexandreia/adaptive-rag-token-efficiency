@@ -1,0 +1,92 @@
+| Retriever | Dataset | Method | F1 | F1 Retained | Semantic Retained | Token Reduction | Fallback |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| TF-IDF | SciFact | Fixed Top-3 | 0.245 | 100.8% | 99.4% | 66.7% | 0.0% |
+| TF-IDF | SciFact | Fixed Top-5 | 0.245 | 100.8% | 98.7% | 47.7% | 0.0% |
+| TF-IDF | SciFact | Fixed Top-10 | 0.243 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF | SciFact | Adaptive-k | 0.251 | 103.2% | 99.6% | 74.9% | 0.0% |
+| TF-IDF | SciFact | Safe Adaptive Context | 0.247 | 101.5% | 99.7% | 69.9% | 10.0% |
+| TF-IDF | SciFact | TACER | 0.253 | 103.9% | 101.2% | 80.9% | 0.0% |
+| TF-IDF | BioASQ | Fixed Top-3 | 0.322 | 98.2% | 99.7% | 66.7% | 0.0% |
+| TF-IDF | BioASQ | Fixed Top-5 | 0.326 | 99.2% | 99.8% | 47.5% | 0.0% |
+| TF-IDF | BioASQ | Fixed Top-10 | 0.328 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF | BioASQ | Adaptive-k | 0.319 | 97.2% | 98.1% | 73.2% | 0.0% |
+| TF-IDF | BioASQ | Safe Adaptive Context | 0.323 | 98.2% | 99.5% | 74.6% | 4.0% |
+| TF-IDF | BioASQ | TACER | 0.314 | 95.5% | 98.3% | 80.8% | 0.0% |
+| TF-IDF | HotpotQA | Fixed Top-3 | 0.532 | 82.5% | 86.3% | 67.7% | 0.0% |
+| TF-IDF | HotpotQA | Fixed Top-5 | 0.555 | 86.2% | 88.8% | 49.9% | 0.0% |
+| TF-IDF | HotpotQA | Fixed Top-10 | 0.645 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF | HotpotQA | Adaptive-k | 0.490 | 76.0% | 81.1% | 70.4% | 0.0% |
+| TF-IDF | HotpotQA | Safe Adaptive Context | 0.627 | 97.3% | 97.8% | 32.3% | 0.0% |
+| TF-IDF | HotpotQA | TACER | 0.627 | 97.3% | 97.0% | 32.6% | 0.0% |
+| TF-IDF | MSMARCO | Fixed Top-3 | 0.197 | 100.6% | 99.0% | 62.2% | 0.0% |
+| TF-IDF | MSMARCO | Fixed Top-5 | 0.198 | 101.1% | 99.8% | 43.8% | 0.0% |
+| TF-IDF | MSMARCO | Fixed Top-10 | 0.196 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF | MSMARCO | Adaptive-k | 0.199 | 102.0% | 98.5% | 48.6% | 0.0% |
+| TF-IDF | MSMARCO | Safe Adaptive Context | 0.195 | 99.8% | 99.1% | 38.5% | 1.0% |
+| TF-IDF | MSMARCO | TACER | 0.195 | 99.6% | 96.3% | 54.1% | 0.0% |
+| TF-IDF | ASQA | Fixed Top-3 | 0.398 | 94.3% | 96.9% | 64.6% | 0.0% |
+| TF-IDF | ASQA | Fixed Top-5 | 0.416 | 98.6% | 98.8% | 45.9% | 0.0% |
+| TF-IDF | ASQA | Fixed Top-10 | 0.422 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF | ASQA | Adaptive-k | 0.368 | 87.3% | 93.6% | 70.9% | 0.0% |
+| TF-IDF | ASQA | Safe Adaptive Context | 0.402 | 95.3% | 98.1% | 58.3% | 9.0% |
+| TF-IDF | ASQA | TACER | 0.404 | 95.7% | 97.9% | 59.4% | 7.0% |
+| TF-IDF + CE | SciFact | Fixed Top-3 | 0.249 | 101.1% | 99.3% | 67.7% | 0.0% |
+| TF-IDF + CE | SciFact | Fixed Top-5 | 0.251 | 102.0% | 99.8% | 48.2% | 0.0% |
+| TF-IDF + CE | SciFact | Fixed Top-10 | 0.246 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF + CE | SciFact | Adaptive-k | 0.262 | 106.2% | 99.9% | 76.9% | 0.0% |
+| TF-IDF + CE | SciFact | Safe Adaptive Context | 0.249 | 100.9% | 100.0% | 75.5% | 3.5% |
+| TF-IDF + CE | SciFact | TACER | 0.251 | 101.9% | 100.4% | 82.5% | 0.0% |
+| TF-IDF + CE | BioASQ | Fixed Top-3 | 0.330 | 101.3% | 99.9% | 68.1% | 0.0% |
+| TF-IDF + CE | BioASQ | Fixed Top-5 | 0.327 | 100.2% | 99.4% | 49.0% | 0.0% |
+| TF-IDF + CE | BioASQ | Fixed Top-10 | 0.326 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF + CE | BioASQ | Adaptive-k | 0.336 | 102.9% | 100.2% | 66.4% | 0.0% |
+| TF-IDF + CE | BioASQ | Safe Adaptive Context | 0.329 | 100.8% | 99.2% | 77.1% | 2.5% |
+| TF-IDF + CE | BioASQ | TACER | 0.320 | 98.2% | 99.0% | 77.9% | 0.0% |
+| TF-IDF + CE | HotpotQA | Fixed Top-3 | 0.644 | 91.8% | 93.1% | 66.1% | 0.0% |
+| TF-IDF + CE | HotpotQA | Fixed Top-5 | 0.663 | 94.4% | 95.8% | 48.3% | 0.0% |
+| TF-IDF + CE | HotpotQA | Fixed Top-10 | 0.702 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF + CE | HotpotQA | Adaptive-k | 0.560 | 79.7% | 86.0% | 65.9% | 0.0% |
+| TF-IDF + CE | HotpotQA | Safe Adaptive Context | 0.689 | 98.2% | 97.5% | 31.6% | 0.0% |
+| TF-IDF + CE | HotpotQA | TACER | 0.676 | 96.3% | 96.1% | 31.8% | 0.0% |
+| TF-IDF + CE | MSMARCO | Fixed Top-3 | 0.218 | 108.4% | 100.8% | 62.8% | 0.0% |
+| TF-IDF + CE | MSMARCO | Fixed Top-5 | 0.204 | 101.5% | 100.2% | 45.4% | 0.0% |
+| TF-IDF + CE | MSMARCO | Fixed Top-10 | 0.201 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF + CE | MSMARCO | Adaptive-k | 0.204 | 101.4% | 100.5% | 27.2% | 0.0% |
+| TF-IDF + CE | MSMARCO | Safe Adaptive Context | 0.204 | 101.4% | 98.3% | 53.4% | 1.0% |
+| TF-IDF + CE | MSMARCO | TACER | 0.200 | 99.1% | 98.9% | 34.6% | 0.0% |
+| TF-IDF + CE | ASQA | Fixed Top-3 | 0.418 | 98.5% | 99.4% | 64.9% | 0.0% |
+| TF-IDF + CE | ASQA | Fixed Top-5 | 0.424 | 100.0% | 100.0% | 48.4% | 0.0% |
+| TF-IDF + CE | ASQA | Fixed Top-10 | 0.424 | 100.0% | 100.0% | 0.0% | 0.0% |
+| TF-IDF + CE | ASQA | Adaptive-k | 0.415 | 97.9% | 99.3% | 64.4% | 0.0% |
+| TF-IDF + CE | ASQA | Safe Adaptive Context | 0.412 | 97.1% | 99.6% | 63.8% | 4.0% |
+| TF-IDF + CE | ASQA | TACER | 0.418 | 98.6% | 99.7% | 63.1% | 3.0% |
+| Dense + CE | SciFact | Fixed Top-3 | 0.252 | 101.8% | 99.6% | 67.7% | 0.0% |
+| Dense + CE | SciFact | Fixed Top-5 | 0.252 | 101.7% | 99.2% | 48.5% | 0.0% |
+| Dense + CE | SciFact | Fixed Top-10 | 0.248 | 100.0% | 100.0% | 0.0% | 0.0% |
+| Dense + CE | SciFact | Adaptive-k | 0.264 | 106.6% | 100.1% | 76.6% | 0.0% |
+| Dense + CE | SciFact | Safe Adaptive Context | 0.249 | 100.5% | 100.3% | 75.4% | 4.5% |
+| Dense + CE | SciFact | TACER | 0.255 | 102.9% | 100.9% | 82.1% | 0.0% |
+| Dense + CE | BioASQ | Fixed Top-3 | 0.334 | 102.8% | 100.6% | 68.8% | 0.0% |
+| Dense + CE | BioASQ | Fixed Top-5 | 0.330 | 101.6% | 100.4% | 50.2% | 0.0% |
+| Dense + CE | BioASQ | Fixed Top-10 | 0.325 | 100.0% | 100.0% | 0.0% | 0.0% |
+| Dense + CE | BioASQ | Adaptive-k | 0.338 | 103.9% | 100.2% | 67.2% | 0.0% |
+| Dense + CE | BioASQ | Safe Adaptive Context | 0.330 | 101.5% | 99.3% | 76.3% | 4.0% |
+| Dense + CE | BioASQ | TACER | 0.324 | 99.8% | 99.2% | 78.7% | 1.0% |
+| Dense + CE | HotpotQA | Fixed Top-3 | 0.647 | 89.2% | 91.6% | 65.8% | 0.0% |
+| Dense + CE | HotpotQA | Fixed Top-5 | 0.684 | 94.3% | 95.9% | 47.6% | 0.0% |
+| Dense + CE | HotpotQA | Fixed Top-10 | 0.725 | 100.0% | 100.0% | 0.0% | 0.0% |
+| Dense + CE | HotpotQA | Adaptive-k | 0.573 | 79.1% | 85.3% | 66.4% | 0.0% |
+| Dense + CE | HotpotQA | Safe Adaptive Context | 0.702 | 96.8% | 97.1% | 31.2% | 0.0% |
+| Dense + CE | HotpotQA | TACER | 0.705 | 97.2% | 97.4% | 31.5% | 0.0% |
+| Dense + CE | MSMARCO | Fixed Top-3 | 0.220 | 109.6% | 100.1% | 62.8% | 0.0% |
+| Dense + CE | MSMARCO | Fixed Top-5 | 0.204 | 101.5% | 99.8% | 45.3% | 0.0% |
+| Dense + CE | MSMARCO | Fixed Top-10 | 0.201 | 100.0% | 100.0% | 0.0% | 0.0% |
+| Dense + CE | MSMARCO | Adaptive-k | 0.204 | 101.6% | 100.0% | 26.0% | 0.0% |
+| Dense + CE | MSMARCO | Safe Adaptive Context | 0.203 | 101.1% | 97.8% | 53.3% | 1.0% |
+| Dense + CE | MSMARCO | TACER | 0.200 | 99.5% | 98.1% | 33.7% | 0.0% |
+| Dense + CE | ASQA | Fixed Top-3 | 0.416 | 99.6% | 99.8% | 57.2% | 0.0% |
+| Dense + CE | ASQA | Fixed Top-5 | 0.419 | 100.2% | 100.2% | 39.3% | 0.0% |
+| Dense + CE | ASQA | Fixed Top-10 | 0.418 | 100.0% | 100.0% | 0.0% | 0.0% |
+| Dense + CE | ASQA | Adaptive-k | 0.415 | 99.3% | 99.7% | 54.8% | 0.0% |
+| Dense + CE | ASQA | Safe Adaptive Context | 0.414 | 99.2% | 99.7% | 54.4% | 4.5% |
+| Dense + CE | ASQA | TACER | 0.417 | 99.8% | 99.7% | 54.4% | 5.5% |
